@@ -1,8 +1,13 @@
 "use client";
 
 import React, { Suspense } from "react";
+import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
-import LoginScreen, { RoleType } from "@/components/LoginScreen";
+import { RoleType } from "@/components/LoginScreen";
+
+const LoginScreen = dynamic(() => import("@/components/LoginScreen"), {
+  ssr: false,
+});
 
 function LoginContent() {
   const router = useRouter();

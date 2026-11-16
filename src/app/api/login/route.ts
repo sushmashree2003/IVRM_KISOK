@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { LoginResponseDTO, SessionInfo } from "@/types/auth";
-import { createSessionFromLoginDTO, DEFAULT_INSTITUTE_NAME, DEFAULT_INSTITUTE_LOGO } from "@/lib/session";
+import { createSessionFromLoginDTO, DEFAULT_INSTITUTE_NAME, DEFAULT_INSTITUTE_LOGO, resolveBackgroundFromEnv } from "@/lib/session";
 import { VAPS_API_ENDPOINTS } from "@/config/api";
 
 export async function POST(req: NextRequest) {
@@ -49,6 +49,22 @@ export async function POST(req: NextRequest) {
       ""
     ).trim();
 
+    const resolvedBackgroupdlo = (
+      body.backgroupdlo ||
+      body.backgroundlogo ||
+      body.backgroundImage ||
+      process.env.backgroupdlo ||
+      process.env.NEXT_PUBLIC_BACKGROUPDLO ||
+      process.env.BACKGROUND_IMAGE ||
+      process.env.NEXT_PUBLIC_BACKGROUND_IMAGE ||
+      process.env.BACKGROUND_LOGO ||
+      process.env.NEXT_PUBLIC_BACKGROUND_LOGO ||
+      process.env.INST_CODE_BGIMAGE ||
+      process.env.NEXT_PUBLIC_INST_CODE_BGIMAGE ||
+      resolveBackgroundFromEnv() ||
+      ""
+    ).trim();
+
     const resolvedSchoolName = process.env.INSTITUTE_NAME || DEFAULT_INSTITUTE_NAME;
     const resolvedSchoolLogo = process.env.INSTITUTE_LOGO || DEFAULT_INSTITUTE_LOGO;
 
@@ -80,6 +96,7 @@ export async function POST(req: NextRequest) {
         MI_Name: resolvedSchoolName,
         mI_logo: resolvedSchoolLogo,
         mI_Logo: resolvedSchoolLogo,
+        backgroupdlo: resolvedBackgroupdlo,
         message: null,
       };
 
@@ -88,6 +105,9 @@ export async function POST(req: NextRequest) {
         "alumni",
         uname
       );
+      if (resolvedBackgroupdlo) {
+        session.backgroupdlo = resolvedBackgroupdlo;
+      }
 
       console.log(`[API /api/login] Alumni login authenticated (any password accepted, VAPS LoginFacade bypassed):`, {
         username: uname,
@@ -97,6 +117,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: true,
         message: "Alumni login successful",
+        backgroupdlo: resolvedBackgroupdlo,
         data: alumniResponse,
         session,
       });
@@ -325,9 +346,16 @@ export async function POST(req: NextRequest) {
           data.mI_Subdomain = session.MI_Subdomain;
         }
 
+        // Attach backgroupdlo to returned data and session
+        if (resolvedBackgroupdlo) {
+          session.backgroupdlo = resolvedBackgroupdlo;
+          data.backgroupdlo = resolvedBackgroupdlo;
+        }
+
         return NextResponse.json({
           success: true,
           message: "Login successful",
+          backgroupdlo: session.backgroupdlo || resolvedBackgroupdlo,
           data,
           session,
         });
@@ -366,6 +394,7 @@ export async function POST(req: NextRequest) {
         initname: resolvedSchoolName,
         initlogo: resolvedSchoolLogo,
         MI_Subdomain: resolvedMiSubdomain,
+        backgroupdlo: resolvedBackgroupdlo,
         miid: resolvedMiId,
         img: resolvedSchoolLogo,
         roleforlogin: "Staff",
@@ -375,6 +404,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: true,
         message: "Staff Login Successful (Demo / Verified)",
+        backgroupdlo: resolvedBackgroupdlo,
         session: staffSession,
       });
     } else if (normalizedRole === "student") {
@@ -407,6 +437,7 @@ export async function POST(req: NextRequest) {
         initname: resolvedSchoolName,
         initlogo: resolvedSchoolLogo,
         MI_Subdomain: resolvedMiSubdomain,
+        backgroupdlo: resolvedBackgroupdlo,
         miid: resolvedMiId,
         img: resolvedSchoolLogo,
         roleforlogin: "Student",
@@ -418,6 +449,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: true,
         message: "Student Login Successful (Demo / Verified)",
+        backgroupdlo: resolvedBackgroupdlo,
         session: studentSession,
       });
     }
@@ -436,6 +468,7 @@ export async function POST(req: NextRequest) {
       initname: resolvedSchoolName,
       initlogo: resolvedSchoolLogo,
       MI_Subdomain: resolvedMiSubdomain,
+      backgroupdlo: resolvedBackgroupdlo,
       miid: resolvedMiId,
       img: resolvedSchoolLogo,
       roleforlogin: normalizedRole,
@@ -445,6 +478,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       message: `${normalizedRole.toUpperCase()} Login Successful`,
+      backgroupdlo: resolvedBackgroupdlo,
       session: genericSession,
     });
   } catch (error: any) {

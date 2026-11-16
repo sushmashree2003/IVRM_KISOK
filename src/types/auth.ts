@@ -48,6 +48,8 @@ export interface LoginResponseDTO {
   mI_logo?: string;
   mI_Logo?: string;
   MI_Logo?: string;
+  backgroupdlo?: string;
+  backgroundImage?: string;
   fillinstition1?: any;
   institutedetails?: any;
   loginlist?: any[];
@@ -85,6 +87,8 @@ export interface SessionInfo {
   initlogo: string;
   instCode?: string;
   MI_Subdomain?: string;
+  backgroupdlo?: string;
+  backgroundImage?: string;
   miid: number;
   img: string;
   roleforlogin: string;
@@ -101,6 +105,7 @@ export interface SessionInfo {
 export interface LoginApiResponse {
   success: boolean;
   message?: string;
+  backgroupdlo?: string;
   data?: LoginResponseDTO;
   session?: SessionInfo;
   firstTimeLogin?: boolean;

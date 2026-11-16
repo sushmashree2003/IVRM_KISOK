@@ -1,10 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import RoleSelectionScreen from "@/components/RoleSelectionScreen";
 import { RoleType } from "@/components/LoginScreen";
 import { getInstituteName } from "@/lib/session";
+
+const RoleSelectionScreen = dynamic(() => import("@/components/RoleSelectionScreen"), {
+  ssr: false,
+});
 
 export default function RoleSelectionPage() {
   const router = useRouter();

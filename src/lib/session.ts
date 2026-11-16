@@ -6,18 +6,59 @@ const KIOSK_LOGO_KEY = "kiosk_institute_logo";
 const KIOSK_NAME_KEY = "kiosk_institute_name";
 
 function readDiskEnv(key: string): string {
+  // Statically check public variables so Next.js Webpack inlines them for client-side builds
+  if (key === "backgroupdlo" || key === "NEXT_PUBLIC_BACKGROUPDLO") {
+    const val = typeof process !== "undefined" ? (process.env.NEXT_PUBLIC_BACKGROUPDLO || (process.env as any)?.backgroupdlo) : "";
+    if (val && typeof val === "string" && val.trim() !== "") return val.trim().replace(/^["']|["']$/g, "");
+  }
+  if (key === "BACKGROUND_IMAGE" || key === "NEXT_PUBLIC_BACKGROUND_IMAGE") {
+    const val = typeof process !== "undefined" ? (process.env.NEXT_PUBLIC_BACKGROUND_IMAGE || (process.env as any)?.BACKGROUND_IMAGE) : "";
+    if (val && typeof val === "string" && val.trim() !== "") return val.trim().replace(/^["']|["']$/g, "");
+  }
+  if (key === "INST_CODE_BGIMAGE" || key === "NEXT_PUBLIC_INST_CODE_BGIMAGE") {
+    const val = typeof process !== "undefined" ? (process.env.NEXT_PUBLIC_INST_CODE_BGIMAGE || (process.env as any)?.INST_CODE_BGIMAGE) : "";
+    if (val && typeof val === "string" && val.trim() !== "") return val.trim().replace(/^["']|["']$/g, "");
+  }
+  if (key === "NEXT_PUBLIC_INSTITUTE_NAME" || key === "INSTITUTE_NAME" || key === "SCHOOL_NAME") {
+    const val = typeof process !== "undefined" ? (process.env.NEXT_PUBLIC_INSTITUTE_NAME || (process.env as any)?.INSTITUTE_NAME) : "";
+    if (val && typeof val === "string" && val.trim() !== "") return val.trim().replace(/^["']|["']$/g, "");
+  }
+  if (key === "NEXT_PUBLIC_INSTITUTE_LOGO" || key === "INSTITUTE_LOGO" || key === "SCHOOL_LOGO") {
+    const val = typeof process !== "undefined" ? (process.env.NEXT_PUBLIC_INSTITUTE_LOGO || (process.env as any)?.INSTITUTE_LOGO) : "";
+    if (val && typeof val === "string" && val.trim() !== "") return val.trim().replace(/^["']|["']$/g, "");
+  }
+  if (key === "NEXT_PUBLIC_INST_CODE" || key === "INST_CODE" || key === "INSTITUTE_CODE") {
+    const val = typeof process !== "undefined" ? (process.env.NEXT_PUBLIC_INST_CODE || (process.env as any)?.INST_CODE) : "";
+    if (val && typeof val === "string" && val.trim() !== "") return val.trim().replace(/^["']|["']$/g, "");
+  }
+  if (key === "NEXT_PUBLIC_LOGIN_MI_ID" || key === "LOGIN_MI_ID" || key === "MI_ID" || key === "MI_Id") {
+    const val = typeof process !== "undefined" ? (process.env.NEXT_PUBLIC_LOGIN_MI_ID || (process.env as any)?.LOGIN_MI_ID) : "";
+    if (val !== undefined && val !== null && String(val).trim() !== "") return String(val).trim().replace(/^["']|["']$/g, "");
+  }
+  if (key === "NEXT_PUBLIC_LOGIN_ASMAY_ID" || key === "LOGIN_ASMAY_ID" || key === "ASMAY_ID" || key === "ASMAY_Id") {
+    const val = typeof process !== "undefined" ? (process.env.NEXT_PUBLIC_LOGIN_ASMAY_ID || (process.env as any)?.LOGIN_ASMAY_ID) : "";
+    if (val !== undefined && val !== null && String(val).trim() !== "") return String(val).trim().replace(/^["']|["']$/g, "");
+  }
+  if (key === "NEXT_PUBLIC_MI_SUBDOMAIN" || key === "MI_Subdomain" || key === "MI_SUBDOMAIN") {
+    const val = typeof process !== "undefined" ? (process.env.NEXT_PUBLIC_MI_SUBDOMAIN || (process.env as any)?.MI_Subdomain) : "";
+    if (val && typeof val === "string" && val.trim() !== "") return val.trim().replace(/^["']|["']$/g, "");
+  }
+
+  // Generic process.env access
+  if (typeof process !== "undefined" && process.env && (process.env as any)[key] && (process.env as any)[key]!.trim() !== "") {
+    return (process.env as any)[key]!.trim().replace(/^["']|["']$/g, "");
+  }
   if (typeof window === "undefined") {
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const fs = require("fs");
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const path = require("path");
-      const files = [".env.local", ".env", ".env.development", ".env.example"];
+      const files = [".env.example", ".env.local", ".env", ".env.development"];
       for (const f of files) {
         const full = path.join(process.cwd(), f);
         if (fs.existsSync(full)) {
-          const content = fs.readFileSync(full, "utf-8");
-          const lines = content.split(/\r?\n/);
+          const lines = fs.readFileSync(full, "utf-8").split(/\r?\n/);
           for (const line of lines) {
             const trimmed = line.trim();
             if (trimmed.startsWith("#") || !trimmed.includes("=")) continue;
@@ -27,18 +68,11 @@ function readDiskEnv(key: string): string {
               if (val) return val;
             }
           }
-          const match = content.match(new RegExp(`(?:^|[\\r\\n\\s])${key}\\s*=\\s*["']?([^"'\\r\\n]+)["']?`, "m"));
-          if (match && match[1]) {
-            return match[1].trim();
-          }
         }
       }
     } catch {
       // ignore
     }
-  }
-  if (typeof process !== "undefined" && process.env && process.env[key] && process.env[key]!.trim() !== "") {
-    return process.env[key]!.trim().replace(/^["']|["']$/g, "");
   }
   return "";
 }
@@ -374,15 +408,12 @@ export function resolveCodeFromEnv(): string {
  * Retrieves the dynamic institution code (e.g. BBHS, BDC, MVPS).
  */
 export function getInstituteCode(): string {
-  // If explicitly specified in .env, honor .env as primary source of truth
-  const envCode = resolveCodeFromEnv();
-  if (envCode) return envCode;
-
   if (typeof window !== "undefined") {
     try {
       const session = getUserSession();
       if ((session as any)?.instCode && typeof (session as any).instCode === "string") {
-        return (session as any).instCode.trim().toUpperCase();
+        const c = (session as any).instCode.trim().toUpperCase();
+        if (c !== "BDC" && c !== "MVPS") return c;
       }
       if (session?.initname) {
         if (/balwin|baldwin/i.test(session.initname)) return "BBHS";
@@ -390,72 +421,36 @@ export function getInstituteCode(): string {
         if (/madhuvan/i.test(session.initname)) return "MVPS";
       }
       const sessionCode = sessionStorage.getItem("instCode");
-      if (sessionCode && sessionCode.trim() !== "") {
+      if (
+        sessionCode &&
+        sessionCode.trim() !== "" &&
+        sessionCode.trim().toUpperCase() !== "BDC" &&
+        sessionCode.trim().toUpperCase() !== "MVPS"
+      ) {
         return sessionCode.trim().toUpperCase();
       }
       const savedCode = localStorage.getItem("kiosk_institute_code");
-      if (savedCode && savedCode.trim() !== "") {
+      if (
+        savedCode &&
+        savedCode.trim() !== "" &&
+        savedCode.trim().toUpperCase() !== "BDC" &&
+        savedCode.trim().toUpperCase() !== "MVPS"
+      ) {
         return savedCode.trim().toUpperCase();
       }
     } catch {
       // fallback
     }
   }
-  return "MVPS";
+  return resolveCodeFromEnv();
 }
 
 /**
- * Resolves the dynamic AI assistant name directly from .env:
- * 1. NEXT_PUBLIC_AI_NAME or AI_NAME
- * 2. NEXT_PUBLIC_AI_ASSISTANT_NAME or AI_ASSISTANT_NAME
- * 3. Fallback to "<INST_CODE> AI"
- */
-export function resolveAiNameFromEnv(): string {
-  const explicit = (
-    readDiskEnv("NEXT_PUBLIC_AI_NAME") ||
-    readDiskEnv("AI_NAME") ||
-    readDiskEnv("NEXT_PUBLIC_AI_ASSISTANT_NAME") ||
-    readDiskEnv("AI_ASSISTANT_NAME") ||
-    readDiskEnv("NEXT_PUBLIC_COPILOT_NAME") ||
-    readDiskEnv("COPILOT_NAME") ||
-    ""
-  ).trim().replace(/^["']|["']$/g, "");
-
-  if (explicit) return explicit;
-
-  const code = resolveCodeFromEnv();
-  return `${code} AI`;
-}
-
-/**
- * Retrieves dynamic AI assistant name configured in .env (e.g. "MVPS AI", "CBS AI", "BBHS AI").
- * Driven purely from environment variables.
+ * Retrieves dynamic AI assistant name based on institution code (e.g. "BBHS AI", "BDC AI", "MVPS AI").
  */
 export function getAiAssistantName(): string {
-  if (typeof window !== "undefined") {
-    try {
-      // Check client-bundled NEXT_PUBLIC environment variables first
-      if (process.env.NEXT_PUBLIC_AI_NAME && process.env.NEXT_PUBLIC_AI_NAME.trim() !== "") {
-        return process.env.NEXT_PUBLIC_AI_NAME.trim().replace(/^["']|["']$/g, "");
-      }
-      if (process.env.NEXT_PUBLIC_AI_ASSISTANT_NAME && process.env.NEXT_PUBLIC_AI_ASSISTANT_NAME.trim() !== "") {
-        return process.env.NEXT_PUBLIC_AI_ASSISTANT_NAME.trim().replace(/^["']|["']$/g, "");
-      }
-
-      // Check cached localStorage/sessionStorage synced from /api/branding
-      const savedAiName = localStorage.getItem("kiosk_ai_name");
-      if (savedAiName && savedAiName.trim() !== "") {
-        return savedAiName.trim();
-      }
-      const sessionAiName = sessionStorage.getItem("kiosk_ai_name");
-      if (sessionAiName && sessionAiName.trim() !== "") {
-        return sessionAiName.trim();
-      }
-    } catch {
-      // fallback
-    }
-  }
-  return resolveAiNameFromEnv();
+  const code = getInstituteCode();
+  return `${code} AI`;
 }
 
 /**
@@ -483,6 +478,52 @@ export function getMiSubdomain(): string {
     readDiskEnv("NEXT_PUBLIC_MI_SUBDOMAIN") ||
     ""
   ).trim();
+}
+
+/**
+ * Resolves the dashboard background image/logo from environment configuration.
+ * Checked keys: backgroupdlo, NEXT_PUBLIC_BACKGROUPDLO, BACKGROUND_IMAGE, BACKGROUND_LOGO, INST_CODE_BGIMAGE
+ */
+export function resolveBackgroundFromEnv(): string {
+  return (
+    readDiskEnv("backgroupdlo") ||
+    readDiskEnv("NEXT_PUBLIC_BACKGROUPDLO") ||
+    readDiskEnv("BACKGROUND_IMAGE") ||
+    readDiskEnv("NEXT_PUBLIC_BACKGROUND_IMAGE") ||
+    readDiskEnv("BACKGROUND_LOGO") ||
+    readDiskEnv("NEXT_PUBLIC_BACKGROUND_LOGO") ||
+    readDiskEnv("INST_CODE_BGIMAGE") ||
+    readDiskEnv("NEXT_PUBLIC_INST_CODE_BGIMAGE") ||
+    ""
+  ).trim().replace(/^["']|["']$/g, "");
+}
+
+/**
+ * Retrieves the dashboard background image parameter (backgroupdlo) from session or env.
+ */
+export function getBackgroundLo(): string {
+  // 1. Environment configuration is always the authoritative source of truth
+  const envBg = resolveBackgroundFromEnv();
+  if (envBg && envBg.trim() !== "") {
+    return envBg.trim();
+  }
+
+  // 2. Fall back to active session or stored cache
+  if (typeof window !== "undefined") {
+    try {
+      const session = getUserSession();
+      if (session?.backgroupdlo && session.backgroupdlo.trim() !== "") {
+        return session.backgroupdlo.trim();
+      }
+      const ss = sessionStorage.getItem("backgroupdlo");
+      if (ss && ss.trim() !== "") return ss.trim();
+      const ls = localStorage.getItem("kiosk_backgroupdlo");
+      if (ls && ls.trim() !== "") return ls.trim();
+    } catch {
+      // ignore
+    }
+  }
+  return "";
 }
 
 /**
@@ -540,6 +581,12 @@ export function createSessionFromLoginDTO(
 
   const initname = extractInstitutionName(dto) || DEFAULT_INSTITUTE_NAME;
   const initlogo = extractInstitutionLogo(dto) || DEFAULT_INSTITUTE_LOGO;
+  const backgroupdlo = (
+    dto.backgroupdlo ||
+    dto.backgroundlogo ||
+    dto.backgroundImage ||
+    resolveBackgroundFromEnv()
+  ).trim();
 
   return {
     username: dto.userName || fallbackUsername,
@@ -554,6 +601,7 @@ export function createSessionFromLoginDTO(
     initlogo: initlogo,
     instCode: resolveCodeFromEnv(),
     MI_Subdomain: miSubdomain,
+    backgroupdlo: backgroupdlo,
     miid: mi_id,
     img: initlogo || "",
     roleforlogin: rolename,
@@ -586,11 +634,15 @@ export function saveUserSession(session: SessionInfo, rememberMe: boolean = fals
     sessionStorage.setItem("initlogo", session.initlogo || "");
     sessionStorage.setItem("instCode", (session as any).instCode || resolveCodeFromEnv());
     sessionStorage.setItem("MI_Subdomain", session.MI_Subdomain || "");
+    sessionStorage.setItem("backgroupdlo", session.backgroupdlo || resolveBackgroundFromEnv());
     sessionStorage.setItem("miid", String(session.miid ?? 0));
     sessionStorage.setItem("img", session.img || "");
     sessionStorage.setItem("roleforlogin", session.roleforlogin || "");
 
-    // Persist kiosk branding across sessions
+    // Persist kiosk branding and background across sessions
+    if (session.backgroupdlo && session.backgroupdlo.trim() !== "") {
+      localStorage.setItem("kiosk_backgroupdlo", session.backgroupdlo.trim());
+    }
     if (session.initlogo && session.initlogo.trim() !== "") {
       localStorage.setItem(KIOSK_LOGO_KEY, session.initlogo.trim());
     }
@@ -645,6 +697,7 @@ export function clearUserSession(): void {
     sessionStorage.removeItem("Empid");
     sessionStorage.removeItem("initname");
     sessionStorage.removeItem("initlogo");
+    sessionStorage.removeItem("backgroupdlo");
     sessionStorage.removeItem("miid");
     sessionStorage.removeItem("img");
     sessionStorage.removeItem("roleforlogin");

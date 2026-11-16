@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import MarkdownResponse from "@/components/chat/MarkdownResponse";
-import UnifiedAIChatPanel from "@/components/chat/UnifiedAIChatPanel";
-import { getUserSession, clearUserSession, getInstituteLogo, getInstituteName, getAiAssistantName } from "@/lib/session";
+import { getUserSession, clearUserSession, getInstituteLogo, getInstituteName, getAiAssistantName, getBackgroundLo } from "@/lib/session";
 import { SessionInfo } from "@/types/auth";
 import { CLIENT_API_ENDPOINTS } from "@/config/api";
 import {
@@ -69,6 +68,7 @@ export type ActiveScreen =
 
 export default function StaffDashboard({ onBackToKiosk }: DashboardProps) {
   const [session, setSession] = useState<SessionInfo | null>(null);
+  const [bgImage, setBgImage] = useState<string>(() => getBackgroundLo());
   const [currentScreen, setCurrentScreen] = useState<ActiveScreen>("dashboard");
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -156,9 +156,26 @@ export default function StaffDashboard({ onBackToKiosk }: DashboardProps) {
 
   // Load active session and fetch live API data
   useEffect(() => {
+    // 1. Fetch dynamic branding and background image strictly from environment (/api/branding)
+    fetch("/api/branding", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.backgroupdlo) {
+          setBgImage(data.backgroupdlo);
+          try {
+            sessionStorage.setItem("backgroupdlo", data.backgroupdlo);
+            localStorage.setItem("kiosk_backgroupdlo", data.backgroupdlo);
+          } catch { }
+        }
+      })
+      .catch(() => { });
+
     const activeSession = getUserSession();
     if (activeSession) {
       setSession(activeSession);
+      if (activeSession.backgroupdlo) {
+        setBgImage(activeSession.backgroupdlo);
+      }
       fetchStaffDetails(activeSession);
       fetchStaffTimetable(activeSession);
       fetchStaffLeave(activeSession);
@@ -507,16 +524,138 @@ export default function StaffDashboard({ onBackToKiosk }: DashboardProps) {
   // Dynamic handled classes from schedule
   const handledClasses = Array.from(new Set(activeSchedule.map((s) => s.class).filter(Boolean))).join(", ");
 
-  return (
-    <div className="dashboard-page">
-      {/* Ambient Orbs */}
-      <div className="kiosk-orb kiosk-orb-one" />
-      <div className="kiosk-orb kiosk-orb-two" />
+  // AI Space & Chatbot State
+  const [chatMessages, setChatMessages] = useState<
+    Array<{
+      id: string;
+      sender: "bot" | "user";
+      text: string;
+      time: string;
+      suggestions?: string[];
+    }>
+  >([
+    {
+      id: "msg-welcome-staff",
+      sender: "bot",
+      text: `Welcome to **${getAiAssistantName()} Faculty Assistant**! 👋 I can help summarize your class schedule, check leave balances, attendance logs, or payslip records. How may I assist you today?`,
+      time: "Just now",
+      suggestions: [
+        "What are my classes today?",
+        "Show my leave balances",
+        "Recent biometric punch records",
+        "Show my latest salary details",
+      ],
+    },
+  ]);
+  const [chatInputText, setChatInputText] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const chatMessagesEndRef = React.useRef<HTMLDivElement | null>(null);
 
-      {/* TOP COMMAND NAVBAR */}
-      <header className="dash-navbar" suppressHydrationWarning>
-        <div className="command-brand" onClick={handleLogout} style={{ cursor: "pointer" }} suppressHydrationWarning>
-          <div className="command-mark" aria-hidden="true" suppressHydrationWarning>
+  const scrollToBottom = () => {
+    chatMessagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    if (currentScreen === "aispace") {
+      scrollToBottom();
+    }
+  }, [chatMessages, currentScreen, isTyping]);
+
+  const handleSendChatMessage = async (customQuery?: string) => {
+    if (isTyping) return;
+    const query = (customQuery || chatInputText).trim();
+    if (!query) return;
+
+    const userMessageId = `msg-user-${Date.now()}`;
+    const userTime = new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+
+    setChatMessages((prev) => [
+      ...prev,
+      {
+        id: userMessageId,
+        sender: "user",
+        text: query,
+        time: userTime,
+      },
+    ]);
+    if (!customQuery) setChatInputText("");
+    setIsTyping(true);
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: query,
+          role: "staff",
+          history: chatMessages.slice(-6).map((m) => ({
+            role: m.sender === "user" ? "user" : "assistant",
+            content: m.text,
+          })),
+        }),
+      });
+
+      const data = await res.json();
+      const botResponse = data.answer || "I have noted your request. You can check the respective tabs for detailed records.";
+
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          id: `msg-bot-${Date.now()}`,
+          sender: "bot",
+          text: botResponse,
+          time: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+          suggestions: [
+            "View Full Timetable",
+            "Open Leave Management",
+            "View Salary Slips",
+            "Check Punch Attendance",
+          ],
+        },
+      ]);
+    } catch {
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          id: `msg-bot-${Date.now()}`,
+          sender: "bot",
+          text: "⚠️ Faculty AI Assistant is temporarily unavailable. Please verify your connection or try again shortly.",
+          time: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+        },
+      ]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  return (
+    <div className={`dashboard-page ${bgImage ? "has-bg-image" : ""}`}>
+      {/* Ambient Orbs only if no background image */}
+      {!bgImage && (
+        <>
+          <div className="kiosk-orb kiosk-orb-one" />
+          <div className="kiosk-orb kiosk-orb-two" />
+        </>
+      )}
+
+      {/* Dynamic Background Image strictly from env parameter 'backgroupdlo' (NO extra color) */}
+      {bgImage && (
+        <div
+          className="dashboard-bg-backdrop"
+          aria-hidden="true"
+          style={{
+            backgroundImage: `url("${bgImage}")`,
+          }}
+        />
+      )}
+
+      {/* TOP COMMAND NAVBAR (ROLE SELECTION COMMAND THEME - FULLY DYNAMIC) */}
+      <header className="dash-navbar" style={{ position: "relative", zIndex: 30 }} suppressHydrationWarning>
+        <div className="command-brand" style={{ display: "flex", alignItems: "center", gap: "14px" }} suppressHydrationWarning>
+          <button className="command-back" onClick={handleLogout} aria-label="Back to role selection" title="Back to Kiosk Home">
+            <ArrowLeft size={19} />
+          </button>
+          <div className="command-mark" aria-hidden="true" style={{ width: "42px", height: "42px" }} suppressHydrationWarning>
             <img
               src={schoolLogo}
               alt={`${schoolName} Logo`}
@@ -529,11 +668,11 @@ export default function StaffDashboard({ onBackToKiosk }: DashboardProps) {
             />
           </div>
           <div suppressHydrationWarning>
-            <p className="command-kicker" suppressHydrationWarning>
+            <p className="command-kicker" style={{ margin: "0 0 2px" }} suppressHydrationWarning>
               {session?.initname ? `${session.initname.toUpperCase()} • SMART CAMPUS` : `${schoolName.toUpperCase()} • SMART CAMPUS`}
             </p>
             <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexWrap: "nowrap" }} suppressHydrationWarning>
-              <h1 style={{ margin: 0, fontFamily: "Outfit, sans-serif", fontSize: "1.15rem", fontWeight: 800, color: "#1e293b", whiteSpace: "nowrap" }} suppressHydrationWarning>
+              <h1 style={{ margin: 0, fontFamily: "Outfit, sans-serif", fontSize: "1.25rem", fontWeight: 800, color: "#1e293b", whiteSpace: "nowrap" }} suppressHydrationWarning>
                 {schoolName}
               </h1>
               <span
@@ -547,7 +686,7 @@ export default function StaffDashboard({ onBackToKiosk }: DashboardProps) {
                   fontWeight: 800,
                   padding: "0.22rem 0.75rem",
                   borderRadius: "9999px",
-                  border: "1.5px solid rgba(251, 146, 60, 0.4)",
+                  border: "1.5px solid rgba(234, 88, 12, 0.35)",
                   boxShadow: "0 2px 8px rgba(234, 88, 12, 0.08)",
                   letterSpacing: "0.02em",
                   whiteSpace: "nowrap",
@@ -562,7 +701,74 @@ export default function StaffDashboard({ onBackToKiosk }: DashboardProps) {
         </div>
 
         {/* Profile Pill & Control Actions */}
-        <div className="dash-nav-actions" style={{ flexWrap: "nowrap" }}>
+        <div className="dash-nav-actions" style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "nowrap" }}>
+          {/* Live Campus Telemetry Pill */}
+          <div className="command-live-status">
+            <span style={{ background: "#16a34a" }} />
+            <span>Campus online</span>
+          </div>
+
+          {/* Live Command Time Pill */}
+          <div
+            className="command-time"
+            suppressHydrationWarning
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.45rem",
+              padding: "0 0.85rem",
+              minHeight: "34px",
+              height: "34px",
+              background: "rgba(255, 255, 255, 0.92)",
+              border: "1px solid rgba(254, 215, 170, 0.7)",
+              borderRadius: "9999px",
+              fontSize: "0.74rem",
+              fontWeight: 700,
+              color: "#334155",
+              boxShadow: "0 2px 8px rgba(234, 88, 12, 0.05)",
+              whiteSpace: "nowrap",
+              flexShrink: 0,
+            }}
+          >
+            <Calendar size={14} style={{ color: "#ea580c" }} />
+            <span suppressHydrationWarning>
+              {currentTime.toLocaleDateString("en-US", { weekday: "short", day: "2-digit", month: "short", year: "numeric" })}
+            </span>
+            <b style={{ color: "#ea580c" }} suppressHydrationWarning>
+              {currentTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}
+            </b>
+          </div>
+
+          {/* Role Status Tag (Matching Login Header) */}
+          <div
+            className="login-role-status-badge"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "5px 12px",
+              borderRadius: "9999px",
+              border: "1.5px solid rgba(13, 148, 136, 0.4)",
+              background: "rgba(13, 148, 136, 0.1)",
+              color: "#0f766e",
+              fontSize: "0.76rem",
+              fontWeight: 800,
+              letterSpacing: "0.02em",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <span
+              className="login-status-dot"
+              style={{
+                width: "8px",
+                height: "8px",
+                borderRadius: "50%",
+                background: "#0d9488",
+              }}
+            />
+            <span>Faculty &amp; Academic Staff</span>
+          </div>
+
           {/* Staff Profile Pill */}
           <div
             className="dash-profile-pill"
@@ -580,21 +786,6 @@ export default function StaffDashboard({ onBackToKiosk }: DashboardProps) {
               <span className="dash-user-name">{staffName}</span>
               <span className="dash-user-role">{staffRole} • ID: {empId}</span>
             </div>
-          </div>
-
-          {/* Live Campus Telemetry Pill */}
-          <div className="command-live-status">
-            <span style={{ background: "#16a34a" }} />
-            <span>Campus online</span>
-          </div>
-
-          {/* Command Time Pill */}
-          <div className="dash-clock-widget">
-            <Calendar size={13} style={{ color: "#ea580c" }} />
-            <span>
-              {currentTime.toLocaleDateString("en-US", { weekday: "short", day: "2-digit", month: "short" })} •{" "}
-              <b>{currentTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}</b>
-            </span>
           </div>
 
           {/* Fullscreen Button */}
@@ -2266,13 +2457,130 @@ export default function StaffDashboard({ onBackToKiosk }: DashboardProps) {
       {/* ========================================================
           VIEW 8: DEDICATED FULL SCREEN — FACULTY AI SPACE
           ======================================================== */}
-      {currentScreen === "aispace" && (
-        <UnifiedAIChatPanel
-          role="teacher_staff"
-          onBack={() => setCurrentScreen("dashboard")}
-          userName={staffName}
-        />
-      )}
+      {
+        currentScreen === "aispace" && (
+          <section className="student-fullscreen-page">
+            <div className="kiosk-orb kiosk-orb-one" />
+            <div className="kiosk-orb kiosk-orb-two" />
+
+            <div className="student-screen-subnav">
+              <button className="student-back-to-dash-btn" onClick={() => setCurrentScreen("dashboard")}>
+                <ArrowLeft size={16} /> Back to Dashboard
+              </button>
+
+              <div className="student-screen-title-area">
+                <div className="student-screen-icon-bubble" style={{ background: "#f5f3ff", color: "#7c3aed" }}>
+                  <Sparkles size={20} />
+                </div>
+                <div>
+                  <h2>Faculty {aiName} Teaching Assistant</h2>
+                  <p>Instant answers on Timetable, Leaves, Biometrics &amp; CBSE Guidelines</p>
+                </div>
+              </div>
+
+              <div className="student-screen-nav-tools">
+                <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#7c3aed" }}>
+                  ● {aiName} Engine Online
+                </div>
+              </div>
+            </div>
+
+            <div className="student-screen-scroll-body" style={{ display: "flex", flexDirection: "column", height: "calc(100% - 70px)" }}>
+              <div style={{ flex: 1, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.85rem" }}>
+                {chatMessages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    style={{
+                      alignSelf: msg.sender === "user" ? "flex-end" : "flex-start",
+                      maxWidth: "75%",
+                      background: msg.sender === "user" ? "#ea580c" : "#ffffff",
+                      color: msg.sender === "user" ? "#ffffff" : "#1e293b",
+                      padding: "0.85rem 1.15rem",
+                      borderRadius: msg.sender === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                      border: msg.sender === "user" ? "none" : "1px solid #e2e8f0",
+                      fontSize: "0.85rem",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    <MarkdownResponse content={msg.text} isUser={msg.sender === "user"} />
+                    <div style={{ fontSize: "0.68rem", opacity: 0.7, marginTop: "4px", textAlign: msg.sender === "user" ? "right" : "left" }}>
+                      {msg.time}
+                    </div>
+                    {msg.suggestions && msg.suggestions.length > 0 && (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "8px" }}>
+                        {msg.suggestions.map((sug, sIdx) => (
+                          <button
+                            key={sIdx}
+                            onClick={() => handleSendChatMessage(sug)}
+                            style={{
+                              background: "#f8fafc",
+                              border: "1px solid #cbd5e1",
+                              borderRadius: "9999px",
+                              padding: "4px 10px",
+                              fontSize: "0.72rem",
+                              fontWeight: 700,
+                              color: "#ea580c",
+                              cursor: "pointer",
+                            }}
+                          >
+                            {sug}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {isTyping && (
+                  <div style={{ alignSelf: "flex-start", background: "#ffffff", padding: "0.6rem 1rem", borderRadius: "18px", border: "1.5px solid #fed7aa", fontSize: "0.8rem", color: "#ea580c", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
+                    <RefreshCw size={13} className="animate-spin" /> {aiName} is typing an answer...
+                  </div>
+                )}
+                <div ref={chatMessagesEndRef} />
+              </div>
+
+              {/* AI INPUT BAR */}
+              <div style={{ padding: "0.85rem", background: "#ffffff", borderTop: "1px solid #e2e8f0", display: "flex", gap: "0.75rem" }}>
+                <input
+                  type="text"
+                  placeholder={`Ask ${aiName} about classes, leaves, salary or lesson plans...`}
+                  value={chatInputText}
+                  disabled={isTyping}
+                  onChange={(e) => setChatInputText(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSendChatMessage()}
+                  style={{
+                    flex: 1,
+                    height: "44px",
+                    borderRadius: "9999px",
+                    border: "1.5px solid #cbd5e1",
+                    padding: "0 16px",
+                    fontSize: "0.85rem",
+                    outline: "none",
+                  }}
+                />
+                <button
+                  onClick={() => handleSendChatMessage()}
+                  disabled={isTyping}
+                  style={{
+                    background: isTyping ? "#94a3b8" : "#ea580c",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: "50%",
+                    width: "44px",
+                    height: "44px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: isTyping ? "not-allowed" : "pointer",
+                  }}
+                >
+                  <Send size={18} />
+                </button>
+              </div>
+            </div>
+          </section>
+        )
+      }
 
       {/* ========================================================
           VIEW: DEDICATED FULL SCREEN — STAFF CIRCULARS & NOTICES

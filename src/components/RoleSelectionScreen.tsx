@@ -29,8 +29,7 @@ import {
 } from "lucide-react";
 import { RoleType } from "./LoginScreen";
 import MarkdownResponse from "./chat/MarkdownResponse";
-import UnifiedAIChatPanel from "./chat/UnifiedAIChatPanel";
-import { getInstituteLogo, getInstituteName, getUserSession, getAiAssistantName, getInstituteCode } from "@/lib/session";
+import { getInstituteLogo, getInstituteName, getUserSession, getAiAssistantName, getInstituteCode, getBackgroundLo } from "@/lib/session";
 
 export interface RoleSelectionScreenProps {
   onSelectRole: (role: RoleType) => void;
@@ -328,7 +327,7 @@ export default function RoleSelectionScreen({
   const [aiName, setAiName] = useState<string>(() => getAiAssistantName());
 
   useEffect(() => {
-    fetch("/api/branding")
+    fetch("/api/branding", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (!data) return;
@@ -340,7 +339,7 @@ export default function RoleSelectionScreen({
         if (data.code) {
           try {
             localStorage.setItem("kiosk_institute_code", data.code);
-          } catch { }
+          } catch {}
         }
         const currentSession = getUserSession();
         if (!currentSession?.initlogo || currentSession.initlogo === "/mvps/brand/logo.png") {
@@ -348,7 +347,7 @@ export default function RoleSelectionScreen({
             setSchoolLogo(data.logo);
             try {
               localStorage.setItem("kiosk_institute_logo", data.logo);
-            } catch { }
+            } catch {}
           }
         }
         if (
@@ -361,113 +360,63 @@ export default function RoleSelectionScreen({
             document.title = `${data.name} • Smart Campus Kiosk`;
             try {
               localStorage.setItem("kiosk_institute_name", data.name);
-            } catch { }
+            } catch {}
           }
         }
+        if (data.backgroupdlo) {
+          setCustomBgImage(data.backgroupdlo);
+          try {
+            sessionStorage.setItem("backgroupdlo", data.backgroupdlo);
+            localStorage.setItem("kiosk_backgroupdlo", data.backgroupdlo);
+          } catch {}
+        }
       })
-      .catch(() => { });
+      .catch(() => {});
   }, []);
 
-  // Dynamic Gallery & Background Slides State (Synchronized with CMS)
-  const [galleryItems, setGalleryItems] = useState<CampusGalleryItem[]>(CAMPUS_GALLERY_COLLECTION);
-  const [slides, setSlides] = useState<BackgroundSlide[]>(BACKGROUND_SLIDES);
-
-  // Background Slideshow State
+  // Background Slideshow State (Defaults to dynamic background image from env if configured)
   const [slideIndex, setSlideIndex] = useState(0);
   const [isSlideshowPlaying, setIsSlideshowPlaying] = useState(true);
-  const [customBgImage, setCustomBgImage] = useState<string | null>(null);
+  const [customBgImage, setCustomBgImage] = useState<string | null>(() => getBackgroundLo() || null);
 
   // Gallery Modal & Lightbox State
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [galleryFilter, setGalleryFilter] = useState<"all" | "sports" | "academics" | "events" | "campus">("all");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  // Fetch dynamic gallery photos from Campus Info CMS
-  useEffect(() => {
-    const fetchCampusGallery = async () => {
-      try {
-        const res = await fetch("/api/admin/campus-info");
-        const json = res.ok ? await res.json() : await (await fetch("/api/kiosk/campus-info")).json();
-        if (json?.gallery && Array.isArray(json.gallery) && json.gallery.length > 0) {
-          const dynamicList: CampusGalleryItem[] = json.gallery.map((g: any, i: number) => {
-            const raw = (g.categoryFilter || "").toLowerCase();
-            const cat: "sports" | "academics" | "events" | "campus" =
-              raw === "sports"
-                ? "sports"
-                : raw === "academics"
-                  ? "academics"
-                  : raw === "cultural" || raw === "events"
-                    ? "events"
-                    : "campus";
-
-            const catLabel =
-              g.category ||
-              (cat === "sports"
-                ? "Sports"
-                : cat === "academics"
-                  ? "Academics"
-                  : cat === "events"
-                    ? "Co-Curricular"
-                    : "Campus");
-
-            return {
-              id: g.id || `gallery-item-${i}`,
-              title: g.title || "Campus Moment",
-              category: cat,
-              categoryLabel: catLabel,
-              src: g.src || "/mvps/hero/campus_front.jpg",
-              description: g.description || g.title || "Campus Activity Moment",
-            };
-          });
-
-          setGalleryItems(dynamicList);
-
-          // Build dynamic background slides
-          const dynamicSlidesList: BackgroundSlide[] = json.gallery
-            .filter((g: any) => g.featured !== false && g.src)
-            .map((g: any, i: number) => ({
-              id: g.id || `slide-${i}`,
-              src: g.src,
-              title: g.title || schoolName,
-              subtitle: g.description || g.date || "Campus Moment",
-              category: g.category || "Campus Moment",
-            }));
-
-          if (dynamicSlidesList.length > 0) {
-            setSlides(dynamicSlidesList);
-          }
-        }
-      } catch (err) {
-        console.warn("Using fallback static gallery:", err);
-      }
-    };
-
-    fetchCampusGallery();
-  }, [schoolName]);
-
   // Campus AI Assistant State
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [aiInput, setAiInput] = useState("");
+  const [isAiTyping, setIsAiTyping] = useState(false);
+  const [aiMessages, setAiMessages] = useState<Array<{ sender: "user" | "bot"; text: string; time: string }>>([
+    {
+      sender: "bot",
+      text: `👋 Hello! I am **${getAiAssistantName()}**, the campus assistant for **${getInstituteName()}**.\n\nAsk me anything about **Admissions**, **Fee Structure**, **Facilities**, or **Campus Timings**!`,
+      time: "Just now",
+    },
+  ]);
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-advance Background Slideshow every 6.5s
   useEffect(() => {
-    if (!isSlideshowPlaying || customBgImage || slides.length === 0) return;
+    if (!isSlideshowPlaying || customBgImage) return;
 
     const timer = setInterval(() => {
-      setSlideIndex((prev) => (prev + 1) % slides.length);
+      setSlideIndex((prev) => (prev + 1) % BACKGROUND_SLIDES.length);
     }, 6500);
 
     return () => clearInterval(timer);
-  }, [isSlideshowPlaying, customBgImage, slides.length]);
+  }, [isSlideshowPlaying, customBgImage]);
 
   const handleNextSlide = useCallback(() => {
     setCustomBgImage(null);
-    setSlideIndex((prev) => (prev + 1) % (slides.length || 1));
-  }, [slides.length]);
+    setSlideIndex((prev) => (prev + 1) % BACKGROUND_SLIDES.length);
+  }, []);
 
   const handlePrevSlide = useCallback(() => {
     setCustomBgImage(null);
-    setSlideIndex((prev) => (prev - 1 + (slides.length || 1)) % (slides.length || 1));
-  }, [slides.length]);
+    setSlideIndex((prev) => (prev - 1 + BACKGROUND_SLIDES.length) % BACKGROUND_SLIDES.length);
+  }, []);
 
   const handleTogglePlay = useCallback(() => {
     setIsSlideshowPlaying((prev) => !prev);
@@ -485,11 +434,11 @@ export default function RoleSelectionScreen({
       if (lightboxIndex !== null) {
         if (e.key === "Escape") setLightboxIndex(null);
         if (e.key === "ArrowRight") {
-          setLightboxIndex((prev) => (prev !== null ? (prev + 1) % (galleryItems.length || 1) : 0));
+          setLightboxIndex((prev) => (prev !== null ? (prev + 1) % CAMPUS_GALLERY_COLLECTION.length : 0));
         }
         if (e.key === "ArrowLeft") {
           setLightboxIndex((prev) =>
-            prev !== null ? (prev - 1 + (galleryItems.length || 1)) % (galleryItems.length || 1) : 0
+            prev !== null ? (prev - 1 + CAMPUS_GALLERY_COLLECTION.length) % CAMPUS_GALLERY_COLLECTION.length : 0
           );
         }
       } else if (isGalleryOpen && e.key === "Escape") {
@@ -499,7 +448,62 @@ export default function RoleSelectionScreen({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [lightboxIndex, isGalleryOpen, galleryItems.length]);
+  }, [lightboxIndex, isGalleryOpen]);
+
+  useEffect(() => {
+    if (isAiModalOpen) {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [aiMessages, isAiModalOpen]);
+
+  const handleSendAi = async (textToSend?: string) => {
+    const query = (textToSend ?? aiInput).trim();
+    if (!query || isAiTyping) return;
+
+    const timeStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    setAiMessages((prev) => [...prev, { sender: "user", text: query, time: timeStr }]);
+    setAiInput("");
+    setIsAiTyping(true);
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: query,
+          role: "visitor",
+          history: aiMessages.slice(-6).map((m) => ({
+            role: m.sender === "user" ? "user" : "assistant",
+            content: m.text,
+          })),
+        }),
+      });
+
+      const data = await res.json();
+      const reply =
+        data.answer ||
+        `Thank you for reaching out! For admissions assistance, please contact the ${schoolName || "campus"} helpdesk or visit Counter 104 in the administration block.`;
+      setAiMessages((prev) => [
+        ...prev,
+        {
+          sender: "bot",
+          text: reply,
+          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        },
+      ]);
+    } catch {
+      setAiMessages((prev) => [
+        ...prev,
+        {
+          sender: "bot",
+          text: `⚠️ ${aiName} is temporarily reconnecting. Please check with the campus reception desk in Block A.`,
+          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        },
+      ]);
+    } finally {
+      setIsAiTyping(false);
+    }
+  };
 
   const handleBotButtonClick = () => {
     if (onOpenBot) {
@@ -509,11 +513,11 @@ export default function RoleSelectionScreen({
     }
   };
 
-  const currentSlide = slides[slideIndex] || slides[0] || BACKGROUND_SLIDES[0];
+  const currentSlide = BACKGROUND_SLIDES[slideIndex];
   const filteredGallery =
     galleryFilter === "all"
-      ? galleryItems
-      : galleryItems.filter((item) => item.category === galleryFilter);
+      ? CAMPUS_GALLERY_COLLECTION
+      : CAMPUS_GALLERY_COLLECTION.filter((item) => item.category === galleryFilter);
 
   return (
     <main className="kiosk-command-center kiosk-roles-portal">
@@ -525,7 +529,7 @@ export default function RoleSelectionScreen({
             style={{ backgroundImage: `url('${customBgImage}')` }}
           />
         ) : (
-          slides.map((slide, idx) => (
+          BACKGROUND_SLIDES.map((slide, idx) => (
             <div
               key={slide.id}
               className={`kiosk-bg-slide ${idx === slideIndex ? "active" : ""}`}
@@ -593,6 +597,15 @@ export default function RoleSelectionScreen({
 
           {/* Right Header Navigation Tools */}
           <div className="command-tools">
+            <button
+              className="command-gallery-trigger"
+              onClick={() => setIsGalleryOpen(true)}
+              title="View Moments of Joy & Learning from madhuvanvatika.org"
+            >
+              <Camera size={15} style={{ color: "#ea580c" }} />
+              <span>School Gallery</span>
+              <span className="gallery-count-badge">{CAMPUS_GALLERY_COLLECTION.length}</span>
+            </button>
 
             <div className="command-chip">
               <Calendar size={13} style={{ color: "#ea580c" }} />
@@ -942,22 +955,22 @@ export default function RoleSelectionScreen({
               }}
             >
               {[
-                { key: "all", label: `All Moments (${galleryItems.length})` },
+                { key: "all", label: `All Moments (${CAMPUS_GALLERY_COLLECTION.length})` },
                 {
                   key: "sports",
-                  label: `Sports (${galleryItems.filter((i) => i.category === "sports").length})`,
+                  label: `Sports (${CAMPUS_GALLERY_COLLECTION.filter((i) => i.category === "sports").length})`,
                 },
                 {
                   key: "academics",
-                  label: `Academics & Labs (${galleryItems.filter((i) => i.category === "academics").length})`,
+                  label: `Academics & Labs (${CAMPUS_GALLERY_COLLECTION.filter((i) => i.category === "academics").length})`,
                 },
                 {
                   key: "events",
-                  label: `Co-Curricular & Stage (${galleryItems.filter((i) => i.category === "events").length})`,
+                  label: `Co-Curricular & Stage (${CAMPUS_GALLERY_COLLECTION.filter((i) => i.category === "events").length})`,
                 },
                 {
                   key: "campus",
-                  label: `Campus & Fleet (${galleryItems.filter((i) => i.category === "campus").length})`,
+                  label: `Campus & Fleet (${CAMPUS_GALLERY_COLLECTION.filter((i) => i.category === "campus").length})`,
                 },
               ].map((tab) => {
                 const isActive = galleryFilter === tab.key;
@@ -1019,7 +1032,7 @@ export default function RoleSelectionScreen({
                 <div
                   key={item.id}
                   onClick={() => {
-                    const globalIdx = galleryItems.findIndex((g) => g.id === item.id);
+                    const globalIdx = CAMPUS_GALLERY_COLLECTION.findIndex((g) => g.id === item.id);
                     setLightboxIndex(globalIdx >= 0 ? globalIdx : 0);
                   }}
                   style={{
@@ -1117,7 +1130,7 @@ export default function RoleSelectionScreen({
 
                       <button
                         onClick={() => {
-                          const globalIdx = galleryItems.findIndex((g) => g.id === item.id);
+                          const globalIdx = CAMPUS_GALLERY_COLLECTION.findIndex((g) => g.id === item.id);
                           setLightboxIndex(globalIdx >= 0 ? globalIdx : 0);
                         }}
                         style={{
@@ -1184,16 +1197,16 @@ export default function RoleSelectionScreen({
                     fontWeight: 800,
                   }}
                 >
-                  {(galleryItems[lightboxIndex] || galleryItems[0])?.categoryLabel}
+                  {CAMPUS_GALLERY_COLLECTION[lightboxIndex].categoryLabel}
                 </span>
                 <span style={{ fontSize: "0.85rem", color: "#cbd5e1" }}>
-                  Photo {lightboxIndex + 1} of {galleryItems.length}
+                  Photo {lightboxIndex + 1} of {CAMPUS_GALLERY_COLLECTION.length}
                 </span>
               </div>
 
               <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
                 <button
-                  onClick={() => handleApplyAsBackground((galleryItems[lightboxIndex] || galleryItems[0]).src)}
+                  onClick={() => handleApplyAsBackground(CAMPUS_GALLERY_COLLECTION[lightboxIndex].src)}
                   style={{
                     background: "rgba(255, 255, 255, 0.2)",
                     border: "1px solid rgba(255, 255, 255, 0.4)",
@@ -1247,8 +1260,8 @@ export default function RoleSelectionScreen({
               }}
             >
               <img
-                src={(galleryItems[lightboxIndex] || galleryItems[0]).src}
-                alt={(galleryItems[lightboxIndex] || galleryItems[0]).title}
+                src={CAMPUS_GALLERY_COLLECTION[lightboxIndex].src}
+                alt={CAMPUS_GALLERY_COLLECTION[lightboxIndex].title}
                 style={{
                   maxWidth: "100%",
                   maxHeight: "72vh",
@@ -1262,7 +1275,7 @@ export default function RoleSelectionScreen({
                 onClick={(e) => {
                   e.stopPropagation();
                   setLightboxIndex(
-                    (lightboxIndex - 1 + galleryItems.length) % (galleryItems.length || 1)
+                    (lightboxIndex - 1 + CAMPUS_GALLERY_COLLECTION.length) % CAMPUS_GALLERY_COLLECTION.length
                   );
                 }}
                 style={{
@@ -1288,7 +1301,7 @@ export default function RoleSelectionScreen({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  setLightboxIndex((lightboxIndex + 1) % (galleryItems.length || 1));
+                  setLightboxIndex((lightboxIndex + 1) % CAMPUS_GALLERY_COLLECTION.length);
                 }}
                 style={{
                   position: "absolute",
@@ -1320,10 +1333,10 @@ export default function RoleSelectionScreen({
               }}
             >
               <h3 style={{ margin: "0 0 4px", fontSize: "1.05rem", fontWeight: 800 }}>
-                {(galleryItems[lightboxIndex] || galleryItems[0]).title}
+                {CAMPUS_GALLERY_COLLECTION[lightboxIndex].title}
               </h3>
               <p style={{ margin: 0, fontSize: "0.82rem", color: "#94a3b8" }}>
-                {(galleryItems[lightboxIndex] || galleryItems[0]).description}
+                {CAMPUS_GALLERY_COLLECTION[lightboxIndex].description}
               </p>
             </div>
           </div>
@@ -1342,22 +1355,232 @@ export default function RoleSelectionScreen({
             onClick={(e) => e.stopPropagation()}
             style={{
               width: "100%",
-              maxWidth: 960,
-              height: "85vh",
-              maxHeight: 760,
-              background: "#ffffff",
+              maxWidth: 720,
+              maxHeight: "88vh",
+              background: "rgba(255, 255, 255, 0.88)",
+              backdropFilter: "blur(28px) saturate(200%)",
+              WebkitBackdropFilter: "blur(28px) saturate(200%)",
               borderRadius: "24px",
-              boxShadow: "0 35px 70px rgba(0, 0, 0, 0.3)",
+              boxShadow: "0 35px 70px rgba(0, 0, 0, 0.3), inset 0 1.5px 2px rgba(255, 255, 255, 0.95)",
               display: "flex",
               flexDirection: "column",
               overflow: "hidden",
+              border: "1.5px solid rgba(255, 255, 255, 0.85)",
             }}
           >
-            <UnifiedAIChatPanel
-              role="visitor_applicant"
-              variant="modal"
-              onBack={() => setIsAiModalOpen(false)}
-            />
+            {/* Modal Header */}
+            <div
+              style={{
+                padding: "1rem 1.25rem",
+                background: "linear-gradient(135deg, rgba(255, 247, 237, 0.9) 0%, rgba(255, 237, 213, 0.72) 100%)",
+                backdropFilter: "blur(14px)",
+                WebkitBackdropFilter: "blur(14px)",
+                borderBottom: "1.5px solid rgba(254, 215, 170, 0.7)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                <img
+                  src={schoolLogo}
+                  alt={`${schoolName} Logo`}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = "/mvps/brand/logo.png";
+                  }}
+                  style={{ width: 40, height: 40, objectFit: "contain", borderRadius: 10, background: "rgba(255, 255, 255, 0.9)", backdropFilter: "blur(6px)", padding: 2, border: "1px solid rgba(234, 88, 12, 0.25)" }}
+                />
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <h3 style={{ margin: 0, fontFamily: "Outfit, sans-serif", fontSize: "1.1rem", fontWeight: 800, color: "#1e293b" }}>
+                      {aiName} Campus Assistant
+                    </h3>
+                    <span
+                      style={{
+                        background: "#dcfce7",
+                        color: "#15803d",
+                        fontSize: "0.68rem",
+                        fontWeight: 800,
+                        padding: "2px 8px",
+                        borderRadius: "9999px",
+                      }}
+                    >
+                      ● Online
+                    </span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: "0.74rem", color: "#64748b" }}>
+                    {schoolName} • Instant Admissions, Fees &amp; Campus Guidance
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setIsAiModalOpen(false)}
+                style={{
+                  background: "rgba(255, 255, 255, 0.85)",
+                  backdropFilter: "blur(8px)",
+                  border: "1px solid rgba(226, 232, 240, 0.8)",
+                  borderRadius: "50%",
+                  width: 32,
+                  height: 32,
+                  display: "grid",
+                  placeItems: "center",
+                  cursor: "pointer",
+                  color: "#64748b",
+                }}
+                aria-label="Close AI Assistant"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Chat Body */}
+            <div
+              style={{
+                flex: 1,
+                overflowY: "auto",
+                padding: "1.25rem",
+                display: "flex",
+                flexDirection: "column",
+                gap: "1rem",
+                minHeight: 320,
+                maxHeight: "55vh",
+                background: "rgba(248, 250, 252, 0.55)",
+              }}
+            >
+              {aiMessages.map((msg, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    alignSelf: msg.sender === "user" ? "flex-end" : "flex-start",
+                    maxWidth: msg.sender === "user" ? "80%" : "92%",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: msg.sender === "user" ? "flex-end" : "flex-start",
+                  }}
+                >
+                  <div
+                    style={{
+                      background: msg.sender === "user" ? "#ea580c" : "rgba(255, 255, 255, 0.85)",
+                      color: msg.sender === "user" ? "#ffffff" : "#1e293b",
+                      padding: "0.75rem 1rem",
+                      borderRadius: msg.sender === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+                      boxShadow: "0 4px 14px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.8)",
+                      border: msg.sender === "user" ? "none" : "1.5px solid rgba(255, 255, 255, 0.9)",
+                      backdropFilter: msg.sender === "user" ? "none" : "blur(10px)",
+                      WebkitBackdropFilter: msg.sender === "user" ? "none" : "blur(10px)",
+                      fontSize: "0.85rem",
+                    }}
+                  >
+                    <MarkdownResponse content={msg.text} isUser={msg.sender === "user"} />
+                  </div>
+                  <span style={{ fontSize: "0.65rem", color: "#64748b", marginTop: 4, padding: "0 4px", fontWeight: 600 }}>
+                    {msg.time}
+                  </span>
+                </div>
+              ))}
+
+              {isAiTyping && (
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#ea580c", fontSize: "0.8rem", fontWeight: 600 }}>
+                  <RefreshCw size={14} className="animate-spin" />
+                  <span>{aiName} is typing an answer...</span>
+                </div>
+              )}
+              <div ref={chatEndRef} />
+            </div>
+
+            {/* Quick Prompts */}
+            <div
+              style={{
+                padding: "0.5rem 1rem",
+                background: "rgba(255, 255, 255, 0.7)",
+                backdropFilter: "blur(10px)",
+                borderTop: "1px solid rgba(226, 232, 240, 0.7)",
+                display: "flex",
+                gap: "6px",
+                overflowX: "auto",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {[
+                "2026-27 Admission Process",
+                "Eligibility & Age Criteria",
+                "Fee Structure",
+                "Required Documents",
+                "School Timings",
+              ].map((chip) => (
+                <button
+                  key={chip}
+                  onClick={() => handleSendAi(chip)}
+                  style={{
+                    background: "rgba(255, 247, 237, 0.85)",
+                    border: "1px solid rgba(254, 215, 170, 0.8)",
+                    color: "#ea580c",
+                    fontSize: "0.72rem",
+                    fontWeight: 700,
+                    padding: "4px 10px",
+                    borderRadius: "9999px",
+                    cursor: "pointer",
+                    flexShrink: 0,
+                  }}
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
+
+            {/* Input Bar */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSendAi();
+              }}
+              style={{
+                padding: "0.75rem 1rem",
+                background: "rgba(255, 255, 255, 0.82)",
+                backdropFilter: "blur(12px)",
+                borderTop: "1.5px solid rgba(226, 232, 240, 0.7)",
+                display: "flex",
+                gap: "0.5rem",
+                alignItems: "center",
+              }}
+            >
+              <input
+                type="text"
+                placeholder={`Ask ${aiName} about admissions, fee structure, timetable, or school policies...`}
+                value={aiInput}
+                onChange={(e) => setAiInput(e.target.value)}
+                style={{
+                  flex: 1,
+                  padding: "0.65rem 1rem",
+                  borderRadius: "12px",
+                  border: "1.5px solid #e2e8f0",
+                  fontSize: "0.85rem",
+                  outline: "none",
+                }}
+              />
+              <button
+                type="submit"
+                disabled={!aiInput.trim() || isAiTyping}
+                style={{
+                  background: "#ea580c",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "12px",
+                  padding: "0.65rem 1.15rem",
+                  fontWeight: 700,
+                  fontSize: "0.85rem",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  cursor: !aiInput.trim() || isAiTyping ? "not-allowed" : "pointer",
+                  opacity: !aiInput.trim() || isAiTyping ? 0.6 : 1,
+                }}
+              >
+                <Send size={15} /> Send
+              </button>
+            </form>
           </div>
         </div>
       )}

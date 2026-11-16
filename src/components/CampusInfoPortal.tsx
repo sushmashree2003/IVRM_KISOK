@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { getUserSession, getInstituteLogo, getInstituteName } from "@/lib/session";
-import { CampusInfoData, LeadershipMember, TourFacility } from "@/types/campus";
 import {
   Calendar,
   GraduationCap,
@@ -29,10 +28,9 @@ import {
   QrCode,
   BookOpen,
   Cpu,
-  Lock,
 } from "lucide-react";
 
-export const LEADERSHIP_MEMBERS: LeadershipMember[] = [
+export const LEADERSHIP_MEMBERS = [
   {
     id: "chairman",
     name: "Amit Chadha",
@@ -67,7 +65,7 @@ export const LEADERSHIP_MEMBERS: LeadershipMember[] = [
   },
 ];
 
-export const TOUR_FACILITIES: TourFacility[] = [
+export const TOUR_FACILITIES = [
   {
     id: "campus_front",
     title: "Campus Façade & Main Pavilion",
@@ -247,7 +245,6 @@ export interface CampusInfoPortalProps {
   isFullscreen?: boolean;
   toggleFullscreen?: (e?: React.MouseEvent) => void;
   currentTime?: Date | null;
-  draftData?: CampusInfoData;
 }
 
 export default function CampusInfoPortal({
@@ -255,21 +252,18 @@ export default function CampusInfoPortal({
   isFullscreen: externalIsFullscreen,
   toggleFullscreen: externalToggleFullscreen,
   currentTime: externalCurrentTime,
-  draftData,
 }: CampusInfoPortalProps) {
   const router = useRouter();
   const [internalTime, setInternalTime] = useState<Date | null>(null);
   const [internalIsFullscreen, setInternalIsFullscreen] = useState(false);
-  const [portalData, setPortalData] = useState<CampusInfoData | null>(draftData || null);
   const [virtualTourOpen, setVirtualTourOpen] = useState(false);
-  const [tourViewMode, setTourViewMode] = useState<"video" | "facilities">("video");
   const [galleryModalOpen, setGalleryModalOpen] = useState(false);
   const [selectedGalleryIndex, setSelectedGalleryIndex] = useState<number | null>(null);
   const [selectedGalleryImg, setSelectedGalleryImg] = useState<{ src: string; title: string } | null>(null);
   const [achievementsModalOpen, setAchievementsModalOpen] = useState(false);
   const [eventsModalOpen, setEventsModalOpen] = useState(false);
   const [leadershipModalOpen, setLeadershipModalOpen] = useState(false);
-  const [selectedLeader, setSelectedLeader] = useState<LeadershipMember | null>(null);
+  const [selectedLeader, setSelectedLeader] = useState<(typeof LEADERSHIP_MEMBERS)[0] | null>(null);
   const [galleryCategoryFilter, setGalleryCategoryFilter] = useState<string>("all");
   const [activeTourFacilityIndex, setActiveTourFacilityIndex] = useState(0);
   const [selectedScheduleId, setSelectedScheduleId] = useState<string>("stem");
@@ -291,11 +285,11 @@ export default function CampusInfoPortal({
       } else if (galleryModalOpen && selectedGalleryIndex !== null) {
         if (e.key === "ArrowLeft") {
           setSelectedGalleryIndex((prev) =>
-            prev !== null ? (prev - 1 + activeGallery.length) % activeGallery.length : 0
+            prev !== null ? (prev - 1 + CAMPUS_GALLERY_ITEMS.length) % CAMPUS_GALLERY_ITEMS.length : 0
           );
         } else if (e.key === "ArrowRight") {
           setSelectedGalleryIndex((prev) =>
-            prev !== null ? (prev + 1) % activeGallery.length : 0
+            prev !== null ? (prev + 1) % CAMPUS_GALLERY_ITEMS.length : 0
           );
         }
       }
@@ -328,7 +322,7 @@ export default function CampusInfoPortal({
     }
 
     // Live branding sync from server config (reads INST_CODE_BGIMAGE from env)
-    fetch("/api/branding")
+    fetch("/api/branding", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (!data) return;
@@ -354,6 +348,12 @@ export default function CampusInfoPortal({
             } catch { }
           }
         }
+        if (data.backgroupdlo) {
+          try {
+            sessionStorage.setItem("backgroupdlo", data.backgroupdlo);
+            localStorage.setItem("kiosk_backgroupdlo", data.backgroupdlo);
+          } catch { }
+        }
       })
       .catch(() => { });
 
@@ -370,126 +370,6 @@ export default function CampusInfoPortal({
       document.removeEventListener("fullscreenchange", handleFsChange);
     };
   }, []);
-
-  useEffect(() => {
-    if (draftData) {
-      setPortalData(draftData);
-      if (draftData.branding?.instituteName) setSchoolName(draftData.branding.instituteName);
-      if (draftData.branding?.logo) setSchoolLogo(draftData.branding.logo);
-      return;
-    }
-
-    try {
-      const cached = localStorage.getItem("kiosk_campus_info_cache");
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        setPortalData(parsed);
-        if (parsed.branding?.instituteName) setSchoolName(parsed.branding.instituteName);
-        if (parsed.branding?.logo) setSchoolLogo(parsed.branding.logo);
-      }
-    } catch { }
-
-    fetch("/api/kiosk/campus-info")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((json: CampusInfoData | null) => {
-        if (!json) return;
-        setPortalData(json);
-        try {
-          localStorage.setItem("kiosk_campus_info_cache", JSON.stringify(json));
-        } catch { }
-        if (json.branding?.instituteName) {
-          setSchoolName(json.branding.instituteName);
-          document.title = `${json.branding.instituteName} • Smart Campus Kiosk`;
-        }
-        if (json.branding?.logo) {
-          setSchoolLogo(json.branding.logo);
-        }
-      })
-      .catch(() => { });
-  }, [draftData]);
-
-  const activeLeadership = (draftData?.leadership || portalData?.leadership || LEADERSHIP_MEMBERS).filter((m) => m.active !== false);
-  const activeFacilities = (draftData?.facilities || portalData?.facilities || TOUR_FACILITIES).filter((f) => f.active !== false);
-  const tour360VideoUrl = draftData?.branding?.virtualTour360Url || draftData?.virtualTour360Url || portalData?.branding?.virtualTour360Url || portalData?.virtualTour360Url || "/campus_promo.mp4";
-  const activeGallery = draftData?.gallery || portalData?.gallery || CAMPUS_GALLERY_ITEMS;
-  const activeEvents = draftData?.events || portalData?.events || [
-    {
-      id: "ptm",
-      day: "28",
-      month: "OCT",
-      name: "Parent Teacher Meeting",
-      tag: "PTM",
-      tagClass: "academics" as const,
-      venue: "10:00 AM – 12:00 PM | Main Auditorium",
-      image: "/Warm Parent-Teacher Classroom Meeting-2.png",
-      cardClass: "ptm-card",
-    },
-    {
-      id: "sports",
-      day: "05",
-      month: "NOV",
-      name: "Sports Day Finals",
-      tag: "Sports",
-      tagClass: "sports" as const,
-      venue: "04:00 PM – 06:00 PM | Athletic Arena",
-      image: "/Sunny School Sports Field Gear-3.png",
-      cardClass: "sports-card",
-    },
-    {
-      id: "stem",
-      day: "10",
-      month: "NOV",
-      name: "Science & AI Exhibition",
-      tag: "STEM",
-      tagClass: "stem" as const,
-      venue: "All Day | Discovery Block Labs",
-      image: "/Vibrant Modern STEM Laboratory-4.png",
-      cardClass: "stem-card",
-    },
-    {
-      id: "cultural",
-      day: "14",
-      month: "NOV",
-      name: "Children's Day Gala",
-      tag: "Cultural",
-      tagClass: "fest" as const,
-      venue: "09:00 AM – 12:00 PM | Main Auditorium",
-      image: "/Indian Classical Arts on Stage-5.png",
-      cardClass: "cultural-card",
-    },
-  ];
-  const activeAchievements = draftData?.achievements || portalData?.achievements || [
-    {
-      id: "ach_math",
-      title: "Inter-School Mathematics Quiz",
-      badge: "★ 1st Rank",
-      rank: "1st Rank",
-      category: "Inter School Competition",
-      date: "Aug 2025",
-      image: "/achievement_math.jpg",
-    },
-    {
-      id: "ach_cricket",
-      title: "Inter-School Cricket Tournament",
-      badge: "★ Best Player",
-      rank: "Best Player",
-      category: "Inter School",
-      date: "Sep 2025",
-      image: "/achievement_cricket.jpg",
-    },
-    {
-      id: "ach_science",
-      title: "District Science Exhibition",
-      badge: "★ 2nd Place",
-      rank: "2nd Place",
-      category: "District Level",
-      date: "Aug 2025",
-      image: "/achievement_science.jpg",
-    },
-  ];
-  const activeHero = draftData?.hero || portalData?.hero;
-  const activeTicker = draftData?.branding?.tickerNotices || portalData?.branding?.tickerNotices;
-  const activeStats = draftData?.quickStats || portalData?.quickStats;
 
   const currentTime = externalCurrentTime || internalTime;
   const isFullscreen = externalIsFullscreen !== undefined ? externalIsFullscreen : internalIsFullscreen;
@@ -563,54 +443,14 @@ export default function CampusInfoPortal({
           </div>
           <div className="mv-news-scroller">
             <div className="mv-news-track">
-              {activeTicker && activeTicker.length > 0 ? (
-                activeTicker.map((notice, nIdx) => {
-                  const isObj = typeof notice === "object" && notice !== null;
-                  const text = isObj ? (notice as any).text : notice;
-                  const badge = isObj ? (notice as any).badge : undefined;
-                  const priority = isObj ? (notice as any).priority : "normal";
-
-                  return (
-                    <React.Fragment key={nIdx}>
-                      <span className="mv-news-sep">|</span>
-                      <span
-                        style={{
-                          fontWeight: priority === "urgent" ? 800 : priority === "high" ? 700 : 500,
-                          color: priority === "urgent" ? "#ef4444" : priority === "high" ? "#ea580c" : "inherit",
-                        }}
-                      >
-                        {badge && (
-                          <span
-                            style={{
-                              background: priority === "urgent" ? "#fee2e2" : priority === "high" ? "#ffedd5" : "#e0f2fe",
-                              color: priority === "urgent" ? "#dc2626" : priority === "high" ? "#c2410c" : "#0284c7",
-                              padding: "1px 6px",
-                              borderRadius: "4px",
-                              fontSize: "0.72rem",
-                              marginRight: "6px",
-                              fontWeight: 700,
-                            }}
-                          >
-                            {badge}
-                          </span>
-                        )}
-                        {text}
-                      </span>
-                    </React.Fragment>
-                  );
-                })
-              ) : (
-                <>
-                  <span className="mv-news-sep">|</span>
-                  <span>{schoolName} scholars achieve 100% first-class distinction</span>
-                  <span className="mv-news-sep">|</span>
-                  <span>Admissions Open for Academic Session 2026-27 • Nursery to Grade XII</span>
-                  <span className="mv-news-sep">|</span>
-                  <span>Annual Sports Day Track &amp; Field Finals scheduled for 28th September</span>
-                  <span className="mv-news-sep">|</span>
-                  <span>State STEM Robotics Expo: Innovation team wins District First Place</span>
-                </>
-              )}
+              <span className="mv-news-sep">|</span>
+              <span>{schoolName} scholars achieve 100% first-class distinction</span>
+              <span className="mv-news-sep">|</span>
+              <span>Admissions Open for Academic Session 2026-27 • Nursery to Grade XII</span>
+              <span className="mv-news-sep">|</span>
+              <span>Annual Sports Day Track &amp; Field Finals scheduled for 28th September</span>
+              <span className="mv-news-sep">|</span>
+              <span>State STEM Robotics Expo: MVPS Innovation team wins District First Place</span>
             </div>
           </div>
         </div>
@@ -652,20 +492,19 @@ export default function CampusInfoPortal({
               {/* Background Looping Video */}
               <video
                 ref={heroVideoRef}
-                key={activeHero?.videoUrl || "hero-video"}
                 className="mv-hero-bg-video"
                 autoPlay
                 loop
                 muted
                 playsInline
                 preload="metadata"
-                poster={activeHero?.posterUrl || "/mvps/hero/banner_01.jpg"}
+                poster="/mvps/hero/banner_01.jpg"
                 aria-hidden="true"
                 onError={(e) => {
                   (e.currentTarget as HTMLElement).style.display = "none";
                 }}
               >
-                <source src={activeHero?.videoUrl || "/Madhuvan_Vatika_Public_School_Full_Promo_20s.mp4"} type="video/mp4" />
+                <source src="/Madhuvan_Vatika_Public_School_Full_Promo_20s.mp4" type="video/mp4" />
               </video>
 
               {/* Dark Gradient Overlay for Readability */}
@@ -675,8 +514,8 @@ export default function CampusInfoPortal({
                 <span className="mv-hero-cursive-kicker">Welcome to</span>
                 <h2 className="mv-hero-main-title">{schoolName}</h2>
                 <p className="mv-hero-desc">
-                  {activeHero?.subheadline ||
-                    "Empowering young minds with world-class scholastic rigor, ethical leadership, and futuristic STEM innovation."}
+                  Empowering young minds with world-class scholastic rigor, ethical leadership,
+                  and futuristic STEM innovation.
                 </p>
               </div>
 
@@ -849,21 +688,49 @@ export default function CampusInfoPortal({
 
             <div className="mv-achieve-cards-row">
               {/* Achievement 1 */}
-              {activeAchievements.slice(0, 3).map((ach) => (
-                <div key={ach.id} className="mv-achieve-card">
-                  <div className="mv-achieve-img-box">
-                    <img src={ach.image} alt={ach.title} />
-                    <div className="mv-achieve-rank-pill">
-                      <span>{ach.badge}</span>
-                    </div>
-                  </div>
-                  <div className="mv-achieve-meta">
-                    <h4 className="mv-achieve-title">{ach.title}</h4>
-                    <span className="mv-achieve-level">{ach.category}</span>
-                    <span className="mv-achieve-winner">{ach.date}</span>
+              <div className="mv-achieve-card">
+                <div className="mv-achieve-img-box">
+                  <img src="/achievement_math.jpg" alt="Mathematics Quiz" />
+                  <div className="mv-achieve-rank-pill">
+                    <span>★ 1st Rank</span>
                   </div>
                 </div>
-              ))}
+                <div className="mv-achieve-meta">
+                  <h4 className="mv-achieve-title">Mathematics Quiz</h4>
+                  <span className="mv-achieve-level">Inter-School Olympiad</span>
+                  <span className="mv-achieve-winner">Aarav Sharma • 100/100</span>
+                </div>
+              </div>
+
+              {/* Achievement 2 */}
+              <div className="mv-achieve-card">
+                <div className="mv-achieve-img-box">
+                  <img src="/achievement_cricket.jpg" alt="Cricket Champions" />
+                  <div className="mv-achieve-rank-pill">
+                    <span>★ Best Player</span>
+                  </div>
+                </div>
+                <div className="mv-achieve-meta">
+                  <h4 className="mv-achieve-title">Cricket Tournament</h4>
+                  <span className="mv-achieve-level">Under-16 Finals Champions</span>
+                  <span className="mv-achieve-winner">Rohan Varma • 84r &amp; 4w</span>
+                </div>
+              </div>
+
+              {/* Achievement 3 */}
+              <div className="mv-achieve-card">
+                <div className="mv-achieve-img-box">
+                  <img src="/achievement_science.jpg" alt="Science Expo" />
+                  <div className="mv-achieve-rank-pill" style={{ background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" }}>
+                    <span>2 2nd Place</span>
+                  </div>
+                </div>
+                <div className="mv-achieve-meta">
+                  <h4 className="mv-achieve-title">Science Exhibition</h4>
+                  <span className="mv-achieve-level">District STEM Fair</span>
+                  <span className="mv-achieve-winner">Ananya &amp; Team • Eco-Grid</span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -892,7 +759,7 @@ export default function CampusInfoPortal({
             </div>
 
             <div className="mv-gallery-grid">
-              {activeGallery.slice(0, 4).map((item, idx) => (
+              {CAMPUS_GALLERY_ITEMS.slice(0, 4).map((item, idx) => (
                 <div
                   key={item.id}
                   className="mv-gallery-item"
@@ -932,12 +799,57 @@ export default function CampusInfoPortal({
             </div>
 
             <div className="mv-timeline-list">
-              {activeEvents.slice(0, 4).map((event) => {
+              {[
+                {
+                  id: "ptm",
+                  day: "01",
+                  month: "NOV",
+                  name: "Parent Teacher Meeting",
+                  tag: "PTM",
+                  tagClass: "academics",
+                  venue: "10:00 AM – 12:00 PM | Main Auditorium",
+                  image: "/Warm Parent-Teacher Classroom Meeting-2.png",
+                  cardClass: "ptm-card",
+                },
+                {
+                  id: "sports",
+                  day: "05",
+                  month: "NOV",
+                  name: "Sports Day Finals",
+                  tag: "Sports",
+                  tagClass: "sports",
+                  venue: "04:00 PM – 06:00 PM | Athletic Arena",
+                  image: "/Sunny School Sports Field Gear-3.png",
+                  cardClass: "sports-card",
+                },
+                {
+                  id: "stem",
+                  day: "10",
+                  month: "NOV",
+                  name: "Science & AI Exhibition",
+                  tag: "STEM",
+                  tagClass: "stem",
+                  venue: "All Day | Discovery Block Labs",
+                  image: "/Vibrant Modern STEM Laboratory-4.png",
+                  cardClass: "stem-card",
+                },
+                {
+                  id: "cultural",
+                  day: "14",
+                  month: "NOV",
+                  name: "Children's Day Gala",
+                  tag: "Cultural",
+                  tagClass: "fest",
+                  venue: "09:00 AM – 12:00 PM | Main Auditorium",
+                  image: "/Indian Classical Arts on Stage-5.png",
+                  cardClass: "cultural-card",
+                },
+              ].map((event) => {
                 const isSelected = selectedScheduleId === event.id;
                 return (
                   <div
                     key={event.id}
-                    className={`mv-timeline-card mv-timeline-row ${event.cardClass || ""} ${isSelected ? "selected active" : ""}`}
+                    className={`mv-timeline-card mv-timeline-row ${event.cardClass} ${isSelected ? "selected active" : ""}`}
                     onClick={() => setSelectedScheduleId(event.id)}
                     style={{
                       backgroundImage: `linear-gradient(90deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.90) 45%, rgba(255, 255, 255, 0.30) 75%, rgba(255, 255, 255, 0) 100%), url('${event.image}')`,
@@ -981,28 +893,72 @@ export default function CampusInfoPortal({
             </div>
 
             <div className="mv-fac-mini-grid">
-              {activeFacilities.slice(0, 6).map((fac, fIdx) => (
-                <div
-                  key={fac.id || fIdx}
-                  className="mv-fac-mini-item"
-                  onClick={() => {
-                    setActiveTourFacilityIndex(fIdx);
-                    setVirtualTourOpen(true);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      setActiveTourFacilityIndex(fIdx);
-                      setVirtualTourOpen(true);
-                    }
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  title={`Explore ${fac.title}`}
-                >
-                  <img src={fac.image} alt={fac.title} className="mv-fac-mini-img" />
-                  <span className="mv-fac-mini-title">{fac.title}</span>
-                </div>
-              ))}
+              <div
+                className="mv-fac-mini-item"
+                onClick={() => { setActiveTourFacilityIndex(1); setVirtualTourOpen(true); }}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { setActiveTourFacilityIndex(1); setVirtualTourOpen(true); } }}
+                role="button"
+                tabIndex={0}
+                title="Explore Modern Classrooms"
+              >
+                <img src="/mvps/facilities/classrooms_01.jpg" alt="Classrooms" className="mv-fac-mini-img" />
+                <span className="mv-fac-mini-title">Classrooms</span>
+              </div>
+              <div
+                className="mv-fac-mini-item"
+                onClick={() => { setActiveTourFacilityIndex(2); setVirtualTourOpen(true); }}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { setActiveTourFacilityIndex(2); setVirtualTourOpen(true); } }}
+                role="button"
+                tabIndex={0}
+                title="Explore AI & STEM Labs"
+              >
+                <img src="/mvps/facilities/labs.jpg" alt="STEM Labs" className="mv-fac-mini-img" />
+                <span className="mv-fac-mini-title">AI &amp; Labs</span>
+              </div>
+              <div
+                className="mv-fac-mini-item"
+                onClick={() => { setActiveTourFacilityIndex(3); setVirtualTourOpen(true); }}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { setActiveTourFacilityIndex(3); setVirtualTourOpen(true); } }}
+                role="button"
+                tabIndex={0}
+                title="Explore Central Library"
+              >
+                <img src="/mvps/facilities/library_01.jpg" alt="Library" className="mv-fac-mini-img" />
+                <span className="mv-fac-mini-title">Library</span>
+              </div>
+              <div
+                className="mv-fac-mini-item"
+                onClick={() => { setActiveTourFacilityIndex(4); setVirtualTourOpen(true); }}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { setActiveTourFacilityIndex(4); setVirtualTourOpen(true); } }}
+                role="button"
+                tabIndex={0}
+                title="Explore Sports Turf & Athletic Arenas"
+              >
+                <img src="/mvps/facilities/sports_01.jpg" alt="Sports Arena" className="mv-fac-mini-img" />
+                <span className="mv-fac-mini-title">Sports Turf</span>
+              </div>
+              <div
+                className="mv-fac-mini-item"
+                onClick={() => { setActiveTourFacilityIndex(5); setVirtualTourOpen(true); }}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { setActiveTourFacilityIndex(5); setVirtualTourOpen(true); } }}
+                role="button"
+                tabIndex={0}
+                title="Explore GPS-Enabled Bus Fleet"
+              >
+                <img src="/mvps/facilities/transport_buses.jpg" alt="Bus Fleet" className="mv-fac-mini-img" />
+                <span className="mv-fac-mini-title">Bus Fleet</span>
+              </div>
+              <div
+                className="mv-fac-mini-item"
+                onClick={() => { setActiveTourFacilityIndex(6); setVirtualTourOpen(true); }}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { setActiveTourFacilityIndex(6); setVirtualTourOpen(true); } }}
+                role="button"
+                tabIndex={0}
+                title="Explore Kindergarten Play Area"
+              >
+                <img src="/mvps/facilities/playarea_01.jpg" alt="Playground" className="mv-fac-mini-img" />
+                <span className="mv-fac-mini-title">Play Area</span>
+              </div>
             </div>
 
             <div className="mv-creed-ribbon">
@@ -1035,34 +991,18 @@ export default function CampusInfoPortal({
         </div>
 
         <div className="mv-footer-motto">
-          {portalData?.footerMotto || "— Together for a Brighter Tomorrow 🍃 —"}
+          — Together for a Brighter Tomorrow 🍃 —
         </div>
 
         <div className="mv-footer-links">
-          <span>Academics</span> | <span>Sports</span> | <span>Arts</span> | <span>Values</span> | <span>Life Skills</span> |{" "}
-          <span
-            onClick={() => router.push("/admin")}
-            className="mv-footer-admin-link"
-            title="Access Admin Portal & CMS"
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                router.push("/admin");
-              }
-            }}
-          >
-            <Lock size={12} style={{ display: "inline-block", verticalAlign: "middle", marginRight: "3px" }} />
-            Admin
-          </span>
+          <span>Academics</span> | <span>Sports</span> | <span>Arts</span> | <span>Values</span> | <span>Life Skills</span>
         </div>
       </footer>
 
       {/* =========================================================================
          MODAL 1: 360 VIRTUAL TOUR & FACILITIES EXPLORER
          ========================================================================= */}
-      {virtualTourOpen && activeFacilities.length > 0 && (
+      {virtualTourOpen && (
         <div
           className="mp-modal-backdrop"
           onClick={() => setVirtualTourOpen(false)}
@@ -1108,230 +1048,122 @@ export default function CampusInfoPortal({
             </div>
 
             <div style={{ padding: "1.1rem", background: "#f8fafc" }}>
-              {/* Tour Mode Switcher (360 Video Walkthrough vs Facility Explorer) */}
-              <div style={{ display: "flex", gap: "8px", marginBottom: "12px", borderBottom: "1px solid #e2e8f0", paddingBottom: "10px" }}>
-                <button
-                  onClick={() => setTourViewMode("video")}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    padding: "0.45rem 1rem",
-                    borderRadius: "8px",
-                    border: "none",
-                    background: tourViewMode === "video" ? "#ea580c" : "#ffffff",
-                    color: tourViewMode === "video" ? "#ffffff" : "#475569",
-                    fontWeight: 700,
-                    fontSize: "0.8rem",
-                    cursor: "pointer",
-                    boxShadow: tourViewMode === "video" ? "0 2px 8px rgba(234, 88, 12, 0.35)" : "0 1px 3px rgba(0, 0, 0, 0.05)",
-                  }}
-                >
-                  <Play size={13} fill={tourViewMode === "video" ? "#ffffff" : "#ea580c"} />
-                  <span>🎥 360° Walkthrough Video</span>
-                </button>
-                <button
-                  onClick={() => setTourViewMode("facilities")}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    padding: "0.45rem 1rem",
-                    borderRadius: "8px",
-                    border: "none",
-                    background: tourViewMode === "facilities" ? "#ea580c" : "#ffffff",
-                    color: tourViewMode === "facilities" ? "#ffffff" : "#475569",
-                    fontWeight: 700,
-                    fontSize: "0.8rem",
-                    cursor: "pointer",
-                    boxShadow: tourViewMode === "facilities" ? "0 2px 8px rgba(234, 88, 12, 0.35)" : "0 1px 3px rgba(0, 0, 0, 0.05)",
-                  }}
-                >
-                  <Building2 size={13} />
-                  <span>🏛️ Campus Facilities Explorer ({activeFacilities.length})</span>
-                </button>
+              {/* Facility Tabs Bar */}
+              <div className="mv-tour-tabs-bar" style={{ marginBottom: "12px" }}>
+                {TOUR_FACILITIES.map((facility, idx) => (
+                  <button
+                    key={facility.id}
+                    className={`mv-tour-tab-btn ${activeTourFacilityIndex === idx ? "active" : ""}`}
+                    onClick={() => setActiveTourFacilityIndex(idx)}
+                  >
+                    <span>{facility.title}</span>
+                  </button>
+                ))}
               </div>
 
-              {tourViewMode === "video" ? (
-                /* 360 Video Player View */
+              {/* Active Facility View */}
+              <div
+                style={{
+                  position: "relative",
+                  borderRadius: "14px",
+                  overflow: "hidden",
+                  boxShadow: "0 8px 24px rgba(15, 23, 42, 0.12)",
+                  height: "380px",
+                  background: "#0f172a",
+                }}
+              >
+                <img
+                  src={TOUR_FACILITIES[activeTourFacilityIndex].image}
+                  alt={TOUR_FACILITIES[activeTourFacilityIndex].title}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                  }}
+                />
                 <div
                   style={{
-                    position: "relative",
-                    borderRadius: "14px",
-                    overflow: "hidden",
-                    boxShadow: "0 8px 24px rgba(15, 23, 42, 0.12)",
-                    height: "400px",
-                    background: "#0f172a",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
+                    position: "absolute",
+                    inset: 0,
+                    background: "linear-gradient(180deg, transparent 40%, rgba(14, 42, 71, 0.90) 100%)",
+                    pointerEvents: "none",
+                  }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: "16px",
+                    left: "20px",
+                    right: "20px",
+                    color: "#ffffff",
                   }}
                 >
-                  {tour360VideoUrl.includes("youtube.com") || tour360VideoUrl.includes("youtu.be") ? (
-                    <iframe
-                      src={tour360VideoUrl.replace("watch?v=", "embed/")}
-                      title="School 360 Campus Tour"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      style={{ width: "100%", height: "100%", border: "none" }}
-                    />
-                  ) : (
-                    <video
-                      key={tour360VideoUrl}
-                      src={tour360VideoUrl}
-                      controls
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                    />
-                  )}
-                  <div
+                  <span
                     style={{
-                      position: "absolute",
-                      top: "12px",
-                      left: "14px",
-                      background: "rgba(0, 0, 0, 0.65)",
-                      backdropFilter: "blur(4px)",
-                      color: "#fff",
-                      padding: "4px 10px",
-                      borderRadius: "6px",
-                      fontSize: "0.74rem",
+                      background: "rgba(234, 88, 12, 0.95)",
+                      padding: "3px 10px",
+                      borderRadius: "9999px",
+                      fontSize: "0.72rem",
                       fontWeight: 800,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "5px",
-                      pointerEvents: "none",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.04em",
                     }}
                   >
-                    <Play size={11} fill="#ea580c" />
-                    <span>School 360° Walkthrough Video Asset</span>
-                  </div>
+                    {TOUR_FACILITIES[activeTourFacilityIndex].category}
+                  </span>
+                  <h4 style={{ margin: "6px 0 3px", fontSize: "1.2rem", fontWeight: 800 }}>
+                    {TOUR_FACILITIES[activeTourFacilityIndex].title}
+                  </h4>
+                  <p style={{ margin: 0, fontSize: "0.82rem", opacity: 0.92, lineHeight: 1.4, maxWidth: "700px" }}>
+                    {TOUR_FACILITIES[activeTourFacilityIndex].description}
+                  </p>
                 </div>
-              ) : (
-                /* Campus Facilities Architecture View */
-                <>
-                  {/* Facility Tabs Bar */}
-                  <div className="mv-tour-tabs-bar" style={{ marginBottom: "12px" }}>
-                    {activeFacilities.map((facility, idx) => (
-                      <button
-                        key={facility.id}
-                        className={`mv-tour-tab-btn ${activeTourFacilityIndex === idx ? "active" : ""}`}
-                        onClick={() => setActiveTourFacilityIndex(idx)}
-                      >
-                        <span>{facility.title}</span>
-                      </button>
-                    ))}
-                  </div>
+              </div>
 
-                  {/* Active Facility View */}
-                  {activeFacilities[activeTourFacilityIndex] && (
-                    <div
-                      style={{
-                        position: "relative",
-                        borderRadius: "14px",
-                        overflow: "hidden",
-                        boxShadow: "0 8px 24px rgba(15, 23, 42, 0.12)",
-                        height: "380px",
-                        background: "#0f172a",
-                      }}
-                    >
-                      <img
-                        src={activeFacilities[activeTourFacilityIndex].image}
-                        alt={activeFacilities[activeTourFacilityIndex].title}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                        }}
-                      />
-                      <div
-                        style={{
-                          position: "absolute",
-                          inset: 0,
-                          background: "linear-gradient(180deg, transparent 40%, rgba(14, 42, 71, 0.90) 100%)",
-                          pointerEvents: "none",
-                        }}
-                      />
-                      <div
-                        style={{
-                          position: "absolute",
-                          bottom: "16px",
-                          left: "20px",
-                          right: "20px",
-                          color: "#ffffff",
-                        }}
-                      >
-                        <span
-                          style={{
-                            background: "rgba(234, 88, 12, 0.95)",
-                            padding: "3px 10px",
-                            borderRadius: "9999px",
-                            fontSize: "0.72rem",
-                            fontWeight: 800,
-                            textTransform: "uppercase",
-                            letterSpacing: "0.04em",
-                          }}
-                        >
-                          {activeFacilities[activeTourFacilityIndex].category}
-                        </span>
-                        <h4 style={{ margin: "6px 0 3px", fontSize: "1.2rem", fontWeight: 800 }}>
-                          {activeFacilities[activeTourFacilityIndex].title}
-                        </h4>
-                        <p style={{ margin: 0, fontSize: "0.82rem", opacity: 0.92, lineHeight: 1.4, maxWidth: "700px" }}>
-                          {activeFacilities[activeTourFacilityIndex].description}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  <div
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginTop: "0.85rem",
+                }}
+              >
+                <div style={{ fontSize: "0.8rem", color: "#475569", fontWeight: 600 }}>
+                  📍 Village Asmanpur, PO Nurpur Bedi, Ropar • Facility {activeTourFacilityIndex + 1} of {TOUR_FACILITIES.length}
+                </div>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button
+                    onClick={() => setActiveTourFacilityIndex((prev) => (prev - 1 + TOUR_FACILITIES.length) % TOUR_FACILITIES.length)}
                     style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginTop: "0.85rem",
+                      background: "#ffffff",
+                      border: "1.5px solid #cbd5e1",
+                      borderRadius: "9999px",
+                      padding: "0.35rem 0.9rem",
+                      fontWeight: 700,
+                      fontSize: "0.78rem",
+                      cursor: "pointer",
+                      color: "#334155",
                     }}
                   >
-                    <div style={{ fontSize: "0.8rem", color: "#475569", fontWeight: 600 }}>
-                      📍 Village Asmanpur, PO Nurpur Bedi, Ropar • Facility {activeTourFacilityIndex + 1} of {TOUR_FACILITIES.length}
-                    </div>
-                    <div style={{ display: "flex", gap: "8px" }}>
-                      <button
-                        onClick={() => setActiveTourFacilityIndex((prev) => (prev - 1 + TOUR_FACILITIES.length) % TOUR_FACILITIES.length)}
-                        style={{
-                          background: "#ffffff",
-                          border: "1.5px solid #cbd5e1",
-                          borderRadius: "9999px",
-                          padding: "0.35rem 0.9rem",
-                          fontWeight: 700,
-                          fontSize: "0.78rem",
-                          cursor: "pointer",
-                          color: "#334155",
-                        }}
-                      >
-                        Previous
-                      </button>
-                      <button
-                        onClick={() => setActiveTourFacilityIndex((prev) => (prev + 1) % activeFacilities.length)}
-                        style={{
-                          background: "#ea580c",
-                          color: "#ffffff",
-                          border: "none",
-                          borderRadius: "9999px",
-                          padding: "0.35rem 1rem",
-                          fontWeight: 700,
-                          fontSize: "0.78rem",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Next Facility
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => setActiveTourFacilityIndex((prev) => (prev + 1) % TOUR_FACILITIES.length)}
+                    style={{
+                      background: "#ea580c",
+                      color: "#ffffff",
+                      border: "none",
+                      borderRadius: "9999px",
+                      padding: "0.35rem 1rem",
+                      fontWeight: 700,
+                      fontSize: "0.78rem",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Next Facility
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1381,13 +1213,13 @@ export default function CampusInfoPortal({
                 </div>
                 <div>
                   <h3 style={{ margin: 0, fontSize: "1.02rem", fontWeight: 800 }}>
-                    {selectedGalleryIndex !== null && activeGallery[selectedGalleryIndex]
-                      ? activeGallery[selectedGalleryIndex].title
+                    {selectedGalleryIndex !== null
+                      ? CAMPUS_GALLERY_ITEMS[selectedGalleryIndex].title
                       : `${schoolName} • Campus Life in Motion`}
                   </h3>
                   <span style={{ fontSize: "0.72rem", color: "rgba(255, 255, 255, 0.85)", fontWeight: 600 }}>
                     {selectedGalleryIndex !== null
-                      ? `Photo ${selectedGalleryIndex + 1} of ${activeGallery.length} • Tap arrows or thumbnails to navigate`
+                      ? `Photo ${selectedGalleryIndex + 1} of ${CAMPUS_GALLERY_ITEMS.length} • Tap arrows or thumbnails to navigate`
                       : "Campus Moments & Extracurricular Highlights"}
                   </span>
                 </div>
@@ -1459,8 +1291,8 @@ export default function CampusInfoPortal({
                     }}
                   >
                     <img
-                      src={activeGallery[selectedGalleryIndex].src}
-                      alt={activeGallery[selectedGalleryIndex].title}
+                      src={CAMPUS_GALLERY_ITEMS[selectedGalleryIndex].src}
+                      alt={CAMPUS_GALLERY_ITEMS[selectedGalleryIndex].title}
                       style={{
                         width: "100%",
                         height: "clamp(260px, 44vh, 400px)",
@@ -1475,7 +1307,7 @@ export default function CampusInfoPortal({
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedGalleryIndex((prev) =>
-                          prev !== null ? (prev - 1 + activeGallery.length) % activeGallery.length : 0
+                          prev !== null ? (prev - 1 + CAMPUS_GALLERY_ITEMS.length) % CAMPUS_GALLERY_ITEMS.length : 0
                         );
                       }}
                       title="Previous Photo"
@@ -1489,7 +1321,7 @@ export default function CampusInfoPortal({
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedGalleryIndex((prev) =>
-                          prev !== null ? (prev + 1) % activeGallery.length : 0
+                          prev !== null ? (prev + 1) % CAMPUS_GALLERY_ITEMS.length : 0
                         );
                       }}
                       title="Next Photo"
@@ -1524,7 +1356,7 @@ export default function CampusInfoPortal({
                         }}
                       >
                         <Sparkles size={11} />
-                        {activeGallery[selectedGalleryIndex].category}
+                        {CAMPUS_GALLERY_ITEMS[selectedGalleryIndex].category}
                       </span>
                       <span
                         style={{
@@ -1537,7 +1369,7 @@ export default function CampusInfoPortal({
                           fontWeight: 700,
                         }}
                       >
-                        {activeGallery[selectedGalleryIndex].date}
+                        {CAMPUS_GALLERY_ITEMS[selectedGalleryIndex].date}
                       </span>
                     </div>
 
@@ -1555,7 +1387,7 @@ export default function CampusInfoPortal({
                         fontWeight: 800,
                       }}
                     >
-                      {selectedGalleryIndex + 1} / {activeGallery.length}
+                      {selectedGalleryIndex + 1} / {CAMPUS_GALLERY_ITEMS.length}
                     </div>
                   </div>
 
@@ -1574,11 +1406,11 @@ export default function CampusInfoPortal({
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 800, color: "#0f172a" }}>
-                        {activeGallery[selectedGalleryIndex].title}
+                        {CAMPUS_GALLERY_ITEMS[selectedGalleryIndex].title}
                       </h4>
                     </div>
                     <p style={{ margin: 0, fontSize: "0.78rem", color: "#475569", lineHeight: 1.4 }}>
-                      {activeGallery[selectedGalleryIndex].description}
+                      {CAMPUS_GALLERY_ITEMS[selectedGalleryIndex].description}
                     </p>
                   </div>
 
@@ -1595,7 +1427,7 @@ export default function CampusInfoPortal({
                       scrollbarWidth: "thin",
                     }}
                   >
-                    {activeGallery.map((item, idx) => (
+                    {CAMPUS_GALLERY_ITEMS.map((item, idx) => (
                       <div
                         key={item.id}
                         className={`mp-thumb-item ${selectedGalleryIndex === idx ? "active" : ""}`}
@@ -1637,10 +1469,10 @@ export default function CampusInfoPortal({
                     }}
                   >
                     {(galleryCategoryFilter === "all"
-                      ? activeGallery
-                      : activeGallery.filter((item) => item.categoryFilter === galleryCategoryFilter)
+                      ? CAMPUS_GALLERY_ITEMS
+                      : CAMPUS_GALLERY_ITEMS.filter((item) => item.categoryFilter === galleryCategoryFilter)
                     ).map((item) => {
-                      const origIndex = activeGallery.findIndex((orig) => orig.id === item.id);
+                      const origIndex = CAMPUS_GALLERY_ITEMS.findIndex((orig) => orig.id === item.id);
                       return (
                         <div
                           key={item.id}
@@ -1783,15 +1615,27 @@ export default function CampusInfoPortal({
             </div>
 
             <div style={{ padding: "1.25rem", background: "#f8fafc", maxHeight: "450px", overflowY: "auto" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "12px" }}>
-                {activeAchievements.map((ach) => (
-                  <div key={ach.id} style={{ background: "#ffffff", borderRadius: "10px", padding: "10px", border: "1px solid #fed7aa" }}>
-                    <img src={ach.image} alt={ach.title} style={{ width: "100%", height: "120px", objectFit: "cover", borderRadius: "8px" }} />
-                    <span style={{ display: "inline-block", background: "#ea580c", color: "#fff", fontSize: "0.68rem", fontWeight: 800, padding: "2px 8px", borderRadius: "9999px", marginTop: "6px" }}>{ach.badge}</span>
-                    <h4 style={{ margin: "4px 0 2px", fontSize: "0.85rem", fontWeight: 800 }}>{ach.title}</h4>
-                    <p style={{ margin: 0, fontSize: "0.72rem", color: "#64748b" }}>{ach.category} • {ach.date}</p>
-                  </div>
-                ))}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px" }}>
+                <div style={{ background: "#ffffff", borderRadius: "10px", padding: "10px", border: "1px solid #fed7aa" }}>
+                  <img src="/achievement_math.jpg" alt="Math Quiz" style={{ width: "100%", height: "120px", objectFit: "cover", borderRadius: "8px" }} />
+                  <span style={{ display: "inline-block", background: "#ea580c", color: "#fff", fontSize: "0.68rem", fontWeight: 800, padding: "2px 8px", borderRadius: "9999px", marginTop: "6px" }}>★ 1st Rank</span>
+                  <h4 style={{ margin: "4px 0 2px", fontSize: "0.85rem", fontWeight: 800 }}>Inter-School Mathematics Quiz</h4>
+                  <p style={{ margin: 0, fontSize: "0.72rem", color: "#64748b" }}>Inter School Competition • Aug 2025</p>
+                </div>
+
+                <div style={{ background: "#ffffff", borderRadius: "10px", padding: "10px", border: "1px solid #fed7aa" }}>
+                  <img src="/achievement_cricket.jpg" alt="Cricket" style={{ width: "100%", height: "120px", objectFit: "cover", borderRadius: "8px" }} />
+                  <span style={{ display: "inline-block", background: "#ea580c", color: "#fff", fontSize: "0.68rem", fontWeight: 800, padding: "2px 8px", borderRadius: "9999px", marginTop: "6px" }}>★ Best Player</span>
+                  <h4 style={{ margin: "4px 0 2px", fontSize: "0.85rem", fontWeight: 800 }}>Inter-School Cricket Tournament</h4>
+                  <p style={{ margin: 0, fontSize: "0.72rem", color: "#64748b" }}>Inter School • Sep 2025</p>
+                </div>
+
+                <div style={{ background: "#ffffff", borderRadius: "10px", padding: "10px", border: "1px solid #fed7aa" }}>
+                  <img src="/achievement_science.jpg" alt="Science" style={{ width: "100%", height: "120px", objectFit: "cover", borderRadius: "8px" }} />
+                  <span style={{ display: "inline-block", background: "#f59e0b", color: "#fff", fontSize: "0.68rem", fontWeight: 800, padding: "2px 8px", borderRadius: "9999px", marginTop: "6px" }}>2 2nd Place</span>
+                  <h4 style={{ margin: "4px 0 2px", fontSize: "0.85rem", fontWeight: 800 }}>District Science Exhibition</h4>
+                  <p style={{ margin: 0, fontSize: "0.72rem", color: "#64748b" }}>District Level • Aug 2025</p>
+                </div>
               </div>
             </div>
           </div>
@@ -1848,21 +1692,49 @@ export default function CampusInfoPortal({
 
             <div style={{ padding: "1.25rem", background: "#f8fafc", maxHeight: "420px", overflowY: "auto" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                {activeEvents.map((ev) => (
-                  <div key={ev.id} style={{ background: "#ffffff", borderRadius: "8px", padding: "10px 14px", border: "1px solid #fed7aa", display: "flex", alignItems: "center", gap: "12px" }}>
-                    <div style={{ background: "#fff7ed", borderRadius: "6px", width: 44, height: 44, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "1px solid #fed7aa", flexShrink: 0 }}>
-                      <b style={{ fontSize: "1rem", color: "#c2410c" }}>{ev.day}</b>
-                      <span style={{ fontSize: "0.62rem", color: "#ea580c", fontWeight: 800 }}>{ev.month}</span>
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <h4 style={{ margin: 0, fontSize: "0.9rem", fontWeight: 800 }}>{ev.name}</h4>
-                        <span style={{ fontSize: "0.7rem", color: "#ea580c", fontWeight: 700, background: "#fff7ed", padding: "2px 8px", borderRadius: "9999px" }}>{ev.tag}</span>
-                      </div>
-                      <p style={{ margin: "2px 0 0", fontSize: "0.75rem", color: "#64748b" }}>{ev.venue}</p>
-                    </div>
+                <div style={{ background: "#ffffff", borderRadius: "8px", padding: "10px 14px", border: "1px solid #fed7aa", display: "flex", alignItems: "center", gap: "12px" }}>
+                  <div style={{ background: "#fff7ed", borderRadius: "6px", width: 44, height: 44, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "1px solid #fed7aa" }}>
+                    <b style={{ fontSize: "1rem", color: "#c2410c" }}>01</b>
+                    <span style={{ fontSize: "0.62rem", color: "#ea580c", fontWeight: 800 }}>NOV</span>
                   </div>
-                ))}
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: "0.9rem", fontWeight: 800 }}>Parent Teacher Meeting (PTM)</h4>
+                    <p style={{ margin: "2px 0 0", fontSize: "0.75rem", color: "#64748b" }}>10:00 AM – 12:00 PM | School Main Auditorium</p>
+                  </div>
+                </div>
+
+                <div style={{ background: "#ffffff", borderRadius: "8px", padding: "10px 14px", border: "1px solid #fed7aa", display: "flex", alignItems: "center", gap: "12px" }}>
+                  <div style={{ background: "#fff7ed", borderRadius: "6px", width: 44, height: 44, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "1px solid #fed7aa" }}>
+                    <b style={{ fontSize: "1rem", color: "#c2410c" }}>05</b>
+                    <span style={{ fontSize: "0.62rem", color: "#ea580c", fontWeight: 800 }}>NOV</span>
+                  </div>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: "0.9rem", fontWeight: 800 }}>Sports Day Practice &amp; Athletic Heats</h4>
+                    <p style={{ margin: "2px 0 0", fontSize: "0.75rem", color: "#64748b" }}>04:00 PM – 06:00 PM | Campus Athletic Arena</p>
+                  </div>
+                </div>
+
+                <div style={{ background: "#ffffff", borderRadius: "8px", padding: "10px 14px", border: "1px solid #fed7aa", display: "flex", alignItems: "center", gap: "12px" }}>
+                  <div style={{ background: "#fff7ed", borderRadius: "6px", width: 44, height: 44, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "1px solid #fed7aa" }}>
+                    <b style={{ fontSize: "1rem", color: "#c2410c" }}>10</b>
+                    <span style={{ fontSize: "0.62rem", color: "#ea580c", fontWeight: 800 }}>NOV</span>
+                  </div>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: "0.9rem", fontWeight: 800 }}>District Science &amp; Innovation Exhibition</h4>
+                    <p style={{ margin: "2px 0 0", fontSize: "0.75rem", color: "#64748b" }}>All Day (09:00 AM – 04:30 PM) | Discovery Block</p>
+                  </div>
+                </div>
+
+                <div style={{ background: "#ffffff", borderRadius: "8px", padding: "10px 14px", border: "1px solid #fed7aa", display: "flex", alignItems: "center", gap: "12px" }}>
+                  <div style={{ background: "#fff7ed", borderRadius: "6px", width: 44, height: 44, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "1px solid #fed7aa" }}>
+                    <b style={{ fontSize: "1rem", color: "#c2410c" }}>14</b>
+                    <span style={{ fontSize: "0.62rem", color: "#ea580c", fontWeight: 800 }}>NOV</span>
+                  </div>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: "0.9rem", fontWeight: 800 }}>Children's Day Special Cultural Gala</h4>
+                    <p style={{ margin: "2px 0 0", fontSize: "0.75rem", color: "#64748b" }}>09:00 AM – 12:00 PM | School Auditorium</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -2071,7 +1943,7 @@ export default function CampusInfoPortal({
                       gap: "14px",
                     }}
                   >
-                    {activeLeadership.map((leader) => (
+                    {LEADERSHIP_MEMBERS.map((leader) => (
                       <div
                         key={leader.id}
                         className="mv-leader-card"

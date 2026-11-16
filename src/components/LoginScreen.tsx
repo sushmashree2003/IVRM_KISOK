@@ -32,7 +32,7 @@ import {
   X,
 } from "lucide-react";
 import { SessionInfo } from "@/types/auth";
-import { saveUserSession, getRememberedUser, getInstituteLogo, getInstituteName, getAiAssistantName } from "@/lib/session";
+import { saveUserSession, getRememberedUser, getInstituteLogo, getInstituteName, getBackgroundLo } from "@/lib/session";
 import { CLIENT_API_ENDPOINTS } from "@/config/api";
 
 export type RoleType = "student" | "staff" | "visitor" | "alumni";
@@ -79,7 +79,6 @@ export default function LoginScreen({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [schoolLogo, setSchoolLogo] = useState<string>(() => getInstituteLogo());
   const [schoolName, setSchoolName] = useState<string>(() => getInstituteName());
-  const [aiName, setAiName] = useState<string>(() => getAiAssistantName());
 
   // Real-time clock & fullscreen sync
   useEffect(() => {
@@ -110,7 +109,7 @@ export default function LoginScreen({
     }
 
     let isMounted = true;
-    fetch("/api/branding")
+    fetch("/api/branding", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (!isMounted || !data) return;
@@ -124,12 +123,6 @@ export default function LoginScreen({
           setSchoolName(data.name);
           try {
             localStorage.setItem("kiosk_institute_name", data.name);
-          } catch { }
-        }
-        if (data.aiName) {
-          setAiName(data.aiName);
-          try {
-            localStorage.setItem("kiosk_ai_name", data.aiName);
           } catch { }
         }
       })
@@ -285,12 +278,12 @@ export default function LoginScreen({
       accentGradient: "linear-gradient(135deg, #ea580c 0%, #c2410c 50%, #059669 100%)",
       haloColor: "rgba(234, 88, 12, 0.22)",
       heroTag: "GLOBAL GVIAN ALUMNI & EX-STAFF NETWORK",
-      heroHeadline1: "Once a GVian, Always a GVian",
+      heroHeadline1: "",
       heroHeadlineHighlight: "Reconnect, Mentor & Shape the Future",
       heroSubtext:
         "Connect with batchmates and former staff worldwide, mentor ambitious students, register for annual reunions, and celebrate alma mater achievements.",
       sloganTitle: "GVIAN ALUMNI & EX-STAFF CREED",
-      sloganQuote: "“Once a GVian, Always a GVian — Carrying forward a legacy of honor, excellence, and shared memories.”",
+      sloganQuote: "“.”",
       sloganMotto: "Honor the Past • Shape the Present • Inspire the Future",
       features: [
         {
@@ -338,6 +331,24 @@ export default function LoginScreen({
   const [visitorPhone, setVisitorPhone] = useState("");
   const [visitorNameError, setVisitorNameError] = useState("");
   const [visitorPhoneError, setVisitorPhoneError] = useState("");
+
+  // Dynamic Background from env parameter 'backgroupdlo'
+  const [bgImage, setBgImage] = useState<string>(() => getBackgroundLo());
+
+  useEffect(() => {
+    fetch("/api/branding", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.backgroupdlo) {
+          setBgImage(data.backgroupdlo);
+          try {
+            sessionStorage.setItem("backgroupdlo", data.backgroupdlo);
+            localStorage.setItem("kiosk_backgroupdlo", data.backgroupdlo);
+          } catch { }
+        }
+      })
+      .catch(() => { });
+  }, []);
 
   // Sync default user when role changes externally or check remembered user
   useEffect(() => {
@@ -444,6 +455,20 @@ export default function LoginScreen({
           sessionStorage.setItem("MI_Subdomain", dynamicMiSubdomain);
         }
 
+        // Dynamically capture backgroupdlo (background image) from login API response or env into session
+        const dynamicBackgroupdlo =
+          result.backgroupdlo ||
+          result.session.backgroupdlo ||
+          result.data?.backgroupdlo ||
+          CLIENT_API_ENDPOINTS.DEFAULT_BACKGROUPDLO ||
+          getBackgroundLo() ||
+          "";
+        if (dynamicBackgroupdlo) {
+          result.session.backgroupdlo = dynamicBackgroupdlo;
+          sessionStorage.setItem("backgroupdlo", dynamicBackgroupdlo);
+          localStorage.setItem("kiosk_backgroupdlo", dynamicBackgroupdlo);
+        }
+
         // Save user data to sessionStorage and individual keys (matching C# sessionInfo)
         saveUserSession(result.session, rememberMe);
         setAuthSuccess(true);
@@ -526,7 +551,7 @@ export default function LoginScreen({
 
   return (
     <div
-      className="kiosk-command-center"
+      className={`kiosk-command-center ${bgImage ? "has-bg-image" : ""}`}
       style={{
         position: "relative",
         width: "100%",
@@ -540,12 +565,27 @@ export default function LoginScreen({
         fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
         userSelect: "none",
         boxSizing: "border-box",
-        background: "#fffcf9",
+        background: bgImage ? "transparent" : "#fffcf9",
       }}
     >
-      {/* FLOATING AMBIENT ORBS (MATCHING ROLE SELECTION SCREEN) */}
-      <div className="kiosk-orb kiosk-orb-one" />
-      <div className="kiosk-orb kiosk-orb-two" />
+      {/* Dynamic Background Image strictly from env parameter 'backgroupdlo' (NO extra color) */}
+      {bgImage && (
+        <div
+          className="dashboard-bg-backdrop"
+          aria-hidden="true"
+          style={{
+            backgroundImage: `url("${bgImage}")`,
+          }}
+        />
+      )}
+
+      {/* FLOATING AMBIENT ORBS only if no background image */}
+      {!bgImage && (
+        <>
+          <div className="kiosk-orb kiosk-orb-one" />
+          <div className="kiosk-orb kiosk-orb-two" />
+        </>
+      )}
 
       {/* TOP COMMAND NAVBAR (ROLE SELECTION COMMAND THEME) */}
       <header
@@ -631,10 +671,10 @@ export default function LoginScreen({
 
           {/* Live Clock & Date Badge */}
           {currentTime && (
-            <div className="command-time">
+            <div className="command-time" suppressHydrationWarning>
               <Calendar size={15} />
-              <span>{formatDate(currentTime)}</span>
-              <b>{formatTime(currentTime)}</b>
+              <span suppressHydrationWarning>{formatDate(currentTime)}</span>
+              <b suppressHydrationWarning>{formatTime(currentTime)}</b>
             </div>
           )}
 
@@ -666,6 +706,22 @@ export default function LoginScreen({
             />
             <span>{config.roleBadge}</span>
           </div>
+
+          {/* Server API & MI_ID Config Toggle */}
+          <button
+            type="button"
+            onClick={() => setShowServerConfig(!showServerConfig)}
+            className="command-fullscreen"
+            title="Configure School API Server & Institution ID (From App.config)"
+            aria-label="Server Configuration"
+            style={{
+              cursor: "pointer",
+              background: showServerConfig ? "#ea580c" : undefined,
+              color: showServerConfig ? "#ffffff" : undefined,
+            }}
+          >
+            <Server size={14} style={{ color: showServerConfig ? "#ffffff" : config.accentColor }} />
+          </button>
 
           {/* Fullscreen Toggle Button */}
           <button
@@ -1375,6 +1431,25 @@ export default function LoginScreen({
                 gap: "clamp(0.6rem, 1vh, 0.9rem)",
               }}
             >
+              {/* Demo disclaimer */}
+              <div
+                style={{
+                  width: "100%",
+                  background: "rgba(13, 148, 136, 0.08)",
+                  border: "1.5px solid rgba(13, 148, 136, 0.3)",
+                  borderRadius: "12px",
+                  padding: "10px 14px",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "8px",
+                  boxSizing: "border-box",
+                }}
+              >
+                <ShieldCheck size={16} style={{ color: "#0d9488", flexShrink: 0, marginTop: "2px" }} />
+                <span style={{ fontSize: "0.78rem", fontWeight: 600, color: "#0f766e", lineHeight: 1.4 }}>
+                  <strong>Static Kiosk Demo</strong> — No real data is submitted. This is an interactive demonstration for Green Valley Public School.
+                </span>
+              </div>
 
               {/* Visitor Name */}
               <div style={{ display: "flex", flexDirection: "column", gap: "4px", width: "100%" }}>
@@ -1668,7 +1743,48 @@ export default function LoginScreen({
               </div>
 
               {/* Remember Me & Help Row */}
-              
+              <div
+                className="login-remember-row"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  fontSize: "0.82rem",
+                  color: "#475569",
+                  padding: "2px 2px",
+                }}
+              >
+                <label
+                  className="login-remember-label"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    cursor: "pointer",
+                    fontWeight: 600,
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    style={{ width: "16px", height: "16px", accentColor: config.accentColor, cursor: "pointer" }}
+                  />
+                  <span>Remember on this kiosk</span>
+                </label>
+                <a
+                  href="#forgot"
+                  className="login-forgot-link"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    alert("Please contact the Kiosk Helpdesk at Ext. 104 or visit the administrative reception.");
+                  }}
+                  style={{ color: config.accentColor, textDecoration: "none", fontWeight: 700 }}
+                >
+                  {/* Forgot ID / Help? */}
+                </a>
+              </div>
+
               {/* Primary High-Visibility Sign In Button */}
               <button
                 type="submit"
@@ -1780,7 +1896,7 @@ export default function LoginScreen({
           <span>Digital Campus Kiosk</span>
         </div>
         <button className="assistant-button" type="button" onClick={onBackToKiosk}>
-          <span className="assistant-pulse" /> Need help? <b>Ask {aiName}</b>
+          <span className="assistant-pulse" /> Need help? <b>Ask GREEN_AI</b>
         </button>
       </footer>
     </div>

@@ -7,7 +7,7 @@ function readEnvVar(key: string, defaultValue: string = ""): string {
   if (process.env[key] && process.env[key]!.trim() !== "") {
     return process.env[key]!.trim();
   }
-  const files = [".env.local", ".env", ".env.development", ".env.example"];
+  const files = [".env.example", ".env.local", ".env", ".env.development"];
   for (const file of files) {
     try {
       const fullPath = path.join(process.cwd(), file);
@@ -34,6 +34,15 @@ function readEnvVar(key: string, defaultValue: string = ""): string {
 const resolvedInstCodeBg =
   readEnvVar("NEXT_PUBLIC_INST_CODE_BGIMAGE") ||
   readEnvVar("INST_CODE_BGIMAGE");
+
+const resolvedBackgroupdlo =
+  readEnvVar("NEXT_PUBLIC_BACKGROUPDLO") ||
+  readEnvVar("backgroupdlo") ||
+  readEnvVar("NEXT_PUBLIC_BACKGROUND_IMAGE") ||
+  readEnvVar("BACKGROUND_IMAGE") ||
+  readEnvVar("NEXT_PUBLIC_BACKGROUND_LOGO") ||
+  readEnvVar("BACKGROUND_LOGO") ||
+  resolvedInstCodeBg;
 
 const resolvedInstCode =
   readEnvVar("NEXT_PUBLIC_INST_CODE") ||
@@ -81,6 +90,8 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_INST_CODE: resolvedInstCode,
     NEXT_PUBLIC_INST_CODE_BGIMAGE: resolvedInstCodeBg,
+    NEXT_PUBLIC_BACKGROUPDLO: resolvedBackgroupdlo,
+    NEXT_PUBLIC_BACKGROUND_IMAGE: resolvedBackgroupdlo,
     NEXT_PUBLIC_INSTITUTE_LOGO: resolvedLogo,
     NEXT_PUBLIC_INSTITUTE_NAME: resolvedName,
     NEXT_PUBLIC_LOGIN_MI_ID: resolvedMiId,

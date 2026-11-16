@@ -1,7 +1,11 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import CampusInfoPortal from "@/components/CampusInfoPortal";
+
+const CampusInfoPortal = dynamic(() => import("@/components/CampusInfoPortal"), {
+  ssr: false,
+});
 
 export default function DashboardPage() {
   const router = useRouter();

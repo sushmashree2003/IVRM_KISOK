@@ -64,6 +64,7 @@ export const VAPS_API_ENDPOINTS = {
   SPORTS_URL: getEnv("SPORTS_URL") || BASE_SPORTS,
   DEFAULT_MI_ID: getEnv("LOGIN_MI_ID") || getEnv("NEXT_PUBLIC_LOGIN_MI_ID") || getEnv("MI_ID") || getEnv("MI_Id") || "",
   DEFAULT_MI_SUBDOMAIN: getEnv("MI_Subdomain") || getEnv("MI_SUBDOMAIN") || getEnv("NEXT_PUBLIC_MI_SUBDOMAIN") || "",
+  DEFAULT_BACKGROUPDLO: getEnv("backgroupdlo") || getEnv("NEXT_PUBLIC_BACKGROUPDLO") || getEnv("BACKGROUND_IMAGE") || getEnv("NEXT_PUBLIC_BACKGROUND_IMAGE") || getEnv("BACKGROUND_LOGO") || getEnv("INST_CODE_BGIMAGE") || "",
   DEFAULT_ASMAY_ID: getEnv("LOGIN_ASMAY_ID") || getEnv("NEXT_PUBLIC_LOGIN_ASMAY_ID") || getEnv("ASMAY_ID") || getEnv("ASMAY_Id") || getEnv("Y_ID") || "",
   DEFAULT_ASMAY_YEAR: getEnv("LOGIN_ASMAY_YEAR") || getEnv("NEXT_PUBLIC_LOGIN_ASMAY_YEAR") || getEnv("ASMAY_YEAR") || "",
   DEFAULT_MO_ID: getEnv("MO_ID") || getEnv("MO_Id") || "",
@@ -155,6 +156,7 @@ export const CLIENT_API_ENDPOINTS = {
   DEFAULT_SERVER_URL: getEnv("NEXT_PUBLIC_LOGIN_URL") || getEnv("LOGIN_URL") || "",
   DEFAULT_MI_ID: getEnv("NEXT_PUBLIC_LOGIN_MI_ID") || getEnv("LOGIN_MI_ID") || getEnv("MI_ID") || getEnv("MI_Id") || "",
   DEFAULT_MI_SUBDOMAIN: getEnv("NEXT_PUBLIC_MI_SUBDOMAIN") || getEnv("MI_Subdomain") || getEnv("MI_SUBDOMAIN") || "",
+  DEFAULT_BACKGROUPDLO: getEnv("NEXT_PUBLIC_BACKGROUPDLO") || getEnv("backgroupdlo") || getEnv("NEXT_PUBLIC_BACKGROUND_IMAGE") || getEnv("BACKGROUND_IMAGE") || getEnv("INST_CODE_BGIMAGE") || "",
   DEFAULT_ASMAY_ID: getEnv("NEXT_PUBLIC_LOGIN_ASMAY_ID") || getEnv("LOGIN_ASMAY_ID") || getEnv("ASMAY_ID") || getEnv("ASMAY_Id") || getEnv("Y_ID") || "",
   DEFAULT_ASMAY_YEAR: getEnv("NEXT_PUBLIC_LOGIN_ASMAY_YEAR") || getEnv("LOGIN_ASMAY_YEAR") || getEnv("ASMAY_YEAR") || "",
 };

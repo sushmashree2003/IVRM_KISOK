@@ -1,10 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { RoleType } from "@/components/LoginScreen";
-import RoleSelectionScreen from "@/components/RoleSelectionScreen";
-import CampusInfoPortal from "@/components/CampusInfoPortal";
+
+const RoleSelectionScreen = dynamic(() => import("@/components/RoleSelectionScreen"), {
+  ssr: false,
+});
+const CampusInfoPortal = dynamic(() => import("@/components/CampusInfoPortal"), {
+  ssr: false,
+});
 
 export default function Home() {
   const router = useRouter();

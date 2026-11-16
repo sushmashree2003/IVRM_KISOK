@@ -2,9 +2,8 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import MarkdownResponse from "@/components/chat/MarkdownResponse";
-import { getUserSession, clearUserSession, getInstituteLogo, getInstituteName, getAiAssistantName } from "@/lib/session";
+import { getUserSession, clearUserSession, getInstituteLogo, getInstituteName, getAiAssistantName, getBackgroundLo } from "@/lib/session";
 import { SessionInfo } from "@/types/auth";
-import PortalCmsManager from "@/components/admin/PortalCmsManager";
 import {
   ArrowLeft,
   ArrowRight,
@@ -56,7 +55,7 @@ interface DashboardProps {
   onBackToKiosk: () => void;
 }
 
-type ActiveScreen = "dashboard" | "attendance" | "finance" | "admissions" | "profile" | "aispace" | "portal-cms";
+type ActiveScreen = "dashboard" | "attendance" | "finance" | "admissions" | "profile" | "aispace";
 
 // Official Inspiring Slogans & Leadership Wisdom for Governance
 const ADMIN_SLOGANS = [
@@ -170,7 +169,8 @@ const ADMISSIONS_PIPELINE = [
 
 export default function AdminDashboard({ onBackToKiosk }: DashboardProps) {
   const [session, setSession] = useState<SessionInfo | null>(null);
-  const [currentScreen, setCurrentScreen] = useState<ActiveScreen>("portal-cms");
+  const [bgImage, setBgImage] = useState<string>(() => getBackgroundLo());
+  const [currentScreen, setCurrentScreen] = useState<ActiveScreen>("dashboard");
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -277,9 +277,26 @@ export default function AdminDashboard({ onBackToKiosk }: DashboardProps) {
 
   // Load session
   useEffect(() => {
+    // 1. Fetch dynamic branding and background image strictly from environment (/api/branding)
+    fetch("/api/branding", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.backgroupdlo) {
+          setBgImage(data.backgroupdlo);
+          try {
+            sessionStorage.setItem("backgroupdlo", data.backgroupdlo);
+            localStorage.setItem("kiosk_backgroupdlo", data.backgroupdlo);
+          } catch { }
+        }
+      })
+      .catch(() => { });
+
     const activeSession = getUserSession();
     if (activeSession) {
       setSession(activeSession);
+      if (activeSession.backgroupdlo) {
+        setBgImage(activeSession.backgroupdlo);
+      }
     }
   }, []);
 
@@ -308,15 +325,33 @@ export default function AdminDashboard({ onBackToKiosk }: DashboardProps) {
   const academicYear = session?.ASMAY_Year || "2025-2026";
 
   return (
-    <div className="dashboard-page">
-      {/* FLOATING AMBIENT ORBS (MATCHING ROLE SELECTION SCREEN) */}
-      <div className="kiosk-orb kiosk-orb-one" />
-      <div className="kiosk-orb kiosk-orb-two" />
+    <div className={`dashboard-page ${bgImage ? "has-bg-image" : ""}`}>
+      {/* FLOATING AMBIENT ORBS only if no background image */}
+      {!bgImage && (
+        <>
+          <div className="kiosk-orb kiosk-orb-one" />
+          <div className="kiosk-orb kiosk-orb-two" />
+        </>
+      )}
 
-      {/* TOP COMMAND NAVBAR (ROLE SELECTION COMMAND THEME) */}
-      <header className="dash-navbar" suppressHydrationWarning>
-        <div className="command-brand" onClick={handleLogout} style={{ cursor: "pointer" }} suppressHydrationWarning>
-          <div className="command-mark" aria-hidden="true" suppressHydrationWarning>
+      {/* Dynamic Background Image strictly from env parameter 'backgroupdlo' (NO extra color) */}
+      {bgImage && (
+        <div
+          className="dashboard-bg-backdrop"
+          aria-hidden="true"
+          style={{
+            backgroundImage: `url("${bgImage}")`,
+          }}
+        />
+      )}
+
+      {/* TOP COMMAND NAVBAR (ROLE SELECTION COMMAND THEME - FULLY DYNAMIC) */}
+      <header className="dash-navbar" style={{ position: "relative", zIndex: 30 }} suppressHydrationWarning>
+        <div className="command-brand" style={{ display: "flex", alignItems: "center", gap: "14px" }} suppressHydrationWarning>
+          <button className="command-back" onClick={handleLogout} aria-label="Back to role selection" title="Back to Kiosk Home">
+            <ArrowLeft size={19} />
+          </button>
+          <div className="command-mark" aria-hidden="true" style={{ width: "42px", height: "42px" }} suppressHydrationWarning>
             <img
               src={schoolLogo}
               alt={`${schoolName} Logo`}
@@ -329,29 +364,29 @@ export default function AdminDashboard({ onBackToKiosk }: DashboardProps) {
             />
           </div>
           <div suppressHydrationWarning>
-            <p className="command-kicker" suppressHydrationWarning>{schoolName.toUpperCase()} • CAMPUS KIOSK CMS</p>
+            <p className="command-kicker" suppressHydrationWarning>{schoolName.toUpperCase()} • SMART CAMPUS</p>
             <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", flexWrap: "wrap" }} suppressHydrationWarning>
               <h1 style={{ margin: 0, fontFamily: "Outfit, sans-serif", fontSize: "1.15rem", fontWeight: 800, color: "#1e293b" }} suppressHydrationWarning>
-                Campus Portal CMS (Dashboard Manager)
+                {schoolName}
               </h1>
               <span
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "0.35rem",
-                  background: "linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)",
-                  color: "#ea580c",
+                  background: "linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)",
+                  color: "#6d28d9",
                   fontSize: "0.74rem",
                   fontWeight: 800,
                   padding: "0.22rem 0.75rem",
                   borderRadius: "9999px",
-                  border: "1.5px solid rgba(234, 88, 12, 0.35)",
-                  boxShadow: "0 2px 8px rgba(234, 88, 12, 0.1)",
+                  border: "1.5px solid rgba(124, 58, 237, 0.35)",
+                  boxShadow: "0 2px 8px rgba(124, 58, 237, 0.1)",
                   letterSpacing: "0.02em",
                 }}
               >
-                <Sparkles size={12} style={{ color: "#ea580c" }} />
-                ADMINISTRATOR ROLE
+                <ShieldCheck size={12} style={{ color: "#7c3aed" }} />
+                PAGE 6 • ADMINISTRATOR PORTAL
               </span>
             </div>
           </div>
@@ -375,16 +410,16 @@ export default function AdminDashboard({ onBackToKiosk }: DashboardProps) {
 
           {/* Live Campus Telemetry Pill */}
           <div className="command-live-status">
-            <span style={{ background: "#ea580c" }} />
-            <span>Kiosk Online</span>
+            <span style={{ background: "#7c3aed" }} />
+            <span>Campus online</span>
           </div>
 
           {/* Command Time Pill */}
-          <div className="dash-clock-widget">
-            <Calendar size={13} style={{ color: "#ea580c" }} />
-            <span>
+          <div className="dash-clock-widget" suppressHydrationWarning>
+            <Calendar size={13} style={{ color: "#7c3aed" }} />
+            <span suppressHydrationWarning>
               {currentTime.toLocaleDateString("en-US", { weekday: "short", day: "2-digit", month: "short" })} •{" "}
-              <b>{currentTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}</b>
+              <b suppressHydrationWarning>{currentTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}</b>
             </span>
           </div>
 
@@ -395,29 +430,765 @@ export default function AdminDashboard({ onBackToKiosk }: DashboardProps) {
           </button>
 
           {/* Back to Kiosk Home */}
-          <button className="dash-kiosk-back-btn" onClick={onBackToKiosk || handleLogout} title="Return to Kiosk Dashboard">
+          <button className="dash-kiosk-back-btn" onClick={handleLogout} title="Return to Role Selection Home">
             <Home size={14} /> Back to Kiosk
           </button>
         </div>
       </header>
 
       {/* ========================================================
-          CAMPUS PORTAL CMS (DASHBOARD MANAGER)
+          VIEW 1: MAIN ADMIN HUB (6 BALANCED CONTAINERS GRID)
           ======================================================== */}
-      {(currentScreen === "portal-cms" || currentScreen === "dashboard") && (
-        <main
-          style={{
-            flex: 1,
-            minHeight: 0,
-            overflowY: "auto",
-            padding: "1.25rem",
-            maxWidth: "1650px",
-            margin: "0 auto",
-            width: "100%",
-            boxSizing: "border-box",
-          }}
-        >
-          <PortalCmsManager onBackToDashboard={onBackToKiosk} />
+      {currentScreen === "dashboard" && (
+        <main className="dash-main-hub">
+          {/* HERO BANNER (ROLE SELECTION COMMAND THEME) */}
+          <section className="student-hub-hero">
+            <div className="student-hero-title-group">
+              <div className="hero-chip" style={{ display: "inline-flex", alignItems: "center", gap: "0.45rem", marginBottom: "0.35rem" }}>
+                <span
+                  style={{
+                    background: "#7c3aed",
+                    color: "#ffffff",
+                    padding: "2px 8px",
+                    borderRadius: "9999px",
+                    fontSize: "0.65rem",
+                    fontWeight: 900,
+                    letterSpacing: "0.04em",
+                  }}
+                >
+                  PAGE 6
+                </span>
+                <Sparkles size={14} /> ADMINISTRATOR &amp; VISITOR PORTAL • CAMPUS COMMAND
+              </div>
+              <h2>
+                Campus Operations <span>Command Hub</span>
+              </h2>
+              <p>Institutional telemetry, operations oversight, safety monitoring, and academic governance.</p>
+              <div className="student-hero-chips">
+                <span className="student-hero-chip" style={{ background: "#f5f3ff", color: "#7c3aed", borderColor: "rgba(124, 58, 237, 0.3)" }}>
+                  <Users size={12} /> 6,240 Total Students
+                </span>
+                <span className="student-hero-chip" style={{ background: "#f5f3ff", color: "#7c3aed", borderColor: "rgba(124, 58, 237, 0.3)" }}>
+                  <UserCheck size={12} /> 86 Active Faculty
+                </span>
+                <span className="student-hero-chip" style={{ background: "#f5f3ff", color: "#7c3aed", borderColor: "rgba(124, 58, 237, 0.3)" }}>
+                  <Bus size={12} /> 38/38 GPS Buses Active
+                </span>
+                <span className="student-hero-chip" style={{ background: "#f5f3ff", color: "#7c3aed", borderColor: "rgba(124, 58, 237, 0.3)" }}>
+                  <ShieldCheck size={12} /> CBSE Affiliation 1930281 • NAAC A++
+                </span>
+              </div>
+              <div className="hero-trust" style={{ marginTop: "0.55rem", fontSize: "11px" }}>
+                <ShieldCheck size={14} style={{ color: "#7c3aed" }} /><span>CBSE Affiliation 1930281 • NAAC A++</span><i />
+                <Activity size={14} style={{ color: "#7c3aed" }} /><span>38/38 GPS Smart Buses Live</span>
+              </div>
+            </div>
+
+            {/* UNIFIED 3D STAGE CAPSULE */}
+            <div className="student-hero-capsule">
+              {/* 3D Admin Character Avatar Stage */}
+              <div className="hero-avatar-podium">
+                <div className="hero-avatar-halo" />
+                <img
+                  src="/admin_avatar.png"
+                  alt="Administrator"
+                  className="hero-avatar-3d-img"
+                />
+                <span className="hero-avatar-tag">Admin Hub</span>
+              </div>
+
+              <div className="hero-capsule-divider" />
+
+              {/* 3D Mini Orbital Badge */}
+              <div className="hero-honor-stage">
+                <div className="hero-honor-icon-bubble">
+                  <ShieldCheck size={18} />
+                </div>
+                <div className="hero-honor-text">
+                  <span className="hero-honor-title">Control</span>
+                  <span className="hero-honor-badge">Smart Campus</span>
+                </div>
+              </div>
+
+              <div className="hero-capsule-divider" />
+
+              {/* AI Space Launch Button */}
+              <button
+                type="button"
+                onClick={() => setCurrentScreen("aispace")}
+                className="hero-ai-capsule-btn"
+                title="Launch Admin AI Command Space"
+              >
+                <div className="hero-ai-robo-wrap">
+                  <img src="/ai_robot.png" alt={aiName} className="hero-ai-robo-img" />
+                  <span className="hero-ai-pulse-dot" />
+                </div>
+                <div style={{ textAlign: "center" }}>
+                  <div className="hero-ai-kicker">
+                    <Sparkles size={9} style={{ display: "inline", verticalAlign: "middle", marginRight: 2 }} /> EXECUTIVE AI
+                  </div>
+                  <span className="hero-ai-action">Ask {aiName} →</span>
+                </div>
+              </button>
+            </div>
+          </section>
+
+          {/* 6 COMPACT BALANCED CONTAINERS (3 COLUMNS × 2 ROWS) */}
+          <section className="student-hub-grid">
+            {/* CONTAINER 1: 🛡️ CAMPUS ATTENDANCE TELEMETRY */}
+            <div
+              className="student-hub-card"
+              onClick={() => setCurrentScreen("attendance")}
+              title="Click to open Attendance Telemetry Screen"
+            >
+              <div className="student-hub-card-header">
+                <div className="student-card-title-group">
+                  <div className="student-card-icon-box">
+                    <Users size={19} />
+                  </div>
+                  <div className="student-card-headings">
+                    <h3>Attendance Telemetry</h3>
+                    <span>Biometrics & Turnstiles</span>
+                  </div>
+                </div>
+                <span
+                  style={{
+                    background: "#fff7ed",
+                    color: "#ea580c",
+                    border: "1px solid rgba(254, 215, 170, 0.8)",
+                    fontSize: "0.68rem",
+                    fontWeight: 800,
+                    padding: "0.2rem 0.65rem",
+                    borderRadius: "9999px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "5px",
+                  }}
+                >
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#16a34a" }} />
+                  6,240 Total
+                </span>
+              </div>
+
+              <div className="student-hub-card-body">
+                <div className="student-metric-hero">
+                  <span className="student-metric-val">96.8%</span>
+                  <span className="student-metric-label">Overall Campus Turnout</span>
+                </div>
+
+                {/* 3D Progress Bar */}
+                <div style={{ height: "7px", width: "100%", background: "#ffedd5", borderRadius: "9999px", overflow: "hidden" }}>
+                  <div
+                    style={{
+                      height: "100%",
+                      width: "96.8%",
+                      background: "linear-gradient(90deg, #ea580c 0%, #f59e0b 100%)",
+                      borderRadius: "9999px",
+                      boxShadow: "0 2px 6px rgba(234, 88, 12, 0.35)",
+                    }}
+                  />
+                </div>
+
+                {/* 4-Tile Duo Grid Widget */}
+                <div className="student-kpi-duo-grid">
+                  <div className="student-kpi-mini-card">
+                    <div className="student-kpi-mini-icon">
+                      <GraduationCap size={14} />
+                    </div>
+                    <div className="student-kpi-mini-meta">
+                      <span className="student-kpi-mini-label">Learners Present</span>
+                      <strong className="student-kpi-mini-val">6,040 / 6,240</strong>
+                    </div>
+                  </div>
+                  <div className="student-kpi-mini-card highlight">
+                    <div className="student-kpi-mini-icon highlight">
+                      <Briefcase size={14} />
+                    </div>
+                    <div className="student-kpi-mini-meta">
+                      <span className="student-kpi-mini-label">Faculty On Duty</span>
+                      <strong className="student-kpi-mini-val highlight">82 / 86 Active</strong>
+                    </div>
+                  </div>
+                  <div className="student-kpi-mini-card">
+                    <div className="student-kpi-mini-icon">
+                      <Fingerprint size={14} />
+                    </div>
+                    <div className="student-kpi-mini-meta">
+                      <span className="student-kpi-mini-label">Biometric Swipes</span>
+                      <strong className="student-kpi-mini-val">4,820 Verified</strong>
+                    </div>
+                  </div>
+                  <div className="student-kpi-mini-card">
+                    <div className="student-kpi-mini-icon">
+                      <ShieldCheck size={14} />
+                    </div>
+                    <div className="student-kpi-mini-meta">
+                      <span className="student-kpi-mini-label">Turnstiles Gate</span>
+                      <strong className="student-kpi-mini-val highlight">100% Synced</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="student-hub-card-footer">
+                <button
+                  className="student-open-screen-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentScreen("attendance");
+                  }}
+                >
+                  <Activity size={13} /> Open Attendance Telemetry Screen <ArrowRight size={13} />
+                </button>
+              </div>
+            </div>
+
+            {/* CONTAINER 2: 💳 FEE COLLECTIONS & FINANCIAL RECONCILIATION */}
+            <div
+              className="student-hub-card"
+              onClick={() => setCurrentScreen("finance")}
+              title="Click to open Financial Ledger Screen"
+            >
+              <div className="student-hub-card-header">
+                <div className="student-card-title-group">
+                  <div className="student-card-icon-box">
+                    <IndianRupee size={19} />
+                  </div>
+                  <div className="student-card-headings">
+                    <h3>Financial &amp; Fee Ledger</h3>
+                    <span>Term Collections &amp; Dues</span>
+                  </div>
+                </div>
+                <span
+                  style={{
+                    background: "#fff7ed",
+                    color: "#ea580c",
+                    border: "1px solid rgba(254, 215, 170, 0.8)",
+                    fontSize: "0.68rem",
+                    fontWeight: 800,
+                    padding: "0.2rem 0.65rem",
+                    borderRadius: "9999px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "5px",
+                  }}
+                >
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#16a34a" }} />
+                  88.1% Collected
+                </span>
+              </div>
+
+              <div className="student-hub-card-body">
+                <div className="student-metric-hero">
+                  <span className="student-metric-val">₹ 62.4 L</span>
+                  <span className="student-metric-label">Reconciled to Date (88.1%)</span>
+                </div>
+
+                {/* 3D Progress Bar */}
+                <div style={{ height: "7px", width: "100%", background: "#ffedd5", borderRadius: "9999px", overflow: "hidden" }}>
+                  <div
+                    style={{
+                      height: "100%",
+                      width: "88.1%",
+                      background: "linear-gradient(90deg, #ea580c 0%, #f59e0b 100%)",
+                      borderRadius: "9999px",
+                      boxShadow: "0 2px 6px rgba(234, 88, 12, 0.35)",
+                    }}
+                  />
+                </div>
+
+                {/* 4-Tile Duo Grid Widget */}
+                <div className="student-kpi-duo-grid">
+                  <div className="student-kpi-mini-card highlight">
+                    <div className="student-kpi-mini-icon highlight">
+                      <CheckCircle2 size={14} />
+                    </div>
+                    <div className="student-kpi-mini-meta">
+                      <span className="student-kpi-mini-label">Total Realized</span>
+                      <strong className="student-kpi-mini-val highlight">₹ 62,40,000</strong>
+                    </div>
+                  </div>
+                  <div className="student-kpi-mini-card">
+                    <div className="student-kpi-mini-icon">
+                      <Clock size={14} />
+                    </div>
+                    <div className="student-kpi-mini-meta">
+                      <span className="student-kpi-mini-label">Pending Dues</span>
+                      <strong className="student-kpi-mini-val">₹ 8,42,500</strong>
+                    </div>
+                  </div>
+                  <div className="student-kpi-mini-card">
+                    <div className="student-kpi-mini-icon">
+                      <CreditCard size={14} />
+                    </div>
+                    <div className="student-kpi-mini-meta">
+                      <span className="student-kpi-mini-label">Digital / UPI</span>
+                      <strong className="student-kpi-mini-val">74% Real-time</strong>
+                    </div>
+                  </div>
+                  <div className="student-kpi-mini-card">
+                    <div className="student-kpi-mini-icon">
+                      <TrendingUp size={14} />
+                    </div>
+                    <div className="student-kpi-mini-meta">
+                      <span className="student-kpi-mini-label">Fiscal Audit</span>
+                      <strong className="student-kpi-mini-val highlight">Reconciled 100%</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="student-hub-card-footer">
+                <button
+                  className="student-open-screen-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentScreen("finance");
+                  }}
+                >
+                  <TrendingUp size={13} /> Open Accounts &amp; Fee Ledger <ArrowRight size={13} />
+                </button>
+              </div>
+            </div>
+
+            {/* CONTAINER 3: 🎓 ADMISSIONS PIPELINE & DESK */}
+            <div
+              className="student-hub-card"
+              onClick={() => setCurrentScreen("admissions")}
+              title="Click to open Admissions Screen"
+            >
+              <div className="student-hub-card-header">
+                <div className="student-card-title-group">
+                  <div className="student-card-icon-box">
+                    <GraduationCap size={19} />
+                  </div>
+                  <div className="student-card-headings">
+                    <h3>Admissions Pipeline</h3>
+                    <span>AY 2026-27 Desk</span>
+                  </div>
+                </div>
+                <span
+                  style={{
+                    background: "#fff7ed",
+                    color: "#ea580c",
+                    border: "1px solid rgba(254, 215, 170, 0.8)",
+                    fontSize: "0.68rem",
+                    fontWeight: 800,
+                    padding: "0.2rem 0.65rem",
+                    borderRadius: "9999px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "5px",
+                  }}
+                >
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ea580c" }} />
+                  340 Inquiries
+                </span>
+              </div>
+
+              <div className="student-hub-card-body">
+                <div className="student-metric-hero">
+                  <span className="student-metric-val">340 Forms</span>
+                  <span className="student-metric-label">Applications Received</span>
+                </div>
+
+                {/* 3D Progress Bar */}
+                <div style={{ height: "7px", width: "100%", background: "#ffedd5", borderRadius: "9999px", overflow: "hidden" }}>
+                  <div
+                    style={{
+                      height: "100%",
+                      width: "72%",
+                      background: "linear-gradient(90deg, #ea580c 0%, #f59e0b 100%)",
+                      borderRadius: "9999px",
+                      boxShadow: "0 2px 6px rgba(234, 88, 12, 0.35)",
+                    }}
+                  />
+                </div>
+
+                {/* 4-Tile Duo Grid Widget */}
+                <div className="student-kpi-duo-grid">
+                  <div className="student-kpi-mini-card highlight">
+                    <div className="student-kpi-mini-icon highlight">
+                      <UserCheck size={14} />
+                    </div>
+                    <div className="student-kpi-mini-meta">
+                      <span className="student-kpi-mini-label">Confirmed</span>
+                      <strong className="student-kpi-mini-val highlight">145 Enrolled</strong>
+                    </div>
+                  </div>
+                  <div className="student-kpi-mini-card">
+                    <div className="student-kpi-mini-icon">
+                      <CheckCircle2 size={14} />
+                    </div>
+                    <div className="student-kpi-mini-meta">
+                      <span className="student-kpi-mini-label">Cleared Interviews</span>
+                      <strong className="student-kpi-mini-val">210 Shortlisted</strong>
+                    </div>
+                  </div>
+                  <div className="student-kpi-mini-card">
+                    <div className="student-kpi-mini-icon">
+                      <Layers size={14} />
+                    </div>
+                    <div className="student-kpi-mini-meta">
+                      <span className="student-kpi-mini-label">Open Capacity</span>
+                      <strong className="student-kpi-mini-val">35 Remaining</strong>
+                    </div>
+                  </div>
+                  <div className="student-kpi-mini-card">
+                    <div className="student-kpi-mini-icon">
+                      <Award size={14} />
+                    </div>
+                    <div className="student-kpi-mini-meta">
+                      <span className="student-kpi-mini-label">Target Grades</span>
+                      <strong className="student-kpi-mini-val highlight">Classes 6 to 9</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="student-hub-card-footer">
+                <button
+                  className="student-open-screen-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentScreen("admissions");
+                  }}
+                >
+                  <Users size={13} /> Open Admissions Pipeline &amp; Desk <ArrowRight size={13} />
+                </button>
+              </div>
+            </div>
+
+            {/* CONTAINER 4: 🎥 CAMPUS INFRASTRUCTURE VIDEO SHOWCASE */}
+            <div
+              className="student-hub-card"
+              onClick={() => setIsVideoModalOpen(true)}
+              title="Click to play campus drone showcase"
+            >
+              <div className="student-hub-card-header">
+                <div className="student-card-title-group">
+                  <div className="student-card-icon-box">
+                    <Film size={19} />
+                  </div>
+                  <div className="student-card-headings">
+                    <h3>Infrastructure Aerial Tour</h3>
+                    <span>Smart Campus Architecture</span>
+                  </div>
+                </div>
+                <span
+                  style={{
+                    background: "#fff7ed",
+                    color: "#ea580c",
+                    border: "1px solid rgba(254, 215, 170, 0.8)",
+                    fontSize: "0.68rem",
+                    fontWeight: 800,
+                    padding: "0.2rem 0.65rem",
+                    borderRadius: "9999px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
+                >
+                  <Play size={10} fill="#ea580c" /> Watch HD
+                </span>
+              </div>
+
+              <div className="student-hub-card-body" style={{ padding: "0.35rem 0.65rem" }}>
+                <div className="student-video-box">
+                  <img
+                    src="https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&w=700&q=80"
+                    alt="Campus Infrastructure Showcase"
+                    className="student-video-poster"
+                  />
+                  <div className="student-video-overlay">
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span
+                        style={{
+                          background: "rgba(0, 0, 0, 0.65)",
+                          color: "#ffffff",
+                          fontSize: "0.65rem",
+                          fontWeight: 700,
+                          padding: "2px 7px",
+                          borderRadius: 6,
+                          backdropFilter: "blur(4px)",
+                        }}
+                      >
+                        ⏱ 04:12
+                      </span>
+                      <span
+                        style={{
+                          background: "#ea580c",
+                          color: "#ffffff",
+                          fontSize: "0.62rem",
+                          fontWeight: 800,
+                          padding: "2px 6px",
+                          borderRadius: 6,
+                        }}
+                      >
+                        DRONE TOUR
+                      </span>
+                    </div>
+
+                    <div className="student-video-play-btn">
+                      <Play size={18} fill="#ffffff" style={{ marginLeft: "2px" }} />
+                    </div>
+
+                    <div style={{ color: "#ffffff" }}>
+                      <div style={{ fontSize: "0.82rem", fontWeight: 800, textShadow: "0 1px 3px rgba(0,0,0,0.8)" }}>
+                        Campus Smart Grid &amp; Academic Wings
+                      </div>
+                      <div style={{ fontSize: "0.68rem", color: "#fbd5b5", textShadow: "0 1px 2px rgba(0,0,0,0.8)" }}>
+                        Aerial view of science labs, solar array &amp; athletic fields
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="student-hub-card-footer">
+                <button
+                  className="student-open-screen-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsVideoModalOpen(true);
+                  }}
+                >
+                  <Play size={13} fill="#ffffff" /> Play Infrastructure Aerial Tour
+                </button>
+              </div>
+            </div>
+
+            {/* CONTAINER 5: 🔔 OFFICIAL CIRCULARS & DIRECTIVES */}
+            <div
+              className="student-hub-card"
+            >
+              <div className="student-hub-card-header">
+                <div className="student-card-title-group">
+                  <div className="student-card-icon-box">
+                    <Bell size={19} />
+                  </div>
+                  <div className="student-card-headings">
+                    <h3>Institutional Directives</h3>
+                    <span>Board Decisions &amp; Circulars</span>
+                  </div>
+                </div>
+                <span
+                  style={{
+                    background: "#fff7ed",
+                    color: "#ea580c",
+                    border: "1px solid rgba(254, 215, 170, 0.8)",
+                    fontSize: "0.68rem",
+                    fontWeight: 800,
+                    padding: "0.2rem 0.65rem",
+                    borderRadius: "9999px",
+                  }}
+                >
+                  {ADMIN_NOTICES.length} Directives
+                </span>
+              </div>
+
+              <div className="student-hub-card-body" style={{ padding: "0.35rem 0.85rem" }}>
+                <div className="student-notices-list">
+                  {ADMIN_NOTICES.map((notice) => (
+                    <div
+                      key={notice.id}
+                      className="student-notice-item"
+                      onClick={() => setSelectedNotice(notice)}
+                      title="Click to read full circular"
+                    >
+                      <span
+                        style={{
+                          fontSize: "0.6rem",
+                          fontWeight: 800,
+                          padding: "2px 6px",
+                          borderRadius: 6,
+                          background: "#fff7ed",
+                          color: "#ea580c",
+                          border: "1px solid rgba(254, 215, 170, 0.8)",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {notice.tag}
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div
+                          style={{
+                            fontSize: "0.74rem",
+                            fontWeight: 700,
+                            color: "#0f172a",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {notice.title}
+                        </div>
+                        <span style={{ fontSize: "0.64rem", color: "#64748b" }}>{notice.authority}</span>
+                      </div>
+                      <span style={{ fontSize: "0.64rem", color: "#94a3b8", flexShrink: 0 }}>{notice.time}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="student-hub-card-footer">
+                <button
+                  className="student-open-screen-btn"
+                  onClick={() => setSelectedNotice(ADMIN_NOTICES[0])}
+                >
+                  <Megaphone size={13} /> View All Administrative Directives
+                </button>
+              </div>
+            </div>
+
+            {/* CONTAINER 6: ✨ GOVERNANCE CREED & LEADERSHIP WISDOM */}
+            <div
+              className="student-hub-card"
+            >
+              <div className="student-hub-card-header">
+                <div className="student-card-title-group">
+                  <div className="student-card-icon-box">
+                    <Sparkles size={19} />
+                  </div>
+                  <div className="student-card-headings">
+                    <h3>Governance Creed &amp; Vision</h3>
+                    <span>Institutional Leadership Thoughts</span>
+                  </div>
+                </div>
+                <span
+                  style={{
+                    background: "#fff7ed",
+                    color: "#ea580c",
+                    border: "1px solid rgba(254, 215, 170, 0.8)",
+                    fontSize: "0.68rem",
+                    fontWeight: 800,
+                    padding: "0.2rem 0.65rem",
+                    borderRadius: "9999px",
+                  }}
+                >
+                  Leadership Motto
+                </span>
+              </div>
+
+              <div className="student-hub-card-body" style={{ padding: "0.35rem 0.85rem" }}>
+                <div className="student-slogan-wrap">
+                  <Quote
+                    size={48}
+                    style={{
+                      position: "absolute",
+                      right: -5,
+                      bottom: -8,
+                      color: "rgba(234, 88, 12, 0.12)",
+                      pointerEvents: "none",
+                    }}
+                  />
+                  <p className="student-slogan-quote">
+                    &ldquo;{ADMIN_SLOGANS[sloganIndex].quote}&rdquo;
+                  </p>
+                  <div className="student-slogan-author">
+                    <span>— {ADMIN_SLOGANS[sloganIndex].author}</span>
+                    <span
+                      style={{
+                        background: "#fff7ed",
+                        color: "#ea580c",
+                        border: "1px solid rgba(254, 215, 170, 0.7)",
+                        padding: "2px 8px",
+                        borderRadius: "9999px",
+                        fontSize: "0.66rem",
+                        fontWeight: 800,
+                      }}
+                    >
+                      {ADMIN_SLOGANS[sloganIndex].badge}
+                    </span>
+                  </div>
+                  <div className="student-slogan-values-strip">
+                    <span className="student-slogan-value-pill">Excellence</span>
+                    <span className="student-slogan-value-pill">Integrity</span>
+                    <span className="student-slogan-value-pill">Innovation</span>
+                    <span className="student-slogan-value-pill">Stewardship</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="student-hub-card-footer">
+                <button
+                  className="student-open-screen-btn"
+                  onClick={() => setSloganIndex((prev) => (prev + 1) % ADMIN_SLOGANS.length)}
+                  title="Click to view next leadership quote"
+                >
+                  <RefreshCw size={13} /> Next Leadership Creed ↻
+                </button>
+              </div>
+            </div>
+          </section>
+
+          {/* COMPACT BOTTOM STRIP: ADMINISTRATOR PROFILE LINK */}
+          <section
+            style={{
+              background: "rgba(255, 255, 255, 0.9)",
+              borderRadius: "14px",
+              padding: "0.5rem 1.15rem",
+              border: "1px solid rgba(254, 215, 170, 0.65)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              boxShadow: "0 4px 14px rgba(234, 88, 12, 0.05)",
+              flexShrink: 0,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
+              <div
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: "50%",
+                  background: "#f5f3ff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#7c3aed",
+                  flexShrink: 0,
+                  border: "1px solid rgba(124, 58, 237, 0.3)",
+                }}
+              >
+                <ShieldCheck size={18} />
+              </div>
+              <div>
+                <span style={{ fontSize: "0.76rem", fontWeight: 800, color: "#1e293b" }}>
+                  Institutional Operations Desk: {adminName} (Chief Administrator)
+                </span>
+                <div style={{ fontSize: "0.68rem", color: "#64748b", display: "flex", gap: "0.6rem", marginTop: "1px" }}>
+                  <span>Accreditation: <strong>NAAC Grade A++</strong></span>
+                  <span>•</span>
+                  <span>CBSE Code: <strong>1930281</strong></span>
+                  <span>•</span>
+                  <span>Campus Network: <strong>1,280 Active IoT Nodes</strong></span>
+                  <span>•</span>
+                  <span>System Health: <strong>100% Operational</strong></span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setCurrentScreen("profile")}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.35rem",
+                padding: "0.35rem 0.85rem",
+                borderRadius: "8px",
+                border: "1px solid rgba(124, 58, 237, 0.35)",
+                background: "#f5f3ff",
+                color: "#7c3aed",
+                fontWeight: 800,
+                fontSize: "0.74rem",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+              }}
+            >
+              <User size={13} /> View Complete Administrator Profile Screen →
+            </button>
+          </section>
         </main>
       )}
 
@@ -1187,21 +1958,19 @@ export default function AdminDashboard({ onBackToKiosk }: DashboardProps) {
         </section>
       )}
 
-      {/* COMPACT COMMAND FOOTER - Hidden in CMS Manager mode so it never floats over CMS inputs or videos */}
-      {currentScreen !== "portal-cms" && currentScreen !== "dashboard" && (
-        <footer className="command-footer" style={{ marginTop: "auto", borderTop: "1px solid rgba(254, 215, 170, 0.5)", background: "rgba(255, 255, 255, 0.88)" }}>
-          <div><span className="footer-dot" style={{ background: "#7c3aed" }} /> Official Institutional Command &amp; Operations Portal</div>
-          <div className="footer-links">
-            <span>CBSE Affiliation 1930281</span>
-            <span>NAAC Grade A++</span>
-            <span>38 Smart Buses Live GPS</span>
-            <span>Campus Surveillance 100% Operational</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.74rem", fontWeight: 700, color: "#7c3aed" }}>
-            <ShieldCheck size={14} /> Safe &amp; Encrypted Kiosk
-          </div>
-        </footer>
-      )}
+      {/* COMPACT COMMAND FOOTER */}
+      <footer className="command-footer" style={{ marginTop: "auto", borderTop: "1px solid rgba(254, 215, 170, 0.5)", background: "rgba(255, 255, 255, 0.88)" }}>
+        <div><span className="footer-dot" style={{ background: "#7c3aed" }} /> Official Institutional Command &amp; Operations Portal</div>
+        <div className="footer-links">
+          <span>CBSE Affiliation 1930281</span>
+          <span>NAAC Grade A++</span>
+          <span>38 Smart Buses Live GPS</span>
+          <span>Campus Surveillance 100% Operational</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.74rem", fontWeight: 700, color: "#7c3aed" }}>
+          <ShieldCheck size={14} /> Safe &amp; Encrypted Kiosk
+        </div>
+      </footer>
 
       {/* ========================================================
           VIDEO TOUR MODAL PLAYER

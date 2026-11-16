@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import MarkdownResponse from "@/components/chat/MarkdownResponse";
-import UnifiedAIChatPanel from "@/components/chat/UnifiedAIChatPanel";
-import { getInstituteLogo, getInstituteName, getAiAssistantName } from "@/lib/session";
+import { getInstituteLogo, getInstituteName, getAiAssistantName, getUserSession, getBackgroundLo } from "@/lib/session";
 import {
   ArrowLeft,
   ArrowRight,
@@ -49,8 +48,7 @@ export type VisitorScreen =
   | "checkin"
   | "calendar"
   | "events"
-  | "ask-cbs"
-  | "ask-ai";
+  | "ask-cbs";
 
 interface VisitorSession {
   visitorName: string;
@@ -271,27 +269,7 @@ export default function VisitorDashboard({ onBackToKiosk }: VisitorDashboardProp
   const [currentScreen, setCurrentScreen] = useState<VisitorScreen>("dashboard");
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [schoolLogo, setSchoolLogo] = useState<string>(() => getInstituteLogo());
-  const [schoolName, setSchoolName] = useState<string>(() => getInstituteName());
-  const [aiName, setAiName] = useState<string>(() => getAiAssistantName());
-
-  // Dynamic branding fetch from .env via /api/branding
-  useEffect(() => {
-    fetch("/api/branding")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (!data) return;
-        if (data.aiName) {
-          setAiName(data.aiName);
-          try {
-            localStorage.setItem("kiosk_ai_name", data.aiName);
-          } catch {}
-        }
-        if (data.name) setSchoolName(data.name);
-        if (data.logo) setSchoolLogo(data.logo);
-      })
-      .catch(() => {});
-  }, []);
+  const [bgImage, setBgImage] = useState<string>(() => getBackgroundLo());
 
   // Visitor Session from localStorage
   const [visitorSession, setVisitorSession] = useState<VisitorSession>({
@@ -308,9 +286,37 @@ export default function VisitorDashboard({ onBackToKiosk }: VisitorDashboardProp
   const [hostAlertSent, setHostAlertSent] = useState(false);
   const [hostAlertTimer, setHostAlertTimer] = useState<string | null>(null);
 
+  // Ask Campus AI chatbot
+  const [chatMessages, setChatMessages] = useState<Array<{ sender: "user" | "bot"; text: string }>>([
+    {
+      sender: "bot",
+      text: `Namaste! Welcome to ${getInstituteName()}. I am **${getAiAssistantName()}**, your AI Campus Guide. Feel free to ask about admissions, fee structure, campus buildings, or timings!`,
+    },
+  ]);
+  const [chatInput, setChatInput] = useState("");
+  const [isChatTyping, setIsChatTyping] = useState(false);
+
   // Load localStorage data safely
   useEffect(() => {
+    // 1. Fetch dynamic branding and background image strictly from environment (/api/branding)
+    fetch("/api/branding", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.backgroupdlo) {
+          setBgImage(data.backgroupdlo);
+          try {
+            sessionStorage.setItem("backgroupdlo", data.backgroupdlo);
+            localStorage.setItem("kiosk_backgroupdlo", data.backgroupdlo);
+          } catch { }
+        }
+      })
+      .catch(() => { });
+
     try {
+      const s = getUserSession();
+      if (s?.backgroupdlo) {
+        setBgImage(s.backgroupdlo);
+      }
       const stored = localStorage.getItem("gvps_visitor_session");
       if (stored) {
         const parsed = JSON.parse(stored) as VisitorSession;
@@ -342,6 +348,47 @@ export default function VisitorDashboard({ onBackToKiosk }: VisitorDashboardProp
     }
   };
 
+  const handleSendChat = async (queryText: string) => {
+    if (isChatTyping) return;
+    const trimmed = queryText.trim();
+    if (!trimmed) return;
+    const userMsg = trimmed;
+    setChatMessages((prev) => [...prev, { sender: "user", text: userMsg }]);
+    setChatInput("");
+    setIsChatTyping(true);
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: userMsg,
+          role: "visitor",
+          history: chatMessages.slice(-6).map((m) => ({
+            role: m.sender === "user" ? "user" : "assistant",
+            content: m.text,
+          })),
+        }),
+      });
+
+      const data = await res.json();
+      const reply =
+        data.answer ||
+        "Thank you for inquiring! For personalized assistance, our Reception desk is open in Central Gate 1 (Ext. 101) or you can visit Counter 104 in Block A.";
+      setChatMessages((prev) => [...prev, { sender: "bot", text: reply }]);
+    } catch {
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          sender: "bot",
+          text: "⚠️ Campus AI Assistant is temporarily unavailable. Please visit Reception Desk at Counter 104 in Block A.",
+        },
+      ]);
+    } finally {
+      setIsChatTyping(false);
+    }
+  };
+
   const handleNotifyHost = () => {
     setHostAlertSent(true);
     const timeStr = new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
@@ -356,18 +403,38 @@ export default function VisitorDashboard({ onBackToKiosk }: VisitorDashboardProp
   /* ─────────────────────────────────────────────────────────────
      RENDER
   ───────────────────────────────────────────────────────────── */
-
+  const schoolLogo = getInstituteLogo();
+  const schoolName = getInstituteName();
+  const aiName = getAiAssistantName();
 
   return (
-    <div className="dashboard-page">
-      {/* Ambient background orbs matching Student/Staff software theme */}
-      <div className="kiosk-orb kiosk-orb-one" />
-      <div className="kiosk-orb kiosk-orb-two" />
+    <div className={`dashboard-page ${bgImage ? "has-bg-image" : ""}`}>
+      {/* Ambient background orbs only if no background image */}
+      {!bgImage && (
+        <>
+          <div className="kiosk-orb kiosk-orb-one" />
+          <div className="kiosk-orb kiosk-orb-two" />
+        </>
+      )}
+
+      {/* Dynamic Background Image strictly from env parameter 'backgroupdlo' (NO extra color) */}
+      {bgImage && (
+        <div
+          className="dashboard-bg-backdrop"
+          aria-hidden="true"
+          style={{
+            backgroundImage: `url("${bgImage}")`,
+          }}
+        />
+      )}
 
       {/* TOP COMMAND NAVBAR (Identical layout & alignment to Student/Staff) */}
-      <header className="dash-navbar" suppressHydrationWarning>
-        <div className="command-brand" onClick={onBackToKiosk} style={{ cursor: "pointer" }} suppressHydrationWarning>
-          <div className="command-mark" aria-hidden="true" suppressHydrationWarning>
+      <header className="dash-navbar" style={{ position: "relative", zIndex: 30 }} suppressHydrationWarning>
+        <div className="command-brand" style={{ display: "flex", alignItems: "center", gap: "14px" }} suppressHydrationWarning>
+          <button className="command-back" onClick={onBackToKiosk} aria-label="Back to role selection" title="Back to Kiosk Home">
+            <ArrowLeft size={19} />
+          </button>
+          <div className="command-mark" aria-hidden="true" style={{ width: "42px", height: "42px" }} suppressHydrationWarning>
             <img
               src={schoolLogo}
               alt={`${schoolName} Logo`}
@@ -433,11 +500,11 @@ export default function VisitorDashboard({ onBackToKiosk }: VisitorDashboardProp
           </div>
 
           {/* Clock Widget */}
-          <div className="dash-clock-widget">
+          <div className="dash-clock-widget" suppressHydrationWarning>
             <Calendar size={13} style={{ color: "#ea580c" }} />
-            <span>
+            <span suppressHydrationWarning>
               {currentTime.toLocaleDateString("en-US", { weekday: "short", day: "2-digit", month: "short" })} •{" "}
-              <b>{currentTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}</b>
+              <b suppressHydrationWarning>{currentTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}</b>
             </span>
           </div>
 
@@ -557,9 +624,9 @@ export default function VisitorDashboard({ onBackToKiosk }: VisitorDashboardProp
               {/* AI Space Launch Button */}
               <button
                 type="button"
-                onClick={() => setCurrentScreen("ask-ai")}
+                onClick={() => setCurrentScreen("ask-cbs")}
                 className="hero-ai-capsule-btn"
-                title={`Launch ${aiName} Assistant`}
+                title="Launch Visitor AI Assistant"
               >
                 <div className="hero-ai-robo-wrap">
                   <img src="/ai_robot.png" alt={aiName} className="hero-ai-robo-img" />
@@ -872,11 +939,11 @@ export default function VisitorDashboard({ onBackToKiosk }: VisitorDashboardProp
               </div>
             </div>
 
-            {/* CONTAINER 6: 💬 ASK AI — VISITOR HELPDESK */}
+            {/* CONTAINER 6: 💬 ASK CBS — AI VISITOR HELPDESK */}
             <div
               className="student-hub-card"
-              onClick={() => setCurrentScreen("ask-ai")}
-              title={`Click to launch Ask ${aiName} Helpdesk`}
+              onClick={() => setCurrentScreen("ask-cbs")}
+              title="Click to launch Ask CBS AI Helpdesk"
             >
               <div className="student-hub-card-header">
                 <div className="student-card-title-group">
@@ -884,7 +951,7 @@ export default function VisitorDashboard({ onBackToKiosk }: VisitorDashboardProp
                     <Sparkles size={19} />
                   </div>
                   <div className="student-card-headings">
-                    <h3>Ask {aiName} — AI Helpdesk</h3>
+                    <h3>Ask CBS — AI Helpdesk</h3>
                     <span>Instant Campus Q&amp;A Assistant</span>
                   </div>
                 </div>
@@ -1041,7 +1108,7 @@ export default function VisitorDashboard({ onBackToKiosk }: VisitorDashboardProp
                 <ShieldCheck size={13} /> Visitor Pass →
               </button>
               <button
-                onClick={() => setCurrentScreen("ask-ai")}
+                onClick={() => setCurrentScreen("ask-cbs")}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
@@ -1057,7 +1124,7 @@ export default function VisitorDashboard({ onBackToKiosk }: VisitorDashboardProp
                   boxShadow: "0 2px 6px rgba(234, 88, 12, 0.25)",
                 }}
               >
-                <Sparkles size={13} /> Ask {aiName} →
+                <Sparkles size={13} /> Ask CBS AI →
               </button>
             </div>
           </section>
@@ -1271,7 +1338,7 @@ export default function VisitorDashboard({ onBackToKiosk }: VisitorDashboardProp
             <div className="student-screen-nav-tools">
               <button
                 className="student-back-to-dash-btn"
-                onClick={() => setCurrentScreen("ask-ai")}
+                onClick={() => setCurrentScreen("ask-cbs")}
                 style={{ fontSize: "0.74rem", padding: "0.35rem 0.85rem", background: "#ea580c", color: "#ffffff", borderColor: "#ea580c" }}
               >
                 <Sparkles size={13} /> Ask Admissions Question
@@ -1687,14 +1754,154 @@ export default function VisitorDashboard({ onBackToKiosk }: VisitorDashboardProp
       )}
 
       {/* ========================================================
-          VIEW 6: DEDICATED FULL SCREEN — ASK AI HELPDESK
+          VIEW 6: DEDICATED FULL SCREEN — ASK CBS AI HELPDESK
           ======================================================== */}
-      {(currentScreen === "ask-cbs" || currentScreen === "ask-ai") && (
-        <UnifiedAIChatPanel
-          role="visitor_applicant"
-          onBack={() => setCurrentScreen("dashboard")}
-          userName={visitorSession?.visitorName || "Campus Guest"}
-        />
+      {currentScreen === "ask-cbs" && (
+        <section className="student-fullscreen-page">
+          <div className="student-screen-subnav">
+            <button className="student-back-to-dash-btn" onClick={() => setCurrentScreen("dashboard")}>
+              <ArrowLeft size={16} /> Back to Dashboard
+            </button>
+
+            <div className="student-screen-title-area">
+              <div className="student-screen-icon-bubble" style={{ background: "#fff7ed", color: "#ea580c" }}>
+                <Sparkles size={20} />
+              </div>
+              <div>
+                <h2>Ask CBS — Campus AI Helpdesk</h2>
+                <p>Instant Answers on Admissions, Fees, Campus Navigation &amp; Visiting Hours</p>
+              </div>
+            </div>
+
+            <div className="student-screen-nav-tools">
+              <button
+                className="student-back-to-dash-btn"
+                onClick={() => setChatMessages([chatMessages[0]])}
+                style={{ fontSize: "0.74rem", padding: "0.35rem 0.85rem" }}
+              >
+                <RefreshCw size={13} /> Reset Chat
+              </button>
+            </div>
+          </div>
+
+          <div className="student-screen-scroll-body" style={{ padding: "1rem 1.5rem", overflowY: "auto", display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: "1.2rem", alignItems: "start" }}>
+            {/* Left: Quick FAQs */}
+            <div style={{ background: "#ffffff", borderRadius: "18px", border: "1.5px solid rgba(254, 215, 170, 0.7)", padding: "1.25rem", boxShadow: "0 4px 18px rgba(0,0,0,0.03)" }}>
+              <h3 style={{ fontFamily: "Outfit, sans-serif", fontSize: "1.05rem", fontWeight: 800, color: "#1e293b", margin: "0 0 0.5rem 0" }}>
+                Frequently Asked Visitor Queries
+              </h3>
+              <p style={{ fontSize: "0.75rem", color: "#64748b", margin: "0 0 1rem 0" }}>
+                Click any question below to immediately ask the CBS AI assistant:
+              </p>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                {CBS_FAQS.map((faq) => (
+                  <button
+                    key={faq.q}
+                    onClick={() => handleSendChat(faq.q)}
+                    style={{
+                      padding: "0.65rem 0.85rem",
+                      borderRadius: "12px",
+                      background: "#f8fafc",
+                      border: "1px solid #e2e8f0",
+                      textAlign: "left",
+                      fontSize: "0.78rem",
+                      fontWeight: 700,
+                      color: "#1e293b",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: "0.5rem",
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    <span>{faq.q}</span>
+                    <ArrowRight size={13} style={{ color: "#ea580c", flexShrink: 0 }} />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Right: Interactive Chat Console */}
+            <div style={{ background: "#ffffff", borderRadius: "18px", border: "1.5px solid rgba(254, 215, 170, 0.7)", boxShadow: "0 4px 18px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column", height: "520px", overflow: "hidden" }}>
+              <div style={{ padding: "0.85rem 1.25rem", background: "linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)", borderBottom: "1px solid rgba(254, 215, 170, 0.8)", display: "flex", alignItems: "center", gap: "0.65rem" }}>
+                <img src="/ai_robot.png" alt={aiName} style={{ width: 34, height: 34, objectFit: "contain" }} />
+                <div>
+                  <div style={{ fontSize: "0.88rem", fontWeight: 800, color: "#1e293b" }}>{aiName} Campus Assistant</div>
+                  <div style={{ fontSize: "0.68rem", color: "#16a34a", fontWeight: 700 }}>● Online • Ready to answer</div>
+                </div>
+              </div>
+
+              {/* Chat Messages */}
+              <div style={{ flex: 1, padding: "1rem", overflowY: "auto", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                {chatMessages.map((msg, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      alignSelf: msg.sender === "user" ? "flex-end" : "flex-start",
+                      maxWidth: "88%",
+                      background: msg.sender === "user" ? "#ea580c" : "#f8fafc",
+                      color: msg.sender === "user" ? "#ffffff" : "#1e293b",
+                      padding: "0.75rem 1rem",
+                      borderRadius: msg.sender === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
+                      fontSize: "0.82rem",
+                      border: msg.sender === "user" ? "none" : "1px solid #e2e8f0",
+                      boxShadow: "0 2px 6px rgba(0,0,0,0.03)",
+                    }}
+                  >
+                    <MarkdownResponse content={msg.text} isUser={msg.sender === "user"} />
+                  </div>
+                ))}
+                {isChatTyping && (
+                  <div style={{ alignSelf: "flex-start", color: "#ea580c", fontSize: "0.75rem", fontWeight: 600, padding: "0.25rem 0.5rem", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <RefreshCw size={12} className="animate-spin" /> {aiName} is thinking and typing an answer...
+                  </div>
+                )}
+              </div>
+
+              {/* Chat Input */}
+              <div style={{ padding: "0.75rem 1rem", borderTop: "1px solid #e2e8f0", background: "#ffffff", display: "flex", gap: "0.5rem" }}>
+                <input
+                  type="text"
+                  placeholder={`Ask ${aiName} about admissions, fees, timings, or directions...`}
+                  value={chatInput}
+                  disabled={isChatTyping}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSendChat(chatInput)}
+                  style={{
+                    flex: 1,
+                    background: "#f8fafc",
+                    border: "1px solid #cbd5e1",
+                    borderRadius: "9999px",
+                    padding: "0.5rem 1rem",
+                    fontSize: "0.82rem",
+                    outline: "none",
+                  }}
+                />
+                <button
+                  onClick={() => handleSendChat(chatInput)}
+                  disabled={isChatTyping}
+                  style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: "50%",
+                    background: isChatTyping ? "#94a3b8" : "#ea580c",
+                    color: "#ffffff",
+                    border: "none",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: isChatTyping ? "not-allowed" : "pointer",
+                    boxShadow: "0 2px 8px rgba(234, 88, 12, 0.3)",
+                  }}
+                >
+                  <Send size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
       )}
     </div>
   );

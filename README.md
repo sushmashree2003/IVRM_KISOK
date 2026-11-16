@@ -41,6 +41,7 @@ The system natively bridges to enterprise educational backends (**VAPS IVRM — 
 - [🖥️ Deployment Modes](#️-deployment-modes)
   - [A. Physical Kiosk Hardware (Chromium Fullscreen)](#a-physical-kiosk-hardware-chromium-fullscreen)
   - [B. Cloud SaaS Production (Vercel / Azure / Docker)](#b-cloud-saas-production-vercel--azure--docker)
+  - [C. Windows Native Desktop Executable (.exe) & Kiosk Packaging](#c-windows-native-desktop-executable-exe--kiosk-packaging)
 - [🔒 Kiosk Hardening & Security Standards](#-kiosk-hardening--security-standards)
 - [📝 License & Support](#-license--support)
 
@@ -455,6 +456,48 @@ npm run build
 npm run start
 ```
 The server listens on `0.0.0.0:3000`, making it accessible across local LANs, enterprise intranets, and through reverse proxies.
+
+### C. Windows Native Desktop Executable (.exe) & Kiosk Packaging
+
+The kiosk application can be packaged into a native Windows executable (`.exe`) powered by **Electron** and **electron-builder**. This bundles the internal Next.js production server, local proxy routes, and a hardened kiosk browser window into a single distributable binary.
+
+#### 1. Available Executable Formats
+- **NSIS Setup Wizard (`Campus-Smart-Kiosk-Setup-<version>.exe`)**: Traditional installer that sets up the kiosk under `Program Files` / user profile, generates desktop & start menu shortcuts, and supports launching on system startup.
+- **Standalone Portable (`Campus-Smart-Kiosk-Portable-<version>.exe`)**: Single self-contained `.exe` that launches immediately from any folder or USB drive with zero installation steps.
+
+#### 2. Building the Windows `.exe`
+
+Run the build script from the project root:
+
+```bash
+# Clean production Next.js build and package Windows .exe
+npm run electron:build
+```
+
+*(On Windows PowerShell, use `npm.cmd run electron:build`).*
+
+Once the command completes, the final executables are located in the `dist/` folder:
+```
+dist/
+├── Campus-Smart-Kiosk-Setup-0.1.0.exe      # Windows NSIS Installer
+├── Campus-Smart-Kiosk-Portable-0.1.0.exe   # Single Portable Executable
+└── win-unpacked/                           # Direct unpacked binaries for fast testing
+```
+
+#### 3. Development & Testing Commands
+
+| Command | Purpose |
+| :--- | :--- |
+| `npm run electron:dev` | Launches the Next.js dev server with the native Electron desktop wrapper |
+| `npm run electron:pack` | Compiles Next.js and generates unpacked binary folder in `dist/win-unpacked` |
+| `npm run electron:build` | Generates the official Windows `.exe` installer and portable packages in `dist/` |
+
+#### 4. Hardware Kiosk Controls & Shortcuts
+
+The packaged executable runs in hardened Kiosk Mode:
+- **True Fullscreen**: Launches edge-to-edge with all window headers, minimize/close buttons, and system taskbars hidden.
+- **Admin Emergency Exit**: Press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Q</kbd> to cleanly terminate both the kiosk window and background Node processes.
+- **Maintenance Fullscreen Toggle**: Press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd> to switch between fullscreen kiosk and windowed mode for configuration or debugging.
 
 ---
 

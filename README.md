@@ -4,43 +4,32 @@ A modern, touch-interactive Digital Campus Kiosk and comprehensive Role-Based Po
 
 ---
 
-## 🌟 Key Features
+## 📑 Table of Contents
 
-### 🖥️ 1. Interactive Campus Kiosk Experience (`/`)
-- **Touchscreen & Kiosk-Ready**: Built-in fullscreen toggle (`Fullscreen API`) ideal for standalone campus kiosk terminals.
-- **Live Clock & Announcements**: Dynamic real-time campus clock and urgent bulletin ticker.
-- **Campus AI Assistant (Chatbot)**: Floating interactive virtual assistant offering instant campus navigation and answers.
-- **Quick Role Switcher**: One-tap access to dedicated student, staff, admin, and alumni workspaces.
-- **Campus Showcase**: Quick access to news, upcoming events, academic achievements, galleries, and campus directory.
-
-### 👥 2. Role-Based Dashboards & Portals
-- **🎓 Student Portal (`/student`)**:
-  - Live attendance tracker & subject-wise breakdown
-  - Daily class timetable & exam schedules
-  - Homework & assignment submission tracking
-  - Fee payment history & receipt download
-  - Digital library book status & borrowing records
-- **👨‍🏫 Staff & Faculty Portal (`/staff`)**:
-  - Class attendance marking & batch management
-  - Gradebook, assignment review, and marks entry
-  - Staff leave balance & leave application workflow
-  - Notice board publishing & teacher timetable
-- **⚙️ Administrator Dashboard (`/admin`)**:
-  - Campus metrics (total students, staff count, attendance percentages, fee collection stats)
-  - User and role management
-  - Campus-wide emergency alerts & announcement broadcasting
-  - Kiosk hardware/system diagnostics and configuration
-- **🤝 Alumni Portal (`/alumni`)**:
-  - Alumni directory & networking
-  - Mentorship program registry
-  - Reunion events & campus milestone fundraisers
-- **👨‍👩‍👧 Parent Access (`/parent`)**:
-  - Integrated student progress monitoring and notifications
-
-### 🔐 3. Authentication & Security (`/login`)
-- Unified role-based login gateway with role switching tabs.
-- Passcode & credential verification.
-- Direct quick-redirect to respective dashboards upon authorization.
+- [🌟 Key Architectural Highlights](#-key-architectural-highlights)
+- [🏢 SaaS Multi-Tenancy & Dynamic White-Labeling](#-saas-multi-tenancy--dynamic-white-labeling)
+- [🖥️ Screen-by-Screen Portals & Feature Modules](#️-screen-by-screen-portals--feature-modules)
+  - [1. Smart Campus Public Kiosk (`/`)](#1-smart-campus-public-kiosk-)
+  - [2. Role Selection Gateway (`/role-selection`)](#2-role-selection-gateway-role-selection)
+  - [3. Universal Authentication & Virtual Keyboard (`/login`)](#3-universal-authentication--virtual-keyboard-login)
+  - [4. Student Academic Suite (`/student`)](#4-student-academic-suite-student)
+  - [5. Staff & Faculty Hub (`/staff`)](#5-staff--faculty-hub-staff)
+  - [6. Administrator Command Center (`/admin`)](#6-administrator-command-center-admin)
+  - [7. Alumni & Heritage Network (`/alumni`)](#7-alumni--heritage-network-alumni)
+  - [8. Visitor & Guest Experience (`/visitor`)](#8-visitor--guest-experience-visitor)
+  - [9. Parent Progress Gateway (`/parent`)](#9-parent-progress-gateway-parent)
+- [🤖 Role-Based AI Campus Copilot (Groq + NVIDIA NIM)](#-role-based-ai-campus-copilot-groq--nvidia-nim)
+- [🛠️ Technology Stack](#️-technology-stack)
+- [📁 Project Directory Structure](#-project-directory-structure)
+- [🔌 Backend VAPS / IVRM API Architecture](#-backend-vaps--ivrm-api-architecture)
+- [⚙️ Environment Configuration & Multi-Tenant Setup](#️-environment-configuration--multi-tenant-setup)
+- [🚀 Quickstart & Local Development](#-quickstart--local-development)
+- [🖥️ Deployment Modes](#️-deployment-modes)
+  - [A. Physical Kiosk Hardware (Chromium Fullscreen)](#a-physical-kiosk-hardware-chromium-fullscreen)
+  - [B. Cloud SaaS Production (Vercel / Azure / Docker)](#b-cloud-saas-production-vercel--azure--docker)
+  - [C. Windows Native Desktop Executable (.exe) & Kiosk Packaging](#c-windows-native-desktop-executable-exe--kiosk-packaging)
+- [🔒 Kiosk Hardening & Security Standards](#-kiosk-hardening--security-standards)
+- [📝 License & Support](#-license--support)
 
 ---
 
@@ -194,6 +183,48 @@ NVIDIA_MAX_TOKENS=16384
 2. In the [Vercel Dashboard](https://vercel.com/dashboard), import your repository.
 3. In **Project Settings > Environment Variables**, add the Groq and NVIDIA variables (`GROQ_API_KEY`, `NVIDIA_API_KEY`, etc.).
 4. Click **Deploy**. Both `/api/chat` and `/api/plan` will run as serverless Node.js functions within execution limits.
+
+### C. Windows Native Desktop Executable (.exe) & Kiosk Packaging
+
+The kiosk application can be packaged into a native Windows executable (`.exe`) powered by **Electron** and **electron-builder**. This bundles the internal Next.js production server, local proxy routes, and a hardened kiosk browser window into a single distributable binary.
+
+#### 1. Available Executable Formats
+- **NSIS Setup Wizard (`Campus-Smart-Kiosk-Setup-<version>.exe`)**: Traditional installer that sets up the kiosk under `Program Files` / user profile, generates desktop & start menu shortcuts, and supports launching on system startup.
+- **Standalone Portable (`Campus-Smart-Kiosk-Portable-<version>.exe`)**: Single self-contained `.exe` that launches immediately from any folder or USB drive with zero installation steps.
+
+#### 2. Building the Windows `.exe`
+
+Run the build script from the project root:
+
+```bash
+# Clean production Next.js build and package Windows .exe
+npm run electron:build
+```
+
+*(On Windows PowerShell, use `npm.cmd run electron:build`).*
+
+Once the command completes, the final executables are located in the `dist/` folder:
+```
+dist/
+├── Campus-Smart-Kiosk-Setup-0.1.0.exe      # Windows NSIS Installer
+├── Campus-Smart-Kiosk-Portable-0.1.0.exe   # Single Portable Executable
+└── win-unpacked/                           # Direct unpacked binaries for fast testing
+```
+
+#### 3. Development & Testing Commands
+
+| Command | Purpose |
+| :--- | :--- |
+| `npm run electron:dev` | Launches the Next.js dev server with the native Electron desktop wrapper |
+| `npm run electron:pack` | Compiles Next.js and generates unpacked binary folder in `dist/win-unpacked` |
+| `npm run electron:build` | Generates the official Windows `.exe` installer and portable packages in `dist/` |
+
+#### 4. Hardware Kiosk Controls & Shortcuts
+
+The packaged executable runs in hardened Kiosk Mode:
+- **True Fullscreen**: Launches edge-to-edge with all window headers, minimize/close buttons, and system taskbars hidden.
+- **Admin Emergency Exit**: Press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Q</kbd> to cleanly terminate both the kiosk window and background Node processes.
+- **Maintenance Fullscreen Toggle**: Press <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd> to switch between fullscreen kiosk and windowed mode for configuration or debugging.
 
 ---
 

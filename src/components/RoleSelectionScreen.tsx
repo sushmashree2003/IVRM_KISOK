@@ -339,7 +339,7 @@ export default function RoleSelectionScreen({
         if (data.code) {
           try {
             localStorage.setItem("kiosk_institute_code", data.code);
-          } catch { }
+          } catch {}
         }
         const currentSession = getUserSession();
         if (!currentSession?.initlogo || currentSession.initlogo === "/mvps/brand/logo.png") {
@@ -347,7 +347,7 @@ export default function RoleSelectionScreen({
             setSchoolLogo(data.logo);
             try {
               localStorage.setItem("kiosk_institute_logo", data.logo);
-            } catch { }
+            } catch {}
           }
         }
         if (
@@ -360,7 +360,7 @@ export default function RoleSelectionScreen({
             document.title = `${data.name} • Smart Campus Kiosk`;
             try {
               localStorage.setItem("kiosk_institute_name", data.name);
-            } catch { }
+            } catch {}
           }
         }
         if (data.backgroupdlo) {
@@ -368,10 +368,10 @@ export default function RoleSelectionScreen({
           try {
             sessionStorage.setItem("backgroupdlo", data.backgroupdlo);
             localStorage.setItem("kiosk_backgroupdlo", data.backgroupdlo);
-          } catch { }
+          } catch {}
         }
       })
-      .catch(() => { });
+      .catch(() => {});
   }, []);
 
   // Background Slideshow State (Defaults to dynamic background image from env if configured)

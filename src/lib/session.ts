@@ -446,43 +446,11 @@ export function getInstituteCode(): string {
 }
 
 /**
- * Resolves the dynamic AI assistant name directly from .env:
- * 1. NEXT_PUBLIC_AI_NAME or AI_NAME
- * 2. NEXT_PUBLIC_AI_ASSISTANT_NAME or AI_ASSISTANT_NAME
- * 3. Fallback to "<INST_CODE> AI"
- */
-export function resolveAiNameFromEnv(): string {
-  const explicit = (
-    readDiskEnv("NEXT_PUBLIC_AI_NAME") ||
-    readDiskEnv("AI_NAME") ||
-    readDiskEnv("NEXT_PUBLIC_AI_ASSISTANT_NAME") ||
-    readDiskEnv("AI_ASSISTANT_NAME") ||
-    readDiskEnv("NEXT_PUBLIC_COPILOT_NAME") ||
-    readDiskEnv("COPILOT_NAME") ||
-    ""
-  ).trim().replace(/^["']|["']$/g, "");
-
-  if (explicit) return explicit;
-
-  const code = resolveCodeFromEnv() || "BBHS";
-  return `${code} AI`;
-}
-
-/**
  * Retrieves dynamic AI assistant name based on institution code (e.g. "BBHS AI", "BDC AI", "MVPS AI").
  */
 export function getAiAssistantName(): string {
-  if (typeof window !== "undefined") {
-    try {
-      const savedAiName = localStorage.getItem("kiosk_ai_name");
-      if (savedAiName && savedAiName.trim() !== "") return savedAiName.trim();
-      const sessionAiName = sessionStorage.getItem("kiosk_ai_name");
-      if (sessionAiName && sessionAiName.trim() !== "") return sessionAiName.trim();
-    } catch {
-      // fallback
-    }
-  }
-  return resolveAiNameFromEnv();
+  const code = getInstituteCode();
+  return `${code} AI`;
 }
 
 /**

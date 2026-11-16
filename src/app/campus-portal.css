@@ -1159,19 +1159,6 @@ body:has(.mv-kiosk-wrapper) {
   cursor: pointer;
 }
 
-.mv-footer-admin-link {
-  display: inline-flex;
-  align-items: center;
-  font-weight: 600;
-  cursor: pointer;
-  transition: color 0.15s ease, transform 0.15s ease;
-}
-
-.mv-footer-admin-link:hover {
-  color: #ea580c !important;
-  transform: translateY(-1px);
-}
-
 /* ==========================================================================
    4. INTERACTIVE MODAL DIALOGS & LIGHTBOX SYSTEM
    ========================================================================== */

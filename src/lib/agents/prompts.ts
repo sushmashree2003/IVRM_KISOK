@@ -1,8 +1,8 @@
 import { AgentDescriptor } from "@/types/chat";
-import { resolveCodeFromEnv, resolveNameFromEnv, resolveAiNameFromEnv } from "@/lib/session";
+import { resolveCodeFromEnv, resolveNameFromEnv } from "@/lib/session";
 
 function getInstCode(): string {
-  return resolveCodeFromEnv() || "MVPS";
+  return resolveCodeFromEnv() || "BBHS";
 }
 
 function getInstName(): string {
@@ -10,7 +10,7 @@ function getInstName(): string {
 }
 
 function getAiName(): string {
-  return resolveAiNameFromEnv();
+  return `${getInstCode()} AI`;
 }
 
 function getAntiHallucinationGuard(): string {

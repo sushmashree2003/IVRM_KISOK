@@ -1431,6 +1431,25 @@ export default function LoginScreen({
                 gap: "clamp(0.6rem, 1vh, 0.9rem)",
               }}
             >
+              {/* Demo disclaimer */}
+              <div
+                style={{
+                  width: "100%",
+                  background: "rgba(13, 148, 136, 0.08)",
+                  border: "1.5px solid rgba(13, 148, 136, 0.3)",
+                  borderRadius: "12px",
+                  padding: "10px 14px",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "8px",
+                  boxSizing: "border-box",
+                }}
+              >
+                <ShieldCheck size={16} style={{ color: "#0d9488", flexShrink: 0, marginTop: "2px" }} />
+                <span style={{ fontSize: "0.78rem", fontWeight: 600, color: "#0f766e", lineHeight: 1.4 }}>
+                  <strong>Static Kiosk Demo</strong> — No real data is submitted. This is an interactive demonstration for Green Valley Public School.
+                </span>
+              </div>
 
               {/* Visitor Name */}
               <div style={{ display: "flex", flexDirection: "column", gap: "4px", width: "100%" }}>

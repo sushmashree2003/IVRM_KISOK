@@ -26,14 +26,27 @@
         "priority": "normal"
       }
     ],
-    "virtualTour360Url": "/campus_promo.mp4",
+    "virtualTour360Url": "/uploads/hero/School_1794909324852.mp4",
     "virtualTourTitle": "360° Architecture & Campus Walkthrough"
   },
   "hero": {
-    "videoUrl": "/Madhuvan_Vatika_Public_School_Full_Promo_20s.mp4",
+    "videoUrl": "/uploads/hero/School_1794909324852.mp4",
     "posterUrl": "/mvps/hero/banner_01.jpg",
-    "headline": "Empowering Minds, Shaping Futures",
-    "subheadline": "Experience next-generation academic intelligence, interactive campus exploration, and secure touch kiosk access.",
+    "backgroundImageUrl": "/hero_school_building.jpg",
+    "kicker": "Welcome to",
+    "headline": "",
+    "subheadline": "Empowering young minds with world-class scholastic rigor, ethical leadership, and futuristic STEM innovation.",
+    "badge1Bold": "100% Pass",
+    "badge1Sub": "CISCE Board Distinction",
+    "badge2Bold": "180+ Faculty",
+    "badge2Sub": "Academic Excellence",
+    "badge3Bold": "4,200+",
+    "badge3Sub": "Happy Scholars",
+    "badge4Bold": "12 Labs",
+    "badge4Sub": "Robotics & AI Smart Hubs",
+    "button1Text": "Explore 360° Campus",
+    "button2Text": "Leadership & Vision",
+    "legacyTag": "Legacy",
     "ctaText": "Admissions 2026-27 Open",
     "ctaAction": "roles"
   },
@@ -87,20 +100,6 @@
     }
   ],
   "facilities": [
-    {
-      "id": "campus_front",
-      "title": "Campus Façade & Main Pavilion",
-      "category": "Campus Architecture",
-      "image": "/uploads/facilities/Screenshot_2026-11-12_191851_1794814489246.png",
-      "description": "Grand institutional campus situated in Asmanpur, Nurpur Bedi with wide entrance atriums, manicured gardens, and full CCTV coverage.",
-      "highlights": [
-        "15 Acres Green Campus",
-        "24/7 CCTV Monitored",
-        "Spacious Entrance Atrium"
-      ],
-      "order": 1,
-      "active": true
-    },
     {
       "id": "classrooms",
       "title": "Modern Smart Classrooms",
@@ -390,5 +389,6 @@
       "description": "Awarded for clean solar energy conversion model built by Class 10 STEM scholars."
     }
   ],
-  "footerMotto": "— Together for a Brighter Tomorrow 🍃 —"
+  "footerMotto": "— Together for a Brighter Tomorrow 🍃 —",
+  "virtualTour360Url": "/uploads/hero/School_1794909324852.mp4"
 }

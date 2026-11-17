@@ -41,6 +41,7 @@ import {
   Building2,
   Maximize,
   Minimize,
+  LogOut,
   QrCode,
   MessageSquare,
 } from "lucide-react";
@@ -1028,7 +1029,7 @@ export default function AlumniDashboard({ onBackToKiosk }: DashboardProps) {
                 }}
               >
                 <Award size={12} style={{ color: "#ea580c" }} />
-                PAGE 7 • ALUMNI HUB
+                ALUMNI &amp; LEGACY HUB
               </span>
             </div>
           </div>
@@ -1072,9 +1073,10 @@ export default function AlumniDashboard({ onBackToKiosk }: DashboardProps) {
             <span>{isFullscreen ? "Exit" : "Full screen"}</span>
           </button>
 
-          {/* Back to Kiosk Home */}
-          <button className="dash-kiosk-back-btn" onClick={handleLogout} title="Return to Kiosk Role Selection">
-            <Home size={14} /> Back to Kiosk
+          {/* Logout Button */}
+          <button className="dash-logout-btn" onClick={handleLogout} title="Logout and return to Role Selection">
+            <LogOut size={14} />
+            <span>Logout</span>
           </button>
         </div>
       </header>
@@ -1256,19 +1258,6 @@ export default function AlumniDashboard({ onBackToKiosk }: DashboardProps) {
           <section className="student-hub-hero">
             <div className="student-hero-title-group">
               <div style={{ display: "inline-flex", alignItems: "center", gap: "0.45rem", marginBottom: "0.25rem" }}>
-                <span
-                  style={{
-                    background: "#ea580c",
-                    color: "#ffffff",
-                    padding: "2px 8px",
-                    borderRadius: "9999px",
-                    fontSize: "0.65rem",
-                    fontWeight: 900,
-                    letterSpacing: "0.04em",
-                  }}
-                >
-                  PAGE 7
-                </span>
                 <span
                   style={{
                     fontSize: "0.74rem",
@@ -5155,12 +5144,6 @@ export default function AlumniDashboard({ onBackToKiosk }: DashboardProps) {
       >
         <div>
           <span className="footer-dot" style={{ background: "#ea580c" }} /> Official {schoolName} Alumni Command Portal
-        </div>
-        <div className="footer-links">
-          <span>CBSE Affiliation 1930281</span>
-          <span>NAAC Grade A++</span>
-          <span>12,400+ Alumni Worldwide</span>
-          <span>18 Global Chapters Active</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.74rem", fontWeight: 700, color: "#ea580c" }}>
           <ShieldCheck size={14} /> Safe & Encrypted Kiosk

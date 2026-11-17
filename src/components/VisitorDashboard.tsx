@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import MarkdownResponse from "@/components/chat/MarkdownResponse";
 import UnifiedAIChatPanel from "@/components/chat/UnifiedAIChatPanel";
-import { getInstituteLogo, getInstituteName, getAiAssistantName, getUserSession, getBackgroundLo } from "@/lib/session";
+import { getInstituteLogo, getInstituteName, getAiAssistantName, getUserSession, clearUserSession, getBackgroundLo } from "@/lib/session";
 import {
   ArrowLeft,
   ArrowRight,
@@ -37,6 +37,7 @@ import {
   Search,
   Check,
   HelpCircle,
+  LogOut,
 } from "lucide-react";
 
 /* ─────────────────────────────────────────────────────────────
@@ -236,7 +237,7 @@ const CAMPUS_GALLERY = [
   { title: "Eco-Campus Botanical Greenhouse", tag: "Sustainability", desc: "Solar powered micro-farm, rainwater harvest, and herbal garden", color: "#059669" },
 ];
 
-const CBS_FAQS = [
+const VISITOR_FAQS = [
   {
     q: "How do I apply for 2026-27 admission for my child?",
     a: "You can pick up a prospectus from Admissions Counter 104 in Block A or submit an online application on the kiosk. Applications are accepted for Nursery through Grade XI.",
@@ -347,6 +348,15 @@ export default function VisitorDashboard({ onBackToKiosk }: VisitorDashboardProp
         document.exitFullscreen();
       }
     }
+  };
+
+  const handleLogout = () => {
+    try {
+      localStorage.removeItem("gvps_visitor_session");
+      sessionStorage.removeItem("gvps_visitor_session");
+    } catch { }
+    clearUserSession();
+    onBackToKiosk();
   };
 
   const handleSendChat = async (queryText: string) => {
@@ -472,7 +482,7 @@ export default function VisitorDashboard({ onBackToKiosk }: VisitorDashboardProp
                 }}
               >
                 <Users size={12} style={{ color: "#ea580c" }} />
-                PAGE 6 • CAMPUS VISITOR PORTAL
+                CAMPUS VISITOR PORTAL
               </span>
             </div>
           </div>
@@ -515,10 +525,10 @@ export default function VisitorDashboard({ onBackToKiosk }: VisitorDashboardProp
             <span>{isFullscreen ? "Exit" : "Full screen"}</span>
           </button>
 
-          {/* Back to Kiosk Home */}
-          <button className="dash-kiosk-back-btn" onClick={onBackToKiosk} title="Return to Kiosk Role Selector">
-            <ArrowLeft size={16} />
-            <span>Exit Visitor</span>
+          {/* Logout Button */}
+          <button className="dash-logout-btn" onClick={handleLogout} title="Logout and return to Role Selection">
+            <LogOut size={14} />
+            <span>Logout</span>
           </button>
         </div>
       </header>
@@ -580,21 +590,21 @@ export default function VisitorDashboard({ onBackToKiosk }: VisitorDashboardProp
 
               {/* Informational Hero Chips */}
               <div className="student-hero-chips">
-                <span className="student-hero-chip">
+                {/* <span className="student-hero-chip">
                   <MapPin size={12} /> 40-Acre Campus
-                </span>
+                </span> */}
                 <span className="student-hero-chip">
                   <Clock size={12} /> Visiting Hours: 08:30 AM – 04:30 PM
                 </span>
                 <span className="student-hero-chip">
                   <ShieldCheck size={12} /> Pass: {visitorPassNumber}
                 </span>
-                <span className="student-hero-chip highlight">
+                {/* <span className="student-hero-chip highlight">
                   <CheckCircle2 size={12} /> Reception Desk Active
                 </span>
                 <span className="student-hero-chip live">
                   <Activity size={12} /> Live Wayfinding Synced
-                </span>
+                </span> */}
               </div>
             </div>
 
@@ -940,11 +950,11 @@ export default function VisitorDashboard({ onBackToKiosk }: VisitorDashboardProp
               </div>
             </div>
 
-            {/* CONTAINER 6: 💬 ASK CBS — AI VISITOR HELPDESK */}
-            <div
+            {/* CONTAINER 6: 💬 ASK CAMPUS AI HELPDESK */}
+            {/* <div
               className="student-hub-card"
               onClick={() => setCurrentScreen("ask-cbs")}
-              title="Click to launch Ask CBS AI Helpdesk"
+              title={`Click to launch Ask ${aiName} Helpdesk`}
             >
               <div className="student-hub-card-header">
                 <div className="student-card-title-group">
@@ -952,7 +962,7 @@ export default function VisitorDashboard({ onBackToKiosk }: VisitorDashboardProp
                     <Sparkles size={19} />
                   </div>
                   <div className="student-card-headings">
-                    <h3>Ask CBS — AI Helpdesk</h3>
+                    <h3>Ask {aiName} — AI Helpdesk</h3>
                     <span>Instant Campus Q&amp;A Assistant</span>
                   </div>
                 </div>
@@ -1001,7 +1011,7 @@ export default function VisitorDashboard({ onBackToKiosk }: VisitorDashboardProp
                   <ArrowRight size={13} />
                 </span>
               </div>
-            </div>
+            </div> */}
           </section>
 
           {/* BOTTOM QUICK-ACTION TELEMETRY BAR (Exact alignment to Student/Staff) */}
@@ -1125,7 +1135,7 @@ export default function VisitorDashboard({ onBackToKiosk }: VisitorDashboardProp
                   boxShadow: "0 2px 6px rgba(234, 88, 12, 0.25)",
                 }}
               >
-                <Sparkles size={13} /> Ask CBS AI →
+                <Sparkles size={13} /> Ask {aiName} →
               </button>
             </div>
           </section>

@@ -38,6 +38,7 @@ import {
   Megaphone,
   Send,
   Layers,
+  LogOut,
   Film,
   TrendingUp,
   Receipt,
@@ -795,10 +796,10 @@ export default function StaffDashboard({ onBackToKiosk }: DashboardProps) {
             <span>{isFullscreen ? "Exit" : "Full screen"}</span>
           </button>
 
-          {/* Back to Kiosk Home */}
-          <button className="dash-kiosk-back-btn" onClick={handleLogout} title="Return to Role Selection Home">
-            <ArrowLeft size={14} />
-            <span>Kiosk Home</span>
+          {/* Logout Button */}
+          <button className="dash-logout-btn" onClick={handleLogout} title="Logout and return to Role Selection">
+            <LogOut size={14} />
+            <span>Logout</span>
           </button>
         </div>
       </header>

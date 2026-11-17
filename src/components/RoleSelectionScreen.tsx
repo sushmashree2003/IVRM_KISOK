@@ -265,7 +265,7 @@ const roles: RoleDefinition[] = [
     accent: "#ea580c",
     soft: "#fff7ed",
     icon: <GraduationCap size={18} />,
-    actions: ["Homework & LMS", "Report cards & marks", "Bus live tracking", "Fee payments"],
+    actions: ["Attendance", "Exam Marks", "Fee payments", "Assistant help"],
   },
   {
     role: "staff",
@@ -277,7 +277,7 @@ const roles: RoleDefinition[] = [
     accent: "#0d9488",
     soft: "#f0fdfa",
     icon: <Users size={18} />,
-    actions: ["Mark attendance", "Enter grades", "Lesson plans", "Leave applications"],
+    actions: ["Mark attendance", "Time table", "Lesson plans", "Leave applications"],
   },
   {
     role: "visitor",
@@ -683,7 +683,7 @@ export default function RoleSelectionScreen({
                     <Sparkles size={14} style={{ color: item.accent }} />
                     Touch to Enter
                   </span>
-                  <button
+                  {/* <button
                     type="button"
                     className="role-details-btn"
                     onClick={(event) => {
@@ -694,7 +694,7 @@ export default function RoleSelectionScreen({
                   >
                     <span>Details</span>
                     <ArrowRight size={13} />
-                  </button>
+                  </button> */}
                 </div>
               </div>
             </article>
@@ -709,10 +709,9 @@ export default function RoleSelectionScreen({
           </div>
 
           <div className="footer-links">
-            <span>CBSE Affiliation 1930281</span>
+            <span>CISCE Affiliation </span>
             <span>NAAC Grade A++</span>
             <span>Campus: 4,200 Students</span>
-            <span>Digital Kiosk OS 3.2</span>
           </div>
 
           <button className="assistant-button" onClick={handleBotButtonClick}>

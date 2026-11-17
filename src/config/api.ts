@@ -16,7 +16,7 @@ function getEnv(key: string, fallback: string = ""): string {
       const path = require("path");
       const files = [".env.local", ".env", ".env.development", ".env.example"];
       for (const f of files) {
-        const full = path.join(process.cwd(), f);
+        const full = path.join(/*turbopackIgnore: true*/ process.cwd(), f);
         if (fs.existsSync(full)) {
           const lines = fs.readFileSync(full, "utf-8").split(/\r?\n/);
           for (const line of lines) {

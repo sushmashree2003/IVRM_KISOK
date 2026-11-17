@@ -9,5 +9,5 @@ const StudentDashboard = dynamic(() => import("@/components/StudentDashboard"), 
 
 export default function StudentPage() {
   const router = useRouter();
-  return <StudentDashboard onBackToKiosk={() => router.push("/dashboard")} />;
+  return <StudentDashboard onBackToKiosk={() => router.push("/roles")} />;
 }

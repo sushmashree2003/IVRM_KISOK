@@ -56,7 +56,7 @@ function readDiskEnv(key: string): string {
       const path = require("path");
       const files = [".env.example", ".env.local", ".env", ".env.development"];
       for (const f of files) {
-        const full = path.join(process.cwd(), f);
+        const full = path.join(/*turbopackIgnore: true*/ process.cwd(), f);
         if (fs.existsSync(full)) {
           const lines = fs.readFileSync(full, "utf-8").split(/\r?\n/);
           for (const line of lines) {
@@ -703,6 +703,10 @@ export function clearUserSession(): void {
     sessionStorage.removeItem("miid");
     sessionStorage.removeItem("img");
     sessionStorage.removeItem("roleforlogin");
+    sessionStorage.removeItem("kiosk_admin_auth");
+    sessionStorage.removeItem("gvps_visitor_session");
+    localStorage.removeItem("gvps_visitor_session");
+    localStorage.removeItem(REMEMBERED_USER_KEY);
   } catch (error) {
     console.error("Failed to clear session data:", error);
   }

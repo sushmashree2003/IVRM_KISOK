@@ -405,6 +405,39 @@
   box-shadow: 0 4px 14px rgba(234, 88, 12, 0.2);
 }
 
+/* DEDICATED ROLE DASHBOARD LOGOUT BUTTON */
+.dash-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  padding: clamp(0.32rem, 0.6vh, 0.42rem) clamp(0.75rem, 1vw, 1.05rem);
+  min-height: 34px;
+  height: 34px;
+  border-radius: 9999px;
+  font-size: clamp(0.72rem, 0.8vw, 0.78rem);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(220, 38, 38, 0.25);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+.dash-logout-btn:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: #ffffff;
+  border-color: #f87171;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.4);
+}
+
+.dash-logout-btn:active {
+  transform: translateY(0);
+}
+
 /* LIVE TICKER BAR */
 .dash-ticker-bar {
   flex-shrink: 0;

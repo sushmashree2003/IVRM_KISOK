@@ -20,9 +20,9 @@ export default function AdminPage() {
   }, []);
 
   const handleBackToKiosk = () => {
-    // Clear admin session token upon returning to public kiosk
+    // Clear admin session token and session data upon returning to roles
     sessionStorage.removeItem("kiosk_admin_auth");
-    router.push("/dashboard");
+    router.push("/roles");
   };
 
   // Brief initial check to prevent layout flash
@@ -44,7 +44,7 @@ export default function AdminPage() {
     return (
       <AdminPasswordGate
         onSuccess={() => setIsAuthenticated(true)}
-        onBackToKiosk={() => router.push("/dashboard")}
+        onBackToKiosk={() => router.push("/roles")}
       />
     );
   }

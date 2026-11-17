@@ -9,5 +9,5 @@ const VisitorDashboard = dynamic(() => import("@/components/VisitorDashboard"), 
 
 export default function VisitorPage() {
   const router = useRouter();
-  return <VisitorDashboard onBackToKiosk={() => router.push("/")} />;
+  return <VisitorDashboard onBackToKiosk={() => router.push("/roles")} />;
 }

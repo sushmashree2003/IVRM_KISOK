@@ -366,9 +366,10 @@ function VideoInputControl({
               controls
               muted
               playsInline
+              preload="metadata"
               style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              onError={(e) => {
-                e.currentTarget.style.display = "none";
+              onError={() => {
+                console.warn("[VideoInputControl] Preview load notice for:", value);
               }}
             />
           ) : (
@@ -577,6 +578,11 @@ export default function PortalCmsManager({ onBackToDashboard }: { onBackToDashbo
     category: string,
     onSuccess: (url: string) => void
   ) => {
+    if (file.size > 500 * 1024 * 1024) {
+      alert(`File size (${(file.size / (1024 * 1024)).toFixed(1)}MB) exceeds the maximum allowed limit of 500MB.`);
+      return;
+    }
+
     const uploadId = `${category}-${Date.now()}`;
     setUploadingField(uploadId);
 
@@ -1043,7 +1049,7 @@ export default function PortalCmsManager({ onBackToDashboard }: { onBackToDashbo
 
                   <div>
                     <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, marginBottom: "4px" }}>
-                      AI Copilot / Assistant Name (e.g. MVPS AI, CBS AI)
+                      AI Copilot / Assistant Name (e.g. MVPS AI, SGS AI)
                     </label>
                     <input
                       type="text"
@@ -1424,11 +1430,12 @@ export default function PortalCmsManager({ onBackToDashboard }: { onBackToDashbo
                     ...data,
                     branding: { ...data.branding, virtualTour360Url: val },
                     virtualTour360Url: val,
+                    hero: { ...data.hero, videoUrl: val },
                   })
                 }
                 isUploading={uploadingField?.startsWith("hero")}
                 onUploadFile={handleFileUpload}
-                subtext="Upload the school's 360 walkthrough clip or enter an existing public asset (e.g. /campus_promo.mp4, YouTube, or Kuula/Matterport tour)."
+                subtext="Upload the school's 360 walkthrough clip or enter an existing public asset (e.g. /campus_promo.mp4, YouTube, or Kuula/Matterport tour). Automatically synchronizes as the Hero Showcase video."
               />
 
               {/* Sub-tab footer switch when viewing single tour tab */}
@@ -1698,60 +1705,307 @@ export default function PortalCmsManager({ onBackToDashboard }: { onBackToDashbo
         )}
 
         {/* =========================================================================
-           TAB 2: HERO VIDEO & PROMO REEL
+           TAB 2: HERO SHOWCASE (.mv-hero-showcase) & VIDEO REEL
            ========================================================================= */}
         {activeTab === "hero" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-            <h3 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 800, color: "#0e2a47" }}>
-              Cinematic Background Video &amp; Headline
-            </h3>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+            {/* Header info */}
+            <div>
+              <h3 style={{ margin: 0, fontSize: "1.08rem", fontWeight: 800, color: "#0e2a47" }}>
+                Hero Showcase Card (.mv-hero-showcase) &amp; Cinematic Media
+              </h3>
+              <p style={{ margin: "3px 0 0", fontSize: "0.78rem", color: "#64748b" }}>
+                Configure all text headlines, typography, media, and distinction stat badges rendered inside the main kiosk hero showcase card.
+              </p>
+            </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1rem" }}>
-              <div>
-                <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, marginBottom: "4px" }}>
-                  Main Headline
-                </label>
-                <input
-                  type="text"
-                  value={data.hero.headline}
-                  onChange={(e) => setData({ ...data, hero: { ...data.hero, headline: e.target.value } })}
-                  style={{ width: "100%", padding: "0.55rem 0.8rem", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.85rem" }}
-                />
+            {/* SECTION 1: TYPOGRAPHY & STORY */}
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "1.1rem", display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ background: "#ea580c", color: "#ffffff", fontSize: "0.68rem", fontWeight: 800, padding: "2px 6px", borderRadius: "4px" }}>
+                  1
+                </span>
+                <h4 style={{ margin: 0, fontSize: "0.92rem", fontWeight: 800, color: "#0e2a47" }}>
+                  Showcase Headlines &amp; Story
+                </h4>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "12px" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "0.76rem", fontWeight: 700, color: "#334155", marginBottom: "4px" }}>
+                    Cursive Welcome Kicker
+                  </label>
+                  <input
+                    type="text"
+                    value={data.hero.kicker || ""}
+                    placeholder="Welcome to"
+                    onChange={(e) => setData({ ...data, hero: { ...data.hero, kicker: e.target.value } })}
+                    style={{ width: "100%", padding: "0.55rem 0.8rem", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.85rem" }}
+                  />
+                  <span style={{ fontSize: "0.7rem", color: "#64748b", marginTop: "2px", display: "block" }}>
+                    Cursive font kicker displayed above the main school name.
+                  </span>
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "0.76rem", fontWeight: 700, color: "#334155", marginBottom: "4px" }}>
+                    Main Headline Title
+                  </label>
+                  <input
+                    type="text"
+                    value={data.hero.headline || ""}
+                    placeholder={data.branding.instituteName || "Leave blank to use Institute Name"}
+                    onChange={(e) => setData({ ...data, hero: { ...data.hero, headline: e.target.value } })}
+                    style={{ width: "100%", padding: "0.55rem 0.8rem", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.85rem" }}
+                  />
+                  <span style={{ fontSize: "0.7rem", color: "#64748b", marginTop: "2px", display: "block" }}>
+                    Defaults to Institutional Name if left empty.
+                  </span>
+                </div>
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 700, marginBottom: "4px" }}>
-                  Sub-headline Description
+                <label style={{ display: "block", fontSize: "0.76rem", fontWeight: 700, color: "#334155", marginBottom: "4px" }}>
+                  Hero Description / Scholastic Mission
                 </label>
-                <input
-                  type="text"
-                  value={data.hero.subheadline}
+                <textarea
+                  rows={2}
+                  value={data.hero.subheadline || ""}
+                  placeholder="Empowering young minds with world-class scholastic rigor, ethical leadership, and futuristic STEM innovation."
                   onChange={(e) => setData({ ...data, hero: { ...data.hero, subheadline: e.target.value } })}
-                  style={{ width: "100%", padding: "0.55rem 0.8rem", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.85rem" }}
+                  style={{ width: "100%", padding: "0.55rem 0.8rem", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.85rem", resize: "vertical" }}
                 />
               </div>
             </div>
 
-            <PhotoInputControl
-              label="Hero Poster Fallback Image"
-              value={data.hero.posterUrl}
-              onChange={(val) => setData({ ...data, hero: { ...data.hero, posterUrl: val } })}
-              category="hero"
-              subtext="Image displayed while video is buffering or on touch kiosks that restrict video autoplay."
-              previewShape="banner"
-              isUploading={uploadingField?.startsWith("hero")}
-              onUploadFile={handleFileUpload}
-            />
+            {/* SECTION 2: THE 4 DISTINCTION STAT BADGES (.mv-hero-pills-row) */}
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "1.1rem", display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ background: "#ea580c", color: "#ffffff", fontSize: "0.68rem", fontWeight: 800, padding: "2px 6px", borderRadius: "4px" }}>
+                  2
+                </span>
+                <h4 style={{ margin: 0, fontSize: "0.92rem", fontWeight: 800, color: "#0e2a47" }}>
+                  4 Distinction Stat Badges (.mv-hero-pills-row)
+                </h4>
+              </div>
+              <p style={{ margin: 0, fontSize: "0.74rem", color: "#64748b" }}>
+                Configure the 4 distinction badges shown across the middle of the showcase card.
+              </p>
 
-            {/* Video File / URL Input with Live Preview Player */}
-            <VideoInputControl
-              label="Background Video Asset (MP4/WebM)"
-              value={data.hero.videoUrl}
-              onChange={(val) => setData({ ...data, hero: { ...data.hero, videoUrl: val } })}
-              isUploading={uploadingField?.startsWith("hero")}
-              onUploadFile={handleFileUpload}
-              subtext="Upload a 15–30s MP4/WebM looping promo clip to local storage or enter any direct cloud URL."
-            />
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px" }}>
+                {/* Badge 1 */}
+                <div style={{ background: "#f8fafc", border: "1.5px solid #fed7aa", borderRadius: "10px", padding: "10px" }}>
+                  <div style={{ fontSize: "0.74rem", fontWeight: 800, color: "#ea580c", marginBottom: "6px" }}>
+                    Badge 1 (Academic Distinction)
+                  </div>
+                  <label style={{ display: "block", fontSize: "0.7rem", color: "#64748b", fontWeight: 600, marginBottom: "2px" }}>
+                    Bold Text:
+                  </label>
+                  <input
+                    type="text"
+                    value={data.hero.badge1Bold ?? "100% Pass"}
+                    placeholder="100% Pass"
+                    onChange={(e) => setData({ ...data, hero: { ...data.hero, badge1Bold: e.target.value } })}
+                    style={{ width: "100%", padding: "4px 8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem", marginBottom: "6px" }}
+                  />
+                  <label style={{ display: "block", fontSize: "0.7rem", color: "#64748b", fontWeight: 600, marginBottom: "2px" }}>
+                    Subtitle / Board:
+                  </label>
+                  <input
+                    type="text"
+                    value={data.hero.badge1Sub ?? "CBSE Board Distinction"}
+                    placeholder="e.g. CBSE Board Distinction or CISCE"
+                    onChange={(e) => setData({ ...data, hero: { ...data.hero, badge1Sub: e.target.value } })}
+                    style={{ width: "100%", padding: "4px 8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem" }}
+                  />
+                </div>
+
+                {/* Badge 2 */}
+                <div style={{ background: "#f8fafc", border: "1.5px solid #e2e8f0", borderRadius: "10px", padding: "10px" }}>
+                  <div style={{ fontSize: "0.74rem", fontWeight: 800, color: "#0e2a47", marginBottom: "6px" }}>
+                    Badge 2 (Faculty &amp; Excellence)
+                  </div>
+                  <label style={{ display: "block", fontSize: "0.7rem", color: "#64748b", fontWeight: 600, marginBottom: "2px" }}>
+                    Bold Text:
+                  </label>
+                  <input
+                    type="text"
+                    value={data.hero.badge2Bold ?? "180+ Faculty"}
+                    placeholder="180+ Faculty"
+                    onChange={(e) => setData({ ...data, hero: { ...data.hero, badge2Bold: e.target.value } })}
+                    style={{ width: "100%", padding: "4px 8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem", marginBottom: "6px" }}
+                  />
+                  <label style={{ display: "block", fontSize: "0.7rem", color: "#64748b", fontWeight: 600, marginBottom: "2px" }}>
+                    Subtitle:
+                  </label>
+                  <input
+                    type="text"
+                    value={data.hero.badge2Sub ?? "Academic Excellence"}
+                    placeholder="Academic Excellence"
+                    onChange={(e) => setData({ ...data, hero: { ...data.hero, badge2Sub: e.target.value } })}
+                    style={{ width: "100%", padding: "4px 8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem" }}
+                  />
+                </div>
+
+                {/* Badge 3 */}
+                <div style={{ background: "#f8fafc", border: "1.5px solid #e2e8f0", borderRadius: "10px", padding: "10px" }}>
+                  <div style={{ fontSize: "0.74rem", fontWeight: 800, color: "#0e2a47", marginBottom: "6px" }}>
+                    Badge 3 (Scholars Community)
+                  </div>
+                  <label style={{ display: "block", fontSize: "0.7rem", color: "#64748b", fontWeight: 600, marginBottom: "2px" }}>
+                    Bold Text:
+                  </label>
+                  <input
+                    type="text"
+                    value={data.hero.badge3Bold ?? "4,200+"}
+                    placeholder="4,200+"
+                    onChange={(e) => setData({ ...data, hero: { ...data.hero, badge3Bold: e.target.value } })}
+                    style={{ width: "100%", padding: "4px 8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem", marginBottom: "6px" }}
+                  />
+                  <label style={{ display: "block", fontSize: "0.7rem", color: "#64748b", fontWeight: 600, marginBottom: "2px" }}>
+                    Subtitle:
+                  </label>
+                  <input
+                    type="text"
+                    value={data.hero.badge3Sub ?? "Happy Scholars"}
+                    placeholder="Happy Scholars"
+                    onChange={(e) => setData({ ...data, hero: { ...data.hero, badge3Sub: e.target.value } })}
+                    style={{ width: "100%", padding: "4px 8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem" }}
+                  />
+                </div>
+
+                {/* Badge 4 */}
+                <div style={{ background: "#f8fafc", border: "1.5px solid #e2e8f0", borderRadius: "10px", padding: "10px" }}>
+                  <div style={{ fontSize: "0.74rem", fontWeight: 800, color: "#0e2a47", marginBottom: "6px" }}>
+                    Badge 4 (Labs &amp; Innovation)
+                  </div>
+                  <label style={{ display: "block", fontSize: "0.7rem", color: "#64748b", fontWeight: 600, marginBottom: "2px" }}>
+                    Bold Text:
+                  </label>
+                  <input
+                    type="text"
+                    value={data.hero.badge4Bold ?? "12 Labs"}
+                    placeholder="12 Labs"
+                    onChange={(e) => setData({ ...data, hero: { ...data.hero, badge4Bold: e.target.value } })}
+                    style={{ width: "100%", padding: "4px 8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem", marginBottom: "6px" }}
+                  />
+                  <label style={{ display: "block", fontSize: "0.7rem", color: "#64748b", fontWeight: 600, marginBottom: "2px" }}>
+                    Subtitle:
+                  </label>
+                  <input
+                    type="text"
+                    value={data.hero.badge4Sub ?? "Robotics & AI Smart Hubs"}
+                    placeholder="Robotics & AI Smart Hubs"
+                    onChange={(e) => setData({ ...data, hero: { ...data.hero, badge4Sub: e.target.value } })}
+                    style={{ width: "100%", padding: "4px 8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem" }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* SECTION 3: VISUAL MEDIA & BACKDROPS */}
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "1.1rem", display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ background: "#ea580c", color: "#ffffff", fontSize: "0.68rem", fontWeight: 800, padding: "2px 6px", borderRadius: "4px" }}>
+                  3
+                </span>
+                <h4 style={{ margin: 0, fontSize: "0.92rem", fontWeight: 800, color: "#0e2a47" }}>
+                  Showcase Media &amp; Backgrounds
+                </h4>
+              </div>
+
+              {/* Video File / URL Input with Live Preview Player */}
+              <VideoInputControl
+                label="Showcase Background Looping Video Asset (MP4/WebM)"
+                value={data.hero.videoUrl}
+                onChange={(val) =>
+                  setData({
+                    ...data,
+                    hero: { ...data.hero, videoUrl: val },
+                    branding: { ...data.branding, virtualTour360Url: val },
+                    virtualTour360Url: val,
+                  })
+                }
+                isUploading={uploadingField?.startsWith("hero")}
+                onUploadFile={handleFileUpload}
+                subtext="Upload a 15–30s MP4/WebM looping promo clip to local storage or enter any direct cloud URL. Automatically synchronizes as the 360° Walkthrough Video."
+              />
+
+              <PhotoInputControl
+                label="Hero Video Poster / Buffer Fallback Image"
+                value={data.hero.posterUrl}
+                onChange={(val) => setData({ ...data, hero: { ...data.hero, posterUrl: val } })}
+                category="hero"
+                subtext="Image displayed while video is buffering or on touch kiosks that restrict video autoplay."
+                previewShape="banner"
+                isUploading={uploadingField?.startsWith("hero")}
+                onUploadFile={handleFileUpload}
+              />
+
+              <PhotoInputControl
+                label="Showcase Card Backdrop Image (.mv-hero-showcase)"
+                value={data.hero.backgroundImageUrl || "/hero_school_building.jpg"}
+                onChange={(val) => setData({ ...data, hero: { ...data.hero, backgroundImageUrl: val } })}
+                category="hero"
+                subtext="Primary architecture backdrop photo displayed behind the video overlay."
+                previewShape="banner"
+                isUploading={uploadingField?.startsWith("hero")}
+                onUploadFile={handleFileUpload}
+              />
+            </div>
+
+            {/* SECTION 4: ACTION BUTTONS & FOOTER TAGLINE */}
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "1.1rem", display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ background: "#ea580c", color: "#ffffff", fontSize: "0.68rem", fontWeight: 800, padding: "2px 6px", borderRadius: "4px" }}>
+                  4
+                </span>
+                <h4 style={{ margin: 0, fontSize: "0.92rem", fontWeight: 800, color: "#0e2a47" }}>
+                  Action Buttons &amp; Footer Tagline
+                </h4>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "12px" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "0.76rem", fontWeight: 700, color: "#334155", marginBottom: "4px" }}>
+                    Primary Button Label (Opens 360 Tour)
+                  </label>
+                  <input
+                    type="text"
+                    value={data.hero.button1Text ?? "Explore 360° Campus"}
+                    placeholder="Explore 360° Campus"
+                    onChange={(e) => setData({ ...data, hero: { ...data.hero, button1Text: e.target.value } })}
+                    style={{ width: "100%", padding: "0.55rem 0.8rem", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.85rem" }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "0.76rem", fontWeight: 700, color: "#334155", marginBottom: "4px" }}>
+                    Secondary Button Label (Opens Leadership)
+                  </label>
+                  <input
+                    type="text"
+                    value={data.hero.button2Text ?? "Leadership & Vision"}
+                    placeholder="Leadership & Vision"
+                    onChange={(e) => setData({ ...data, hero: { ...data.hero, button2Text: e.target.value } })}
+                    style={{ width: "100%", padding: "0.55rem 0.8rem", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.85rem" }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "0.76rem", fontWeight: 700, color: "#334155", marginBottom: "4px" }}>
+                    Footer Tagline Suffix (— {data.branding.instituteName || "School"} ...)
+                  </label>
+                  <input
+                    type="text"
+                    value={data.hero.legacyTag ?? "Legacy"}
+                    placeholder="Legacy (e.g. Legacy, Excellence, Vision)"
+                    onChange={(e) => setData({ ...data, hero: { ...data.hero, legacyTag: e.target.value } })}
+                    style={{ width: "100%", padding: "0.55rem 0.8rem", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.85rem" }}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         )}
 

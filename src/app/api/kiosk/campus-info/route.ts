@@ -7,7 +7,7 @@ function readEnvVar(key: string): string {
   const files = [".env.local", ".env", ".env.development", ".env.example"];
   for (const file of files) {
     try {
-      const fullPath = path.join(process.cwd(), file);
+      const fullPath = path.join(/*turbopackIgnore: true*/ process.cwd(), file);
       if (fs.existsSync(fullPath)) {
         const lines = fs.readFileSync(fullPath, "utf-8").split(/\r?\n/);
         for (const line of lines) {

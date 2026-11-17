@@ -9,5 +9,5 @@ const AlumniDashboard = dynamic(() => import("@/components/AlumniDashboard"), {
 
 export default function AlumniPage() {
   const router = useRouter();
-  return <AlumniDashboard onBackToKiosk={() => router.push("/dashboard")} />;
+  return <AlumniDashboard onBackToKiosk={() => router.push("/roles")} />;
 }

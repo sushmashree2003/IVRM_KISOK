@@ -657,7 +657,7 @@ export default function LoginScreen({
                 }}
               >
                 <ShieldCheck size={12} style={{ color: "#ea580c" }} />
-                PAGE 3 • ROLE AUTHENTICATION PORTAL
+                ROLE AUTHENTICATION PORTAL
               </span>
             </div>
           </div>
@@ -757,19 +757,6 @@ export default function LoginScreen({
           {/* Active Portal Pill Tag */}
           {/* Active Portal Pill Tag */}
           <div className="hero-chip" style={{ display: "inline-flex", alignItems: "center", gap: "0.45rem", marginBottom: "0.2rem" }}>
-            <span
-              style={{
-                background: "#ea580c",
-                color: "#ffffff",
-                padding: "2px 8px",
-                borderRadius: "9999px",
-                fontSize: "0.65rem",
-                fontWeight: 900,
-                letterSpacing: "0.04em",
-              }}
-            >
-              PAGE 3
-            </span>
             <Sparkles size={14} /> ROLE AUTHENTICATION • {config.heroTag}
           </div>
 
@@ -1071,7 +1058,7 @@ export default function LoginScreen({
                 <span>Visitor</span>
               </button>
 
-              <button
+              {/* <button
                 className={`login-role-chip ${role === "alumni" ? "active" : ""}`}
                 style={{
                   display: "flex",
@@ -1094,7 +1081,7 @@ export default function LoginScreen({
               >
                 <Star size={16} />
                 <span>Alumni / Ex-Staff</span>
-              </button>
+              </button> */}
             </div>
           </div>
         </div>
@@ -1847,7 +1834,7 @@ export default function LoginScreen({
           <span className="footer-dot" /> Role Authentication Portal • Enter credentials or select role to login
         </div>
         <div className="footer-links">
-          <span>CBSE Affiliation 1930281</span>
+          <span>CISCE </span>
           <span>NAAC Grade A++</span>
           <span>Campus: 6,200 Students</span>
           <span>Digital Campus Kiosk</span>

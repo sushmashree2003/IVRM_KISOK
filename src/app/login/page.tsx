@@ -54,7 +54,7 @@ function LoginContent() {
     <LoginScreen
       role={role}
       onLoginSuccess={handleLoginSuccess}
-      onBackToKiosk={() => router.push("/")}
+      onBackToKiosk={() => router.push("/roles")}
       onSwitchRole={handleRoleChange}
     />
   );

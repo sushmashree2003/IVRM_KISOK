@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 function syncEnvFile(fileName: string, updates: Record<string, string>) {
   try {
-    const envPath = path.join(process.cwd(), fileName);
+    const envPath = path.join(/*turbopackIgnore: true*/ process.cwd(), fileName);
     if (!fs.existsSync(envPath)) return;
     let content = fs.readFileSync(envPath, "utf-8");
     for (const [key, val] of Object.entries(updates)) {

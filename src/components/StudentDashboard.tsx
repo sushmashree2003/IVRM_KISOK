@@ -33,6 +33,7 @@ import {
   Activity,
   Sparkles,
   ChevronRight,
+  LogOut,
   Award,
   TrendingUp,
   User,
@@ -974,7 +975,7 @@ export default function StudentDashboard({ onBackToKiosk }: DashboardProps) {
                 }}
               >
                 <GraduationCap size={12} style={{ color: "#ea580c" }} />
-                PAGE 4 • STUDENT &amp; PARENT PORTAL
+                STUDENT &amp; PARENT PORTAL
               </span>
             </div>
           </div>
@@ -1020,9 +1021,10 @@ export default function StudentDashboard({ onBackToKiosk }: DashboardProps) {
             <span>{isFullscreen ? "Exit" : "Full screen"}</span>
           </button>
 
-          {/* Back to Kiosk Home */}
-          <button className="dash-kiosk-back-btn" onClick={handleLogout} title="Return to Kiosk Home">
-            <Home size={14} /> Back to Kiosk
+          {/* Logout Button */}
+          <button className="dash-logout-btn" onClick={handleLogout} title="Logout and return to Role Selection">
+            <LogOut size={14} />
+            <span>Logout</span>
           </button>
         </div>
       </header>
@@ -1190,19 +1192,6 @@ export default function StudentDashboard({ onBackToKiosk }: DashboardProps) {
           <section className="student-hub-hero">
             <div className="student-hero-title-group">
               <div style={{ display: "inline-flex", alignItems: "center", gap: "0.45rem", marginBottom: "0.25rem" }}>
-                <span
-                  style={{
-                    background: "#ea580c",
-                    color: "#ffffff",
-                    padding: "2px 8px",
-                    borderRadius: "9999px",
-                    fontSize: "0.65rem",
-                    fontWeight: 900,
-                    letterSpacing: "0.04em",
-                  }}
-                >
-                  PAGE 4
-                </span>
                 <span style={{ fontSize: "0.74rem", fontWeight: 800, color: "#ea580c", display: "inline-flex", alignItems: "center", gap: "4px" }}>
                   <Sparkles size={13} /> STUDENT &amp; PARENT PORTAL • ACADEMIC HUB
                 </span>
@@ -3622,12 +3611,6 @@ export default function StudentDashboard({ onBackToKiosk }: DashboardProps) {
       {/* COMPACT COMMAND FOOTER */}
       <footer className="command-footer" style={{ marginTop: "auto", borderTop: "1px solid rgba(254, 215, 170, 0.5)", background: "rgba(255, 255, 255, 0.88)" }}>
         <div><span className="footer-dot" /> Official Student &amp; Parent Academic Command Portal</div>
-        <div className="footer-links">
-          <span>CBSE Affiliation 1930421</span>
-          <span>NAAC Grade A++</span>
-          <span>Student Ledger Online</span>
-          <span>VAPS Cloud Connected</span>
-        </div>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.74rem", fontWeight: 700, color: "#16a34a" }}>
           <ShieldCheck size={14} /> Safe &amp; Encrypted Kiosk
         </div>

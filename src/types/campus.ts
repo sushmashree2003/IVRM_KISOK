@@ -21,8 +21,21 @@ export interface CampusBranding {
 export interface HeroConfig {
   videoUrl: string;
   posterUrl: string;
+  backgroundImageUrl?: string;
+  kicker?: string;
   headline: string;
   subheadline: string;
+  badge1Bold?: string;
+  badge1Sub?: string;
+  badge2Bold?: string;
+  badge2Sub?: string;
+  badge3Bold?: string;
+  badge3Sub?: string;
+  badge4Bold?: string;
+  badge4Sub?: string;
+  button1Text?: string;
+  button2Text?: string;
+  legacyTag?: string;
   ctaText?: string;
   ctaAction?: string;
 }

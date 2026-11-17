@@ -18,13 +18,13 @@ export const revalidate = 0;
 function syncEnvFiles() {
   try {
     const cwd = process.cwd();
-    const examplePath = path.join(cwd, ".env.example");
+    const examplePath = path.join(/*turbopackIgnore: true*/ cwd, ".env.example");
     if (fs.existsSync(examplePath)) {
       const exampleContent = fs.readFileSync(examplePath, "utf-8");
       const targetFiles = [".env", ".env.local"];
       for (const target of targetFiles) {
-        const targetPath = path.join(cwd, target);
-        if (!fs.existsSync(targetPath) || fs.readFileSync(targetPath, "utf-8") !== exampleContent) {
+        const targetPath = path.join(/*turbopackIgnore: true*/ cwd, target);
+        if (!fs.existsSync(targetPath)) {
           fs.writeFileSync(targetPath, exampleContent, "utf-8");
         }
       }

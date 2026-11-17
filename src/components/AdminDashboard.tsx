@@ -50,6 +50,7 @@ import {
   CreditCard,
   Film,
   Layers,
+  LogOut,
 } from "lucide-react";
 
 interface DashboardProps {
@@ -399,9 +400,10 @@ export default function AdminDashboard({ onBackToKiosk }: DashboardProps) {
             <span>{isFullscreen ? "Exit" : "Full screen"}</span>
           </button>
 
-          {/* Back to Kiosk Home */}
-          <button className="dash-kiosk-back-btn" onClick={onBackToKiosk || handleLogout} title="Return to Kiosk Dashboard">
-            <Home size={14} /> Back to Kiosk
+          {/* Logout Button */}
+          <button className="dash-logout-btn" onClick={handleLogout} title="Logout and return to Role Selection">
+            <LogOut size={14} />
+            <span>Logout</span>
           </button>
         </div>
       </header>
@@ -1196,12 +1198,6 @@ export default function AdminDashboard({ onBackToKiosk }: DashboardProps) {
       {currentScreen !== "portal-cms" && currentScreen !== "dashboard" && (
         <footer className="command-footer" style={{ marginTop: "auto", borderTop: "1px solid rgba(254, 215, 170, 0.5)", background: "rgba(255, 255, 255, 0.88)" }}>
           <div><span className="footer-dot" style={{ background: "#7c3aed" }} /> Official Institutional Command &amp; Operations Portal</div>
-          <div className="footer-links">
-            <span>CBSE Affiliation 1930281</span>
-            <span>NAAC Grade A++</span>
-            <span>38 Smart Buses Live GPS</span>
-            <span>Campus Surveillance 100% Operational</span>
-          </div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.74rem", fontWeight: 700, color: "#7c3aed" }}>
             <ShieldCheck size={14} /> Safe &amp; Encrypted Kiosk
           </div>

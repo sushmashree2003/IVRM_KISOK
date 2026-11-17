@@ -146,9 +146,11 @@ const nextConfig: NextConfig = {
     "**.localhost",
   ],
 
-  // Allow Server Actions from external origins
+  // Allow Server Actions from external origins & configure upload/proxy body size limit (e.g. for campus media/videos)
   experimental: {
+    proxyClientMaxBodySize: "500mb",
     serverActions: {
+      bodySizeLimit: "500mb",
       allowedOrigins: [
         "*.ngrok-free.app",
         "*.ngrok-free.dev",

@@ -290,19 +290,21 @@ const roles: RoleDefinition[] = [
     soft: "#f5f3ff",
     icon: <QrCode size={18} />,
     actions: ["Visitor pass", "Campus tour", "Admissions desk", "Meet leadership"],
-  },
-  {
-    role: "alumni",
-    eyebrow: "STAY CONNECTED",
-    title: "Alumni / Ex-Staff",
-    badge: "Heritage Network",
-    description: "Keep the alumni spirit alive through chapters, mentoring and shared milestones.",
-    image: "/alumni_avatar.png",
-    accent: "#d97706",
-    soft: "#fffbeb",
-    icon: <Award size={18} />,
-    actions: ["Alumni directory", "Mentorship", "Hall of fame", "Reunions"],
-  },
+  }
+
+  // ,
+  // {
+  //   role: "alumni",
+  //   eyebrow: "STAY CONNECTED",
+  //   title: "Alumni / Ex-Staff",
+  //   badge: "Heritage Network",
+  //   description: "Keep the alumni spirit alive through chapters, mentoring and shared milestones.",
+  //   image: "/alumni_avatar.png",
+  //   accent: "#d97706",
+  //   soft: "#fffbeb",
+  //   icon: <Award size={18} />,
+  //   actions: ["Alumni directory", "Mentorship", "Hall of fame", "Reunions"],
+  // },
 ];
 
 const formatDate = (date: Date | null) =>
@@ -624,7 +626,7 @@ export default function RoleSelectionScreen({
           </div>
 
           {/* Background Slideshow Controller Capsule */}
-          
+
         </section>
 
         {/* 4 PERSONA ROLE SELECTION GRID (PREVIOUS LAYOUT RESTORED) */}

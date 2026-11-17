@@ -641,7 +641,7 @@ export default function CampusInfoPortal({
                   <span>Digital Pass &amp; Maps</span>
                 </div>
               </div>
-
+              {/* 
               <div
                 className="mv-role-pill-btn"
                 onClick={() => router.push("/alumni")}
@@ -654,7 +654,7 @@ export default function CampusInfoPortal({
                   <b>Alumni Network</b>
                   <span>Reunions &amp; Mentoring</span>
                 </div>
-              </div>
+              </div> */}
             </div>
 
             <button

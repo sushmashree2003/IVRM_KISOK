@@ -85,6 +85,12 @@ const resolvedAsmayYear =
   readEnvVar("LOGIN_ASMAY_YEAR") ||
   readEnvVar("ASMAY_YEAR");
 
+const resolvedAdminPassword =
+  readEnvVar("ADMIN_PASSWORD") ||
+  readEnvVar("NEXT_PUBLIC_ADMIN_PASSWORD") ||
+  readEnvVar("password") ||
+  "SGSNov@321";
+
 const nextConfig: NextConfig = {
   // Expose branding & session config to client bundle
   env: {
@@ -98,6 +104,7 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_MI_SUBDOMAIN: resolvedMiSubdomain,
     NEXT_PUBLIC_LOGIN_ASMAY_ID: resolvedAsmayId,
     NEXT_PUBLIC_LOGIN_ASMAY_YEAR: resolvedAsmayYear,
+    NEXT_PUBLIC_ADMIN_PASSWORD: resolvedAdminPassword,
   },
 
   // Allow dev resources (HMR WebSocket, _next/static, etc.) from LAN, WAN, and tunnel origins

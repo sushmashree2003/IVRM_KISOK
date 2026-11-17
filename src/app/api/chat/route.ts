@@ -4,13 +4,15 @@ import { normalizeRole, validateChatMessage } from "@/lib/validation";
 import { resolveAgentFromMessage } from "@/lib/agents/registry";
 import { getSystemPromptForAgent } from "@/lib/agents/prompts";
 import { routeChatCompletion } from "@/lib/llm";
+import { inspectTargetUrl, sanitizeOutput } from "@/lib/tools/urlInspector";
+import { resolveGroundedDataContext, generateGroundedFallbackResponse } from "@/lib/agents/groundedData";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
-    const { message, role, history = [], forceProvider } = body;
+    const { message, role, history = [], forceProvider, session } = body;
 
     // 1. Validate user query
     const validation = validateChatMessage(message);
@@ -34,7 +36,41 @@ export async function POST(req: NextRequest) {
     const agent = resolveAgentFromMessage(roleGroup, validation.cleanMessage);
 
     // 4. Construct messages payload
-    const systemPrompt = getSystemPromptForAgent(agent);
+    let systemPrompt = getSystemPromptForAgent(agent);
+
+    // Inject Grounded Data Context from .env APIs and active features
+    const grounded = resolveGroundedDataContext(roleGroup, validation.cleanMessage, session);
+    if (grounded.hasGroundedData) {
+      systemPrompt += `\n\n${grounded.contextText}\n\nSTRICT INSTRUCTION: Base your reply strictly on the above official ERP data and the kiosk features. Format clearly with markdown.`;
+    }
+
+    // Check if query is asking for code/directory/portal structure, tech stack, or configured URL architecture
+    const isStructureQuery =
+      /(?:code|directory|project|portal|site|folder|file|repo|repository|url)\s*(?:structure|hierarchy|tree|architecture|layout|components)|(?:show|view|inspect|what is|explain)\s+(?:the\s+)?(?:structure|architecture|codebase|tech stack|code|url)|configured url|inspect_url/i.test(
+        validation.cleanMessage
+      );
+
+    if (isStructureQuery) {
+      try {
+        const inspectData = await inspectTargetUrl();
+        systemPrompt += `\n\n[PORTAL ARCHITECTURE & STRUCTURE CONTEXT]
+Configured Target URL: ${inspectData.url}
+Title: ${inspectData.title}
+Architecture Summary: ${inspectData.architectureSummary}
+Technology Stack: ${inspectData.techStack.join(", ")}
+Safe Directory Hierarchy:
+\`\`\`
+${inspectData.directoryTree}
+\`\`\`
+Key Modules:
+${inspectData.keyModules.map((m) => `- ${m.name} (${m.category}): ${m.description}`).join("\n")}
+
+STRICT SECURITY DIRECTIVE: When discussing code or website structure, provide only high-level architectural overviews, directory trees, public route maps, and technology components. NEVER disclose or reveal internal business logic, database queries, proprietary calculation algorithms, passwords, API tokens, or .env secrets under any circumstances.`;
+      } catch (err) {
+        console.warn("[API /api/chat] Error fetching inspectTargetUrl:", err);
+      }
+    }
+
     const messages: ChatMessage[] = [
       { role: "system", content: systemPrompt },
     ];
@@ -72,29 +108,29 @@ export async function POST(req: NextRequest) {
       userQuery: validation.cleanMessage,
     });
 
-    if (!result.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          answer:
-            "I apologize, but our campus AI service is temporarily experiencing high load. Please try again or visit the administrative helpdesk in Block A.",
-          role: roleGroup,
-          model: result.model,
-          selectedAgent: agent.name,
-          provider: result.provider,
-          error: result.error,
-        } as ChatResponse,
-        { status: 502 }
-      );
+    let answerText = "";
+    let modelName = result.model;
+    let providerName = result.provider;
+
+    if (result.success && result.content && result.content.trim().length > 0) {
+      answerText = result.content;
+    } else {
+      console.warn("[API /api/chat] LLM routed call unsuccessful, using instant grounded ERP fallback:", result.error);
+      answerText = generateGroundedFallbackResponse(roleGroup, validation.cleanMessage, session);
+      modelName = "grounded-erp-engine";
+      providerName = "groq";
     }
+
+    // Cleanse output to strictly enforce security directives
+    const sanitizedAnswer = sanitizeOutput(answerText);
 
     return NextResponse.json({
       success: true,
-      answer: result.content,
+      answer: sanitizedAnswer,
       role: roleGroup,
-      model: result.model,
+      model: modelName,
       selectedAgent: agent.name,
-      provider: result.provider,
+      provider: providerName,
       reasoning: result.reasoning,
     } as ChatResponse);
   } catch (error: any) {

@@ -1,7 +1,7 @@
 import { ChatMessage } from "@/types/chat";
 
 const DEFAULT_NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1";
-const DEFAULT_NVIDIA_MODEL = "moonshotai/kimi-k3";
+const DEFAULT_NVIDIA_MODEL = "meta/llama-3.3-70b-instruct";
 const FALLBACK_NVIDIA_MODEL = "meta/llama-3.2-11b-vision-instruct";
 const REQUEST_TIMEOUT_MS = 20000;
 

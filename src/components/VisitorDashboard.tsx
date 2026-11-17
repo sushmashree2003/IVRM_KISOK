@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import MarkdownResponse from "@/components/chat/MarkdownResponse";
+import UnifiedAIChatPanel from "@/components/chat/UnifiedAIChatPanel";
 import { getInstituteLogo, getInstituteName, getAiAssistantName, getUserSession, getBackgroundLo } from "@/lib/session";
 import {
   ArrowLeft,
@@ -1754,153 +1755,15 @@ export default function VisitorDashboard({ onBackToKiosk }: VisitorDashboardProp
       )}
 
       {/* ========================================================
-          VIEW 6: DEDICATED FULL SCREEN — ASK CBS AI HELPDESK
+          VIEW 6: DEDICATED FULL SCREEN — ASK CAMPUS AI HELPDESK
           ======================================================== */}
       {currentScreen === "ask-cbs" && (
-        <section className="student-fullscreen-page">
-          <div className="student-screen-subnav">
-            <button className="student-back-to-dash-btn" onClick={() => setCurrentScreen("dashboard")}>
-              <ArrowLeft size={16} /> Back to Dashboard
-            </button>
-
-            <div className="student-screen-title-area">
-              <div className="student-screen-icon-bubble" style={{ background: "#fff7ed", color: "#ea580c" }}>
-                <Sparkles size={20} />
-              </div>
-              <div>
-                <h2>Ask CBS — Campus AI Helpdesk</h2>
-                <p>Instant Answers on Admissions, Fees, Campus Navigation &amp; Visiting Hours</p>
-              </div>
-            </div>
-
-            <div className="student-screen-nav-tools">
-              <button
-                className="student-back-to-dash-btn"
-                onClick={() => setChatMessages([chatMessages[0]])}
-                style={{ fontSize: "0.74rem", padding: "0.35rem 0.85rem" }}
-              >
-                <RefreshCw size={13} /> Reset Chat
-              </button>
-            </div>
-          </div>
-
-          <div className="student-screen-scroll-body" style={{ padding: "1rem 1.5rem", overflowY: "auto", display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: "1.2rem", alignItems: "start" }}>
-            {/* Left: Quick FAQs */}
-            <div style={{ background: "#ffffff", borderRadius: "18px", border: "1.5px solid rgba(254, 215, 170, 0.7)", padding: "1.25rem", boxShadow: "0 4px 18px rgba(0,0,0,0.03)" }}>
-              <h3 style={{ fontFamily: "Outfit, sans-serif", fontSize: "1.05rem", fontWeight: 800, color: "#1e293b", margin: "0 0 0.5rem 0" }}>
-                Frequently Asked Visitor Queries
-              </h3>
-              <p style={{ fontSize: "0.75rem", color: "#64748b", margin: "0 0 1rem 0" }}>
-                Click any question below to immediately ask the CBS AI assistant:
-              </p>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                {CBS_FAQS.map((faq) => (
-                  <button
-                    key={faq.q}
-                    onClick={() => handleSendChat(faq.q)}
-                    style={{
-                      padding: "0.65rem 0.85rem",
-                      borderRadius: "12px",
-                      background: "#f8fafc",
-                      border: "1px solid #e2e8f0",
-                      textAlign: "left",
-                      fontSize: "0.78rem",
-                      fontWeight: 700,
-                      color: "#1e293b",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      gap: "0.5rem",
-                      transition: "all 0.2s",
-                    }}
-                  >
-                    <span>{faq.q}</span>
-                    <ArrowRight size={13} style={{ color: "#ea580c", flexShrink: 0 }} />
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Right: Interactive Chat Console */}
-            <div style={{ background: "#ffffff", borderRadius: "18px", border: "1.5px solid rgba(254, 215, 170, 0.7)", boxShadow: "0 4px 18px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column", height: "520px", overflow: "hidden" }}>
-              <div style={{ padding: "0.85rem 1.25rem", background: "linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)", borderBottom: "1px solid rgba(254, 215, 170, 0.8)", display: "flex", alignItems: "center", gap: "0.65rem" }}>
-                <img src="/ai_robot.png" alt={aiName} style={{ width: 34, height: 34, objectFit: "contain" }} />
-                <div>
-                  <div style={{ fontSize: "0.88rem", fontWeight: 800, color: "#1e293b" }}>{aiName} Campus Assistant</div>
-                  <div style={{ fontSize: "0.68rem", color: "#16a34a", fontWeight: 700 }}>● Online • Ready to answer</div>
-                </div>
-              </div>
-
-              {/* Chat Messages */}
-              <div style={{ flex: 1, padding: "1rem", overflowY: "auto", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                {chatMessages.map((msg, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      alignSelf: msg.sender === "user" ? "flex-end" : "flex-start",
-                      maxWidth: "88%",
-                      background: msg.sender === "user" ? "#ea580c" : "#f8fafc",
-                      color: msg.sender === "user" ? "#ffffff" : "#1e293b",
-                      padding: "0.75rem 1rem",
-                      borderRadius: msg.sender === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
-                      fontSize: "0.82rem",
-                      border: msg.sender === "user" ? "none" : "1px solid #e2e8f0",
-                      boxShadow: "0 2px 6px rgba(0,0,0,0.03)",
-                    }}
-                  >
-                    <MarkdownResponse content={msg.text} isUser={msg.sender === "user"} />
-                  </div>
-                ))}
-                {isChatTyping && (
-                  <div style={{ alignSelf: "flex-start", color: "#ea580c", fontSize: "0.75rem", fontWeight: 600, padding: "0.25rem 0.5rem", display: "flex", alignItems: "center", gap: "6px" }}>
-                    <RefreshCw size={12} className="animate-spin" /> {aiName} is thinking and typing an answer...
-                  </div>
-                )}
-              </div>
-
-              {/* Chat Input */}
-              <div style={{ padding: "0.75rem 1rem", borderTop: "1px solid #e2e8f0", background: "#ffffff", display: "flex", gap: "0.5rem" }}>
-                <input
-                  type="text"
-                  placeholder={`Ask ${aiName} about admissions, fees, timings, or directions...`}
-                  value={chatInput}
-                  disabled={isChatTyping}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSendChat(chatInput)}
-                  style={{
-                    flex: 1,
-                    background: "#f8fafc",
-                    border: "1px solid #cbd5e1",
-                    borderRadius: "9999px",
-                    padding: "0.5rem 1rem",
-                    fontSize: "0.82rem",
-                    outline: "none",
-                  }}
-                />
-                <button
-                  onClick={() => handleSendChat(chatInput)}
-                  disabled={isChatTyping}
-                  style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: "50%",
-                    background: isChatTyping ? "#94a3b8" : "#ea580c",
-                    color: "#ffffff",
-                    border: "none",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: isChatTyping ? "not-allowed" : "pointer",
-                    boxShadow: "0 2px 8px rgba(234, 88, 12, 0.3)",
-                  }}
-                >
-                  <Send size={16} />
-                </button>
-              </div>
-            </div>
-          </div>
+        <section className="student-fullscreen-page" style={{ height: "100%", overflow: "hidden" }}>
+          <UnifiedAIChatPanel
+            role="visitor_applicant"
+            onBack={() => setCurrentScreen("dashboard")}
+            variant="fullscreen"
+          />
         </section>
       )}
     </div>

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import MarkdownResponse from "@/components/chat/MarkdownResponse";
+import UnifiedAIChatPanel from "@/components/chat/UnifiedAIChatPanel";
 import { getUserSession, clearUserSession, getInstituteLogo, getInstituteName, getAiAssistantName, getBackgroundLo } from "@/lib/session";
 import { SessionInfo } from "@/types/auth";
 import {
@@ -4204,208 +4205,16 @@ export default function AlumniDashboard({ onBackToKiosk }: DashboardProps) {
       )}
 
       {/* ========================================================
-          VIEW 9: AI ASSISTANT SPACE (GREENBOT)
+          VIEW 9: AI ASSISTANT SPACE (CAMPUS AI)
           ======================================================== */}
       {currentScreen === "aispace" && (
-        <section className="student-fullscreen-page">
-          <div className="student-screen-subnav">
-            <button className="student-back-to-dash-btn" onClick={() => handleNavigateTo("dashboard")}>
-              <ArrowLeft size={16} /> Back to Dashboard
-            </button>
-            <div className="student-screen-title-area">
-              <div className="student-screen-icon-bubble" style={{ background: "#fff7ed", color: "#ea580c" }}>
-                <Bot size={20} />
-              </div>
-              <div>
-                <h2>{aiName} Assistant (Alumni &amp; Legacy Space)</h2>
-                <p>Instant guidance on reunions, transcript verification, campus passes, and mentorship opportunities.</p>
-              </div>
-            </div>
-            <div className="student-screen-nav-tools">
-              <span
-                style={{
-                  background: "#dcfce7",
-                  color: "#15803d",
-                  padding: "4px 10px",
-                  borderRadius: "9999px",
-                  fontSize: "0.74rem",
-                  fontWeight: 800,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "4px",
-                }}
-              >
-                <Sparkles size={12} /> AI Active
-              </span>
-            </div>
-          </div>
-
-          <div
-            className="student-screen-scroll-body"
-            style={{
-              padding: "1rem clamp(1rem, 2vw, 2.5rem)",
-              display: "flex",
-              flexDirection: "column",
-              height: "100%",
-            }}
-          >
-            <div
-              style={{
-                maxWidth: 900,
-                width: "100%",
-                margin: "0 auto",
-                display: "flex",
-                flexDirection: "column",
-                flex: 1,
-                minHeight: 0,
-              }}
-            >
-              {/* CHAT MESSAGES LOG */}
-              <div
-                style={{
-                  flex: 1,
-                  minHeight: 320,
-                  overflowY: "auto",
-                  background: "#ffffff",
-                  borderRadius: "18px",
-                  border: "1.2px solid rgba(251, 146, 60, 0.28)",
-                  padding: "1.25rem",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "1rem",
-                  boxShadow: "0 4px 14px rgba(0,0,0,0.03)",
-                }}
-              >
-                {chatMessages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    style={{
-                      display: "flex",
-                      justifyContent: msg.sender === "user" ? "flex-end" : "flex-start",
-                      alignItems: "flex-start",
-                      gap: "8px",
-                    }}
-                  >
-                    {msg.sender === "bot" && (
-                      <div
-                        style={{
-                          width: 34,
-                          height: 34,
-                          borderRadius: "50%",
-                          background: "#fff7ed",
-                          border: "1.5px solid #fed7aa",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: "#ea580c",
-                          flexShrink: 0,
-                        }}
-                      >
-                        <Bot size={18} />
-                      </div>
-                    )}
-                    <div
-                      style={{
-                        maxWidth: "85%",
-                        padding: "10px 14px",
-                        borderRadius: "14px",
-                        fontSize: "0.82rem",
-                        lineHeight: 1.45,
-                        background: msg.sender === "user" ? "#ea580c" : "#fff7ed",
-                        color: msg.sender === "user" ? "#ffffff" : "#1e293b",
-                        border: msg.sender === "user" ? "none" : "1px solid rgba(251, 146, 60, 0.3)",
-                      }}
-                    >
-                      <MarkdownResponse content={msg.text} isUser={msg.sender === "user"} />
-                      <span
-                        style={{
-                          display: "block",
-                          marginTop: 4,
-                          fontSize: "0.64rem",
-                          color: msg.sender === "user" ? "rgba(255,255,255,0.8)" : "#94a3b8",
-                          textAlign: msg.sender === "user" ? "right" : "left",
-                        }}
-                      >
-                        {msg.time}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-                {isAiTyping && (
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#ea580c", fontSize: "0.78rem", fontWeight: 600 }}>
-                    <RefreshCw size={14} className="animate-spin" />
-                    <span>{aiName} is typing an answer...</span>
-                  </div>
-                )}
-                <div ref={chatBottomRef} />
-              </div>
-
-              {/* QUICK SUGGESTIONS */}
-              <div style={{ display: "flex", gap: "6px", overflowX: "auto", padding: "10px 0" }}>
-                {Object.keys(AI_PRESET_QA).map((q, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => handleSendAiMessage(q)}
-                    style={{
-                      padding: "5px 12px",
-                      borderRadius: "9999px",
-                      background: "#ffffff",
-                      border: "1px solid rgba(251, 146, 60, 0.4)",
-                      color: "#9a3412",
-                      fontSize: "0.74rem",
-                      fontWeight: 700,
-                      cursor: "pointer",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {q}
-                  </button>
-                ))}
-              </div>
-
-              {/* CHAT INPUT FORM */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  background: "#ffffff",
-                  padding: "8px 12px",
-                  borderRadius: "14px",
-                  border: "1.5px solid rgba(251, 146, 60, 0.4)",
-                }}
-              >
-                <input
-                  type="text"
-                  placeholder={`Type a question for ${aiName}...`}
-                  value={chatInput}
-                  disabled={isAiTyping}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSendAiMessage()}
-                  style={{ border: "none", outline: "none", fontSize: "0.85rem", flex: 1, padding: "4px" }}
-                />
-                <button
-                  onClick={() => handleSendAiMessage()}
-                  disabled={isAiTyping}
-                  style={{
-                    padding: "8px 16px",
-                    borderRadius: 10,
-                    background: isAiTyping ? "#94a3b8" : "#ea580c",
-                    color: "#ffffff",
-                    border: "none",
-                    fontSize: "0.82rem",
-                    fontWeight: 800,
-                    cursor: isAiTyping ? "not-allowed" : "pointer",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "6px",
-                  }}
-                >
-                  <Send size={14} /> Send
-                </button>
-              </div>
-            </div>
-          </div>
+        <section className="student-fullscreen-page" style={{ height: "100%", overflow: "hidden" }}>
+          <UnifiedAIChatPanel
+            role="alumni_ex_employee"
+            onBack={() => handleNavigateTo("dashboard")}
+            userName={profile.name}
+            variant="fullscreen"
+          />
         </section>
       )}
 

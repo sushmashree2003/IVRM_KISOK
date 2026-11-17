@@ -707,21 +707,6 @@ export default function LoginScreen({
             <span>{config.roleBadge}</span>
           </div>
 
-          {/* Server API & MI_ID Config Toggle */}
-          <button
-            type="button"
-            onClick={() => setShowServerConfig(!showServerConfig)}
-            className="command-fullscreen"
-            title="Configure School API Server & Institution ID (From App.config)"
-            aria-label="Server Configuration"
-            style={{
-              cursor: "pointer",
-              background: showServerConfig ? "#ea580c" : undefined,
-              color: showServerConfig ? "#ffffff" : undefined,
-            }}
-          >
-            <Server size={14} style={{ color: showServerConfig ? "#ffffff" : config.accentColor }} />
-          </button>
 
           {/* Fullscreen Toggle Button */}
           <button
@@ -1742,48 +1727,6 @@ export default function LoginScreen({
                 </div>
               </div>
 
-              {/* Remember Me & Help Row */}
-              <div
-                className="login-remember-row"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  fontSize: "0.82rem",
-                  color: "#475569",
-                  padding: "2px 2px",
-                }}
-              >
-                <label
-                  className="login-remember-label"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    cursor: "pointer",
-                    fontWeight: 600,
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    style={{ width: "16px", height: "16px", accentColor: config.accentColor, cursor: "pointer" }}
-                  />
-                  <span>Remember on this kiosk</span>
-                </label>
-                <a
-                  href="#forgot"
-                  className="login-forgot-link"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    alert("Please contact the Kiosk Helpdesk at Ext. 104 or visit the administrative reception.");
-                  }}
-                  style={{ color: config.accentColor, textDecoration: "none", fontWeight: 700 }}
-                >
-                  {/* Forgot ID / Help? */}
-                </a>
-              </div>
 
               {/* Primary High-Visibility Sign In Button */}
               <button

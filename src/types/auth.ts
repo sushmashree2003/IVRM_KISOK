@@ -96,6 +96,7 @@ export interface SessionInfo {
   rawResponse?: LoginResponseDTO;
   name?: string;
   studentname?: string;
+  staffName?: string;
   asmcL_ClassName?: string;
   asms_sectionname?: string;
   role?: string;

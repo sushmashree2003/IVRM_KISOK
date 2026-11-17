@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import MarkdownResponse from "@/components/chat/MarkdownResponse";
+import UnifiedAIChatPanel from "@/components/chat/UnifiedAIChatPanel";
 import { getUserSession, clearUserSession, getInstituteLogo, getInstituteName, getAiAssistantName, getBackgroundLo } from "@/lib/session";
 import { SessionInfo } from "@/types/auth";
 import { CLIENT_API_ENDPOINTS } from "@/config/api";
@@ -2459,125 +2460,13 @@ export default function StaffDashboard({ onBackToKiosk }: DashboardProps) {
           ======================================================== */}
       {
         currentScreen === "aispace" && (
-          <section className="student-fullscreen-page">
-            <div className="kiosk-orb kiosk-orb-one" />
-            <div className="kiosk-orb kiosk-orb-two" />
-
-            <div className="student-screen-subnav">
-              <button className="student-back-to-dash-btn" onClick={() => setCurrentScreen("dashboard")}>
-                <ArrowLeft size={16} /> Back to Dashboard
-              </button>
-
-              <div className="student-screen-title-area">
-                <div className="student-screen-icon-bubble" style={{ background: "#f5f3ff", color: "#7c3aed" }}>
-                  <Sparkles size={20} />
-                </div>
-                <div>
-                  <h2>Faculty {aiName} Teaching Assistant</h2>
-                  <p>Instant answers on Timetable, Leaves, Biometrics &amp; CBSE Guidelines</p>
-                </div>
-              </div>
-
-              <div className="student-screen-nav-tools">
-                <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#7c3aed" }}>
-                  ● {aiName} Engine Online
-                </div>
-              </div>
-            </div>
-
-            <div className="student-screen-scroll-body" style={{ display: "flex", flexDirection: "column", height: "calc(100% - 70px)" }}>
-              <div style={{ flex: 1, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.85rem" }}>
-                {chatMessages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    style={{
-                      alignSelf: msg.sender === "user" ? "flex-end" : "flex-start",
-                      maxWidth: "75%",
-                      background: msg.sender === "user" ? "#ea580c" : "#ffffff",
-                      color: msg.sender === "user" ? "#ffffff" : "#1e293b",
-                      padding: "0.85rem 1.15rem",
-                      borderRadius: msg.sender === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                      border: msg.sender === "user" ? "none" : "1px solid #e2e8f0",
-                      fontSize: "0.85rem",
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    <MarkdownResponse content={msg.text} isUser={msg.sender === "user"} />
-                    <div style={{ fontSize: "0.68rem", opacity: 0.7, marginTop: "4px", textAlign: msg.sender === "user" ? "right" : "left" }}>
-                      {msg.time}
-                    </div>
-                    {msg.suggestions && msg.suggestions.length > 0 && (
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "8px" }}>
-                        {msg.suggestions.map((sug, sIdx) => (
-                          <button
-                            key={sIdx}
-                            onClick={() => handleSendChatMessage(sug)}
-                            style={{
-                              background: "#f8fafc",
-                              border: "1px solid #cbd5e1",
-                              borderRadius: "9999px",
-                              padding: "4px 10px",
-                              fontSize: "0.72rem",
-                              fontWeight: 700,
-                              color: "#ea580c",
-                              cursor: "pointer",
-                            }}
-                          >
-                            {sug}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-                {isTyping && (
-                  <div style={{ alignSelf: "flex-start", background: "#ffffff", padding: "0.6rem 1rem", borderRadius: "18px", border: "1.5px solid #fed7aa", fontSize: "0.8rem", color: "#ea580c", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
-                    <RefreshCw size={13} className="animate-spin" /> {aiName} is typing an answer...
-                  </div>
-                )}
-                <div ref={chatMessagesEndRef} />
-              </div>
-
-              {/* AI INPUT BAR */}
-              <div style={{ padding: "0.85rem", background: "#ffffff", borderTop: "1px solid #e2e8f0", display: "flex", gap: "0.75rem" }}>
-                <input
-                  type="text"
-                  placeholder={`Ask ${aiName} about classes, leaves, salary or lesson plans...`}
-                  value={chatInputText}
-                  disabled={isTyping}
-                  onChange={(e) => setChatInputText(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSendChatMessage()}
-                  style={{
-                    flex: 1,
-                    height: "44px",
-                    borderRadius: "9999px",
-                    border: "1.5px solid #cbd5e1",
-                    padding: "0 16px",
-                    fontSize: "0.85rem",
-                    outline: "none",
-                  }}
-                />
-                <button
-                  onClick={() => handleSendChatMessage()}
-                  disabled={isTyping}
-                  style={{
-                    background: isTyping ? "#94a3b8" : "#ea580c",
-                    color: "#ffffff",
-                    border: "none",
-                    borderRadius: "50%",
-                    width: "44px",
-                    height: "44px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: isTyping ? "not-allowed" : "pointer",
-                  }}
-                >
-                  <Send size={18} />
-                </button>
-              </div>
-            </div>
+          <section className="student-fullscreen-page" style={{ height: "100%", overflow: "hidden" }}>
+            <UnifiedAIChatPanel
+              role="teacher_staff"
+              onBack={() => setCurrentScreen("dashboard")}
+              userName={staffProfile.name || session?.name || "Faculty Member"}
+              variant="fullscreen"
+            />
           </section>
         )
       }

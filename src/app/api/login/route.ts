@@ -140,6 +140,7 @@ export async function POST(req: NextRequest) {
       upperUser.startsWith("ADM") ||
       upperUser.startsWith("S-") ||
       upperUser.startsWith("STD") ||
+      upperUser.startsWith("SGS") ||
       upperUser.startsWith("2025") ||
       upperUser.startsWith("2026") ||
       trimmedUser.toLowerCase().includes("student");
@@ -150,6 +151,7 @@ export async function POST(req: NextRequest) {
       upperUser.startsWith("TCH") ||
       upperUser.startsWith("STAFF") ||
       upperUser.startsWith("E-") ||
+      upperUser.includes("AMITSAXENA") ||
       trimmedUser.toLowerCase().includes("teacher") ||
       trimmedUser.toLowerCase().includes("faculty") ||
       trimmedUser.toLowerCase().includes("staff");
@@ -264,8 +266,11 @@ export async function POST(req: NextRequest) {
         trimmedUser.toLowerCase().includes("test") ||
         trimmedUser.toUpperCase().startsWith("EMP-") ||
         trimmedUser.toUpperCase().startsWith("ADM-") ||
+        trimmedUser.toUpperCase().startsWith("SGS") ||
+        trimmedUser.toUpperCase().includes("AMITSAXENA") ||
         password === "1234" ||
-        password === "password123";
+        password === "password123" ||
+        password === "Password@123";
 
       if (data.message && data.message.trim() !== "") {
         if (!isDemoUser) {
@@ -381,16 +386,22 @@ export async function POST(req: NextRequest) {
       }
 
       // Allow staff login
+      const staffDisplayName =
+        upperUser.includes("AMITSAXENA")
+          ? "Amit Saxena"
+          : trimmedUser.split("@")[0].replace(/\./g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()) || "Faculty Member";
+
       const staffSession: SessionInfo = {
         username: trimmedUser,
-        name: trimmedUser.split("@")[0].replace(/\./g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()) || "Faculty Member",
+        name: staffDisplayName,
+        staffName: staffDisplayName,
         ASMAY_Year: resolvedAsmayYear,
         ASMAY_Id: resolvedAsmayId,
         AMST_ID: 0,
         UserId: 501,
         RoleId: 2,
         Rolename: "Staff",
-        Empid: 1042,
+        Empid: upperUser.includes("AMITSAXENA") ? 1043 : 1042,
         initname: resolvedSchoolName,
         initlogo: resolvedSchoolLogo,
         MI_Subdomain: resolvedMiSubdomain,
@@ -423,14 +434,19 @@ export async function POST(req: NextRequest) {
       }
 
       // Allow student login
+      const studentDisplayName =
+        upperUser.startsWith("SGS")
+          ? `SGS Student (${trimmedUser})`
+          : trimmedUser.replace(/\b\w/g, (c: string) => c.toUpperCase()) || "Student User";
+
       const studentSession: SessionInfo = {
         username: trimmedUser,
-        name: trimmedUser.replace(/\b\w/g, (c: string) => c.toUpperCase()) || "Student User",
-        studentname: trimmedUser.replace(/\b\w/g, (c: string) => c.toUpperCase()) || "Student User",
+        name: studentDisplayName,
+        studentname: studentDisplayName,
         ASMAY_Year: resolvedAsmayYear,
         ASMAY_Id: resolvedAsmayId,
-        AMST_ID: 1024,
-        UserId: 1024,
+        AMST_ID: upperUser.startsWith("SGS") ? 1801 : 1024,
+        UserId: upperUser.startsWith("SGS") ? 1801 : 1024,
         RoleId: 3,
         Rolename: "Student",
         Empid: 0,

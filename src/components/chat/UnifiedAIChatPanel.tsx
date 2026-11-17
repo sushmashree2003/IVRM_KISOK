@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import MarkdownResponse from "@/components/chat/MarkdownResponse";
 import RoleAIFeatureExplorer from "@/components/shared/RoleAIFeatureExplorer";
 import { ROLE_AI_METADATA, RoleAIMetadata } from "@/config/roleAiFeatures";
-import { getAiAssistantName, getInstituteName } from "@/lib/session";
+import { getAiAssistantName, getInstituteName, getUserSession } from "@/lib/session";
 import {
   Sparkles,
   Send,
@@ -140,6 +140,8 @@ export default function UnifiedAIChatPanel({
         content: m.text,
       }));
 
+      const session = getUserSession();
+
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -147,6 +149,7 @@ export default function UnifiedAIChatPanel({
           message: query,
           role,
           history,
+          session,
         }),
       });
 

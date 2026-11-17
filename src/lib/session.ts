@@ -453,6 +453,8 @@ export function getAiAssistantName(): string {
   return `${code} AI`;
 }
 
+export const resolveAiNameFromEnv = getAiAssistantName;
+
 /**
  * Retrieves dynamic institution subdomain (e.g. "bbhs", "bdcampus") strictly from environment.
  * Does not use any manual default - purely env-driven.

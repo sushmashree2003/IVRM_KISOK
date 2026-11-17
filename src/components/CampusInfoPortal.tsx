@@ -28,6 +28,7 @@ import {
   QrCode,
   BookOpen,
   Cpu,
+  Lock,
 } from "lucide-react";
 
 export const LEADERSHIP_MEMBERS = [
@@ -245,6 +246,7 @@ export interface CampusInfoPortalProps {
   isFullscreen?: boolean;
   toggleFullscreen?: (e?: React.MouseEvent) => void;
   currentTime?: Date | null;
+  draftData?: any;
 }
 
 export default function CampusInfoPortal({
@@ -995,7 +997,35 @@ export default function CampusInfoPortal({
         </div>
 
         <div className="mv-footer-links">
-          <span>Academics</span> | <span>Sports</span> | <span>Arts</span> | <span>Values</span> | <span>Life Skills</span>
+          <span>Academics</span> | <span>Sports</span> | <span>Arts</span> | <span>Values</span> | <span>Life Skills</span> |{" "}
+          <span
+            onClick={() => router.push("/admin")}
+            className="mv-footer-admin-link"
+            title="Access Admin Portal & CMS"
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                router.push("/admin");
+              }
+            }}
+            style={{
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "4px",
+              color: "#ea580c",
+              fontWeight: 800,
+              padding: "2px 8px",
+              borderRadius: "4px",
+              background: "rgba(234, 88, 12, 0.1)",
+              border: "1px solid rgba(234, 88, 12, 0.25)",
+              transition: "all 0.15s ease",
+            }}
+          >
+            <Lock size={12} /> Admin
+          </span>
         </div>
       </footer>
 

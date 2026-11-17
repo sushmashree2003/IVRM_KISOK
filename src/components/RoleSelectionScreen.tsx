@@ -339,7 +339,7 @@ export default function RoleSelectionScreen({
         if (data.code) {
           try {
             localStorage.setItem("kiosk_institute_code", data.code);
-          } catch {}
+          } catch { }
         }
         const currentSession = getUserSession();
         if (!currentSession?.initlogo || currentSession.initlogo === "/mvps/brand/logo.png") {
@@ -347,7 +347,7 @@ export default function RoleSelectionScreen({
             setSchoolLogo(data.logo);
             try {
               localStorage.setItem("kiosk_institute_logo", data.logo);
-            } catch {}
+            } catch { }
           }
         }
         if (
@@ -360,7 +360,7 @@ export default function RoleSelectionScreen({
             document.title = `${data.name} • Smart Campus Kiosk`;
             try {
               localStorage.setItem("kiosk_institute_name", data.name);
-            } catch {}
+            } catch { }
           }
         }
         if (data.backgroupdlo) {
@@ -368,10 +368,10 @@ export default function RoleSelectionScreen({
           try {
             sessionStorage.setItem("backgroupdlo", data.backgroupdlo);
             localStorage.setItem("kiosk_backgroupdlo", data.backgroupdlo);
-          } catch {}
+          } catch { }
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   // Background Slideshow State (Defaults to dynamic background image from env if configured)
@@ -573,39 +573,14 @@ export default function RoleSelectionScreen({
                 <h1 style={{ margin: 0, fontSize: "1.35rem", fontWeight: 800, color: "#1e293b", letterSpacing: "-0.03em" }}>
                   {schoolName}
                 </h1>
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "0.35rem",
-                    background: "linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)",
-                    color: "#c2410c",
-                    fontSize: "0.74rem",
-                    fontWeight: 800,
-                    padding: "0.22rem 0.75rem",
-                    borderRadius: "9999px",
-                    border: "1.5px solid rgba(234, 88, 12, 0.35)",
-                    boxShadow: "0 2px 8px rgba(234, 88, 12, 0.1)",
-                  }}
-                >
-                  <Sparkles size={11} style={{ color: "#ea580c" }} />
-                  Kiosk OS 3.2
-                </span>
+
               </div>
             </div>
           </div>
 
           {/* Right Header Navigation Tools */}
           <div className="command-tools">
-            <button
-              className="command-gallery-trigger"
-              onClick={() => setIsGalleryOpen(true)}
-              title="View Moments of Joy & Learning from madhuvanvatika.org"
-            >
-              <Camera size={15} style={{ color: "#ea580c" }} />
-              <span>School Gallery</span>
-              <span className="gallery-count-badge">{CAMPUS_GALLERY_COLLECTION.length}</span>
-            </button>
+
 
             <div className="command-chip">
               <Calendar size={13} style={{ color: "#ea580c" }} />
@@ -649,59 +624,7 @@ export default function RoleSelectionScreen({
           </div>
 
           {/* Background Slideshow Controller Capsule */}
-          <div className="kiosk-slideshow-capsule">
-            {/* <div className="slideshow-capsule-meta">
-              <div className="capsule-icon-wrap">
-                <Camera size={14} style={{ color: "#ea580c" }} />
-              </div>
-              <div className="capsule-text-wrap">
-                <span className="capsule-tag">
-                  {customBgImage ? "Custom View" : currentSlide.category}
-                </span>
-                <span className="capsule-title">
-                  {customBgImage ? "Selected Campus Moment" : currentSlide.title}
-                </span>
-              </div>
-            </div> */}
-
-            <div className="slideshow-capsule-controls">
-              <button
-                className="slideshow-ctrl-btn"
-                onClick={handlePrevSlide}
-                aria-label="Previous Campus Photo"
-                title="Previous Photo"
-              >
-                <ChevronLeft size={16} />
-              </button>
-
-              <button
-                className="slideshow-ctrl-btn"
-                onClick={handleTogglePlay}
-                aria-label={isSlideshowPlaying ? "Pause Background Slideshow" : "Play Background Slideshow"}
-                title={isSlideshowPlaying ? "Pause Slideshow" : "Resume Slideshow"}
-              >
-                {isSlideshowPlaying ? <Pause size={14} /> : <Play size={14} />}
-              </button>
-
-              <button
-                className="slideshow-ctrl-btn"
-                onClick={handleNextSlide}
-                aria-label="Next Campus Photo"
-                title="Next Photo"
-              >
-                <ChevronRight size={16} />
-              </button>
-
-              <button
-                className="slideshow-gallery-btn"
-                onClick={() => setIsGalleryOpen(true)}
-                title="Browse Full Gallery"
-              >
-                <ImageIcon size={13} />
-                <span>Gallery</span>
-              </button>
-            </div>
-          </div>
+          
         </section>
 
         {/* 4 PERSONA ROLE SELECTION GRID (PREVIOUS LAYOUT RESTORED) */}

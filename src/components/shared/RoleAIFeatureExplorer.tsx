@@ -30,6 +30,7 @@ import {
   Filter,
   ArrowRight,
   Zap,
+  Layers,
 } from "lucide-react";
 
 interface RoleAIFeatureExplorerProps {
@@ -59,6 +60,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: 
   FileText,
   Building2,
   Sparkles,
+  Layers,
 };
 
 export default function RoleAIFeatureExplorer({

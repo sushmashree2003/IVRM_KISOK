@@ -32,7 +32,7 @@ import {
   X,
 } from "lucide-react";
 import { SessionInfo } from "@/types/auth";
-import { saveUserSession, getInstituteLogo, getInstituteName, getBackgroundLo } from "@/lib/session";
+import { saveUserSession, getInstituteLogo, getInstituteName, getBackgroundLo, getAiAssistantName } from "@/lib/session";
 import { CLIENT_API_ENDPOINTS } from "@/config/api";
 
 export type RoleType = "student" | "staff" | "visitor" | "alumni";
@@ -79,6 +79,7 @@ export default function LoginScreen({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [schoolLogo, setSchoolLogo] = useState<string>(() => getInstituteLogo());
   const [schoolName, setSchoolName] = useState<string>(() => getInstituteName());
+  const aiName = getAiAssistantName();
 
   // Real-time clock & fullscreen sync
   useEffect(() => {
@@ -1852,7 +1853,7 @@ export default function LoginScreen({
           <span>Digital Campus Kiosk</span>
         </div>
         <button className="assistant-button" type="button" onClick={onBackToKiosk}>
-          <span className="assistant-pulse" /> Need help? <b>Ask GREEN_AI</b>
+          <span className="assistant-pulse" /> Need help? <b>Ask {aiName}</b>
         </button>
       </footer>
     </div>

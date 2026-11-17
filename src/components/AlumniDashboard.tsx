@@ -2102,9 +2102,9 @@ export default function AlumniDashboard({ onBackToKiosk }: DashboardProps) {
               </div>
             </div>
 
-            {/* RIGHT SIDEBAR COLUMN: GREENBOT AI + CURRENT AFFAIRS + MENTORSHIP */}
+            {/* RIGHT SIDEBAR COLUMN: CAMPUS AI + CURRENT AFFAIRS + MENTORSHIP */}
             <div className="alumni-right-col">
-              {/* GREENBOT AI ASSISTANT CARD */}
+              {/* CAMPUS AI ASSISTANT CARD */}
               <div
                 style={{
                   background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)",

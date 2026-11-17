@@ -3606,7 +3606,7 @@ export default function StudentDashboard({ onBackToKiosk }: DashboardProps) {
       )}
 
       {/* ========================================================
-          VIEW 10: DEDICATED FULL SCREEN — GREENBOT AI SPACE
+          VIEW 10: DEDICATED FULL SCREEN — CAMPUS AI SPACE
           ======================================================== */}
       {currentScreen === "aispace" && (
         <section className="student-fullscreen-page" style={{ height: "100%", overflow: "hidden" }}>

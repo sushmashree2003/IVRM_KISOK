@@ -32,7 +32,7 @@ import {
   X,
 } from "lucide-react";
 import { SessionInfo } from "@/types/auth";
-import { saveUserSession, getRememberedUser, getInstituteLogo, getInstituteName, getBackgroundLo } from "@/lib/session";
+import { saveUserSession, getInstituteLogo, getInstituteName, getBackgroundLo } from "@/lib/session";
 import { CLIENT_API_ENDPOINTS } from "@/config/api";
 
 export type RoleType = "student" | "staff" | "visitor" | "alumni";
@@ -311,10 +311,9 @@ export default function LoginScreen({
   };
 
   const config = roleConfig[role] || roleConfig.student;
-  const [username, setUsername] = useState(config.defaultUser);
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authSuccess, setAuthSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -350,14 +349,12 @@ export default function LoginScreen({
       .catch(() => { });
   }, []);
 
-  // Sync default user when role changes externally or check remembered user
+  // Clear inputs and wipe any stored kiosk credentials on role switch
   useEffect(() => {
-    const remembered = getRememberedUser();
-    if (remembered && remembered.username) {
-      setUsername(remembered.username);
-    } else if (roleConfig[role]) {
-      setUsername(roleConfig[role].defaultUser);
-    }
+    try {
+      localStorage.removeItem("vaps_kiosk_remembered_user");
+    } catch { }
+    setUsername("");
     setPassword("");
     setErrorMessage(null);
     setVisitorName("");
@@ -469,8 +466,11 @@ export default function LoginScreen({
           localStorage.setItem("kiosk_backgroupdlo", dynamicBackgroupdlo);
         }
 
-        // Save user data to sessionStorage and individual keys (matching C# sessionInfo)
-        saveUserSession(result.session, rememberMe);
+        // Save user data to sessionStorage and individual keys (never persist answers/credentials in localStorage on kiosk)
+        saveUserSession(result.session, false);
+        try {
+          localStorage.removeItem("vaps_kiosk_remembered_user");
+        } catch { }
         setAuthSuccess(true);
         setTimeout(() => {
           setIsSubmitting(false);
@@ -1610,6 +1610,7 @@ export default function LoginScreen({
             <form
               onSubmit={handleSubmit}
               className="login-form"
+              autoComplete="off"
               style={{
                 width: "100%",
                 display: "flex",
@@ -1642,11 +1643,18 @@ export default function LoginScreen({
                 <div className="login-input-group" style={{ position: "relative", width: "100%", display: "flex", alignItems: "center" }}>
                   <input
                     type="text"
+                    name="kiosk_username"
                     className="login-input-field"
                     placeholder={config.userPlaceholder}
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    data-lpignore="true"
+                    data-form-type="other"
                     style={{
                       width: "100%",
                       height: "44px",
@@ -1683,13 +1691,18 @@ export default function LoginScreen({
                 <div className="login-input-group" style={{ position: "relative", width: "100%", display: "flex", alignItems: "center" }}>
                   <input
                     type={showPassword ? "text" : "password"}
+                    name="kiosk_password"
                     className="login-input-field"
                     placeholder={role === "alumni" ? "Enter any password / PIN" : "Password / PIN"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required={role !== "alumni"}
-                    autoComplete="current-password"
+                    autoComplete="new-password"
+                    autoCorrect="off"
+                    autoCapitalize="none"
                     spellCheck={false}
+                    data-lpignore="true"
+                    data-form-type="other"
                     style={{
                       width: "100%",
                       height: "44px",

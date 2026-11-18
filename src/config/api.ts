@@ -3,30 +3,52 @@
  * D:\Sushma\Kiosk\Old kiosk\vaps demo school\vaps demo school\App.config
  */
 
-function getEnv(key: string, fallback: string = ""): string {
-  if (typeof process !== "undefined" && process.env && process.env[key] && process.env[key]!.trim() !== "") {
-    return process.env[key]!.trim();
-  }
-  // Server-side fallback: read directly from .env files
+if (typeof process !== "undefined" && process.env) {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+}
+
+let loadedEnvCache: Record<string, string> | null = null;
+
+function loadAllEnvFiles(): Record<string, string> {
+  if (loadedEnvCache !== null) return loadedEnvCache;
+  const envMap: Record<string, string> = {};
+
   if (typeof window === "undefined") {
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const fs = require("fs");
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const path = require("path");
-      const files = [".env.local", ".env", ".env.development", ".env.example"];
-      for (const f of files) {
-        const full = path.join(/*turbopackIgnore: true*/ process.cwd(), f);
-        if (fs.existsSync(full)) {
-          const lines = fs.readFileSync(full, "utf-8").split(/\r?\n/);
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (trimmed.startsWith("#") || !trimmed.includes("=")) continue;
-            const [k, ...rest] = trimmed.split("=");
-            if (k.trim() === key) {
-              const val = rest.join("=").trim().replace(/^[`'"]+|[`'"]+$/g, "");
-              if (val) return val;
+
+      const searchDirs: string[] = [
+        process.cwd(),
+        typeof process.execPath === "string" ? path.dirname(process.execPath) : "",
+        (process as any).resourcesPath || "",
+        (process as any).resourcesPath ? path.join((process as any).resourcesPath, "app") : "",
+        path.resolve(process.cwd(), ".."),
+      ].filter(Boolean);
+
+      const files = [".env.local", ".env.production", ".env", ".env.development", ".env.example"];
+
+      for (const dir of searchDirs) {
+        for (const f of files) {
+          try {
+            const full = path.join(/*turbopackIgnore: true*/ dir, f);
+            if (fs.existsSync(full)) {
+              const lines = fs.readFileSync(full, "utf-8").split(/\r?\n/);
+              for (const line of lines) {
+                const trimmed = line.trim();
+                if (trimmed.startsWith("#") || !trimmed.includes("=")) continue;
+                const [k, ...rest] = trimmed.split("=");
+                const key = k.trim();
+                const val = rest.join("=").trim().replace(/^[`'"]+|[`'"]+$/g, "");
+                if (key && envMap[key] === undefined) {
+                  envMap[key] = val;
+                }
+              }
             }
+          } catch {
+            // ignore per-file errors
           }
         }
       }
@@ -34,14 +56,30 @@ function getEnv(key: string, fallback: string = ""): string {
       // ignore
     }
   }
+
+  loadedEnvCache = envMap;
+  return loadedEnvCache;
+}
+
+function getEnv(key: string, fallback: string = ""): string {
+  if (typeof process !== "undefined" && process.env && process.env[key] && process.env[key]!.trim() !== "") {
+    return process.env[key]!.trim();
+  }
+  const fileEnvs = loadAllEnvFiles();
+  if (fileEnvs[key] && fileEnvs[key].trim() !== "") {
+    return fileEnvs[key].trim();
+  }
   return fallback;
 }
 
-const BASE_PORTAL = (getEnv("PORTAL_URL") || "").replace(/\/+$/, "");
-const BASE_LOGIN = (getEnv("LOGIN_URL") || "").replace(/\/+$/, "");
-const BASE_BDAY = (getEnv("BDAY_URL") || "").replace(/\/+$/, "");
-const BASE_LEAVE = (getEnv("LEAVE_URL") || BASE_PORTAL || "").replace(/\/+$/, "");
-const BASE_SPORTS = (getEnv("SPORTS_URL") || "").replace(/\/+$/, "");
+const DEFAULT_FALLBACK_LOGIN = "https://stgeorgesschoolerp.azurewebsites.in:30036";
+const DEFAULT_FALLBACK_PORTAL = "https://stgeorgesschoolerp.azurewebsites.in:30029";
+
+const BASE_PORTAL = (getEnv("PORTAL_URL") || DEFAULT_FALLBACK_PORTAL).replace(/\/+$/, "");
+const BASE_LOGIN = (getEnv("LOGIN_URL") || DEFAULT_FALLBACK_LOGIN).replace(/\/+$/, "");
+const BASE_BDAY = (getEnv("BDAY_URL") || BASE_PORTAL).replace(/\/+$/, "");
+const BASE_LEAVE = (getEnv("LEAVE_URL") || BASE_PORTAL).replace(/\/+$/, "");
+const BASE_SPORTS = (getEnv("SPORTS_URL") || BASE_PORTAL).replace(/\/+$/, "");
 
 function cleanUrl(val: string | undefined, fallback: string): string {
   if (val && typeof val === "string" && val.trim() !== "") {

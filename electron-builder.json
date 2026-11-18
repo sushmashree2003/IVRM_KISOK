@@ -11,18 +11,22 @@
     ".next/**/*",
     "public/**/*",
     "package.json",
+    ".env*",
+    "src/data/**/*",
     "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
     "!**/node_modules/*/{test,__tests__,tests,powertest,example,examples}",
     "!**/node_modules/*.d.ts",
     "!**/node_modules/.bin"
   ],
+  "extraResources": [
+    {
+      "from": ".env",
+      "to": ".env"
+    }
+  ],
   "asar": false,
   "win": {
     "target": [
-      {
-        "target": "nsis",
-        "arch": ["x64"]
-      },
       {
         "target": "portable",
         "arch": ["x64"]

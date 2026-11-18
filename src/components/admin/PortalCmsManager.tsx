@@ -2486,7 +2486,8 @@ export default function PortalCmsManager({ onBackToDashboard }: { onBackToDashbo
                     name: "Institutional Annual Day",
                     tag: "Fest",
                     tagClass: "fest",
-                    venue: "05:00 PM | Grand Auditorium",
+                    venue: "Grand Auditorium",
+                    time: "05:00 PM – 08:00 PM",
                     image: "/Indian Classical Arts on Stage-5.png",
                     cardClass: "cultural-card",
                   };
@@ -2571,10 +2572,21 @@ export default function PortalCmsManager({ onBackToDashboard }: { onBackToDashbo
                       <input
                         type="text"
                         value={ev.venue}
-                        placeholder="Venue & Timing"
+                        placeholder="Venue (e.g. Grand Auditorium)"
                         onChange={(e) => {
                           const updated = [...data.events];
                           updated[idx].venue = e.target.value;
+                          setData({ ...data, events: updated });
+                        }}
+                        style={{ padding: "0.35rem 0.7rem", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.78rem" }}
+                      />
+                      <input
+                        type="text"
+                        value={ev.time || ""}
+                        placeholder="Time (e.g. 10:00 AM – 12:00 PM)"
+                        onChange={(e) => {
+                          const updated = [...data.events];
+                          updated[idx].time = e.target.value;
                           setData({ ...data, events: updated });
                         }}
                         style={{ padding: "0.35rem 0.7rem", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.78rem" }}
@@ -2666,6 +2678,7 @@ export default function PortalCmsManager({ onBackToDashboard }: { onBackToDashbo
                     category: "State Level",
                     date: "Oct 2026",
                     image: "/achievement_science.jpg",
+                    description: "Student Team • 1st Prize Winner",
                   };
                   setData({ ...data, achievements: [...data.achievements, newAch] });
                 }}
@@ -2726,6 +2739,18 @@ export default function PortalCmsManager({ onBackToDashboard }: { onBackToDashbo
                       setData({ ...data, achievements: updated });
                     }}
                     style={{ padding: "0.4rem 0.7rem", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", fontWeight: 800 }}
+                  />
+
+                  <input
+                    type="text"
+                    value={ach.description || ""}
+                    placeholder="Winner / Student Name & Award (e.g. Aarav Sharma • 100/100)"
+                    onChange={(e) => {
+                      const updated = [...data.achievements];
+                      updated[idx].description = e.target.value;
+                      setData({ ...data, achievements: updated });
+                    }}
+                    style={{ padding: "0.35rem 0.7rem", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.78rem" }}
                   />
 
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>

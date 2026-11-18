@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { getUserSession, getInstituteLogo, getInstituteName } from "@/lib/session";
-import { CampusInfoData, CampusLiveNotice } from "@/types/campus";
+import { CampusInfoData, CampusLiveNotice, CampusEvent, CampusAchievement } from "@/types/campus";
 import {
   Calendar,
   GraduationCap,
@@ -119,6 +119,12 @@ export const TOUR_FACILITIES = [
   },
 ];
 
+// ─────────────────────────────────────────────────────────────────────────────
+// FALLBACK CONSTANTS — used only when campusData returns empty/null from API.
+// Admin-saved dynamic data always takes priority over these.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** @deprecated Use activeGallery (derived in component) instead. Kept as safe fallback. */
 export const CAMPUS_GALLERY_ITEMS = [
   {
     id: "annual_cultural_stage",
@@ -276,6 +282,104 @@ export default function CampusInfoPortal({
   const [tourTabMode, setTourTabMode] = useState<"video" | "facilities">("video");
   const heroVideoRef = useRef<HTMLVideoElement>(null);
 
+  // ─── FALLBACK DATA (shown only when campusData is null/empty) ──────────────
+  const FALLBACK_ACHIEVEMENTS: CampusAchievement[] = [
+    {
+      id: "ach_math",
+      title: "Mathematics Quiz",
+      badge: "★ 1st Rank",
+      rank: "1st Rank",
+      category: "Inter-School Olympiad",
+      date: "Oct 2026",
+      image: "/achievement_math.jpg",
+      description: "Aarav Sharma • 100/100",
+    },
+    {
+      id: "ach_cricket",
+      title: "Cricket Tournament",
+      badge: "★ Best Player",
+      rank: "Best Player",
+      category: "Under-16 Finals Champions",
+      date: "Oct 2026",
+      image: "/achievement_cricket.jpg",
+      description: "Rohan Varma • 84r & 4w",
+    },
+    {
+      id: "ach_science",
+      title: "Science Exhibition",
+      badge: "2nd Place",
+      rank: "2nd Place",
+      category: "District STEM Fair",
+      date: "Oct 2026",
+      image: "/achievement_science.jpg",
+      description: "Ananya & Team • Eco-Grid",
+    },
+  ];
+
+  const FALLBACK_EVENTS: CampusEvent[] = [
+    {
+      id: "ptm",
+      day: "01",
+      month: "NOV",
+      name: "Parent Teacher Meeting",
+      tag: "PTM",
+      tagClass: "academics",
+      venue: "10:00 AM – 12:00 PM | Main Auditorium",
+      image: "/Warm Parent-Teacher Classroom Meeting-2.png",
+      cardClass: "ptm-card",
+      description: "Comprehensive term evaluation and academic review meeting between parents, students, and faculty.",
+    },
+    {
+      id: "sports",
+      day: "05",
+      month: "NOV",
+      name: "Sports Day Finals",
+      tag: "Sports",
+      tagClass: "sports",
+      venue: "04:00 PM – 06:00 PM | Athletic Arena",
+      image: "/Sunny School Sports Field Gear-3.png",
+      cardClass: "sports-card",
+      description: "Inter-house championship finals covering athletic sprints, hurdles, high jump, and relay spectacles.",
+    },
+    {
+      id: "stem",
+      day: "10",
+      month: "NOV",
+      name: "Science & AI Exhibition",
+      tag: "STEM",
+      tagClass: "stem",
+      venue: "All Day | Discovery Block Labs",
+      image: "/Vibrant Modern STEM Laboratory-4.png",
+      cardClass: "stem-card",
+      description: "Student technological innovations, IoT robotics demonstrations, and AI model showcases.",
+    },
+    {
+      id: "cultural",
+      day: "14",
+      month: "NOV",
+      name: "Children's Day Gala",
+      tag: "Cultural",
+      tagClass: "fest",
+      venue: "09:00 AM – 12:00 PM | Main Auditorium",
+      image: "/Indian Classical Arts on Stage-5.png",
+      cardClass: "cultural-card",
+      description: "Celebratory student carnival, cultural music performances, and prize distribution festival.",
+    },
+  ];
+
+  // ─── DYNAMIC ACTIVE DATA ───────────────────────────────────────────────────
+  // Priority 1: admin-saved dynamic data from campusData (via /api/kiosk/campus-info)
+  // Priority 2: FALLBACK_* constants (hardcoded safe defaults)
+  const activeAchievements: CampusAchievement[] =
+    campusData?.achievements?.length ? campusData.achievements : FALLBACK_ACHIEVEMENTS;
+
+  const activeGallery =
+    campusData?.gallery?.length ? campusData.gallery : CAMPUS_GALLERY_ITEMS;
+
+  const activeEvents: CampusEvent[] =
+    campusData?.events?.length ? campusData.events : FALLBACK_EVENTS;
+  // ──────────────────────────────────────────────────────────────────────────
+
   const dynamicHeroVideo =
     campusData?.hero?.videoUrl ||
     campusData?.branding?.virtualTour360Url ||
@@ -317,11 +421,11 @@ export default function CampusInfoPortal({
       } else if (galleryModalOpen && selectedGalleryIndex !== null) {
         if (e.key === "ArrowLeft") {
           setSelectedGalleryIndex((prev) =>
-            prev !== null ? (prev - 1 + CAMPUS_GALLERY_ITEMS.length) % CAMPUS_GALLERY_ITEMS.length : 0
+            prev !== null ? (prev - 1 + activeGallery.length) % activeGallery.length : 0
           );
         } else if (e.key === "ArrowRight") {
           setSelectedGalleryIndex((prev) =>
-            prev !== null ? (prev + 1) % CAMPUS_GALLERY_ITEMS.length : 0
+            prev !== null ? (prev + 1) % activeGallery.length : 0
           );
         }
       }
@@ -759,7 +863,7 @@ export default function CampusInfoPortal({
                 </div>
               </div>
 
-              <div
+              {/* <div
                 className="mv-role-pill-btn"
                 onClick={() => router.push("/visitor")}
                 title="Open Visitor Desk"
@@ -771,7 +875,7 @@ export default function CampusInfoPortal({
                   <b>Visitor &amp; Guest</b>
                   <span>Digital Pass &amp; Maps</span>
                 </div>
-              </div>
+              </div> */}
               {/* 
               <div
                 className="mv-role-pill-btn"
@@ -820,50 +924,38 @@ export default function CampusInfoPortal({
             </div>
 
             <div className="mv-achieve-cards-row">
-              {/* Achievement 1 */}
-              <div className="mv-achieve-card">
-                <div className="mv-achieve-img-box">
-                  <img src="/achievement_math.jpg" alt="Mathematics Quiz" />
-                  <div className="mv-achieve-rank-pill">
-                    <span>★ 1st Rank</span>
+              {/* Dynamic achievements — admin-saved data first, fallback constants if empty */}
+              {activeAchievements.slice(0, 3).map((ach, idx) => (
+                <div key={ach.id} className="mv-achieve-card">
+                  <div className="mv-achieve-img-box">
+                    <img
+                      src={ach.image}
+                      alt={ach.title}
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = "/achievement_math.jpg";
+                      }}
+                    />
+                    <div
+                      className="mv-achieve-rank-pill"
+                      style={
+                        idx === 2
+                          ? { background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" }
+                          : undefined
+                      }
+                    >
+                      <span>{ach.badge || ach.rank}</span>
+                    </div>
+                  </div>
+                  <div className="mv-achieve-meta">
+                    <h4 className="mv-achieve-title">{ach.title}</h4>
+                    <span className="mv-achieve-level">{ach.category}</span>
+                    <span className="mv-achieve-winner">
+                      {ach.description || `${ach.rank || ach.badge || "Winner"} • ${ach.date}`}
+                    </span>
                   </div>
                 </div>
-                <div className="mv-achieve-meta">
-                  <h4 className="mv-achieve-title">Mathematics Quiz</h4>
-                  <span className="mv-achieve-level">Inter-School Olympiad</span>
-                  <span className="mv-achieve-winner">Aarav Sharma • 100/100</span>
-                </div>
-              </div>
-
-              {/* Achievement 2 */}
-              <div className="mv-achieve-card">
-                <div className="mv-achieve-img-box">
-                  <img src="/achievement_cricket.jpg" alt="Cricket Champions" />
-                  <div className="mv-achieve-rank-pill">
-                    <span>★ Best Player</span>
-                  </div>
-                </div>
-                <div className="mv-achieve-meta">
-                  <h4 className="mv-achieve-title">Cricket Tournament</h4>
-                  <span className="mv-achieve-level">Under-16 Finals Champions</span>
-                  <span className="mv-achieve-winner">Rohan Varma • 84r &amp; 4w</span>
-                </div>
-              </div>
-
-              {/* Achievement 3 */}
-              <div className="mv-achieve-card">
-                <div className="mv-achieve-img-box">
-                  <img src="/achievement_science.jpg" alt="Science Expo" />
-                  <div className="mv-achieve-rank-pill" style={{ background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" }}>
-                    <span>2 2nd Place</span>
-                  </div>
-                </div>
-                <div className="mv-achieve-meta">
-                  <h4 className="mv-achieve-title">Science Exhibition</h4>
-                  <span className="mv-achieve-level">District STEM Fair</span>
-                  <span className="mv-achieve-winner">Ananya &amp; Team • Eco-Grid</span>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
@@ -892,7 +984,7 @@ export default function CampusInfoPortal({
             </div>
 
             <div className="mv-gallery-grid">
-              {CAMPUS_GALLERY_ITEMS.slice(0, 4).map((item, idx) => (
+              {activeGallery.slice(0, 4).map((item, idx) => (
                 <div
                   key={item.id}
                   className="mv-gallery-item"
@@ -903,7 +995,14 @@ export default function CampusInfoPortal({
                   }}
                   title={`Click to open ${item.shortTitle} photo popup`}
                 >
-                  <img src={item.src} alt={item.shortTitle} />
+                  <img
+                    src={item.src}
+                    alt={item.shortTitle}
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = "/mvps/gallery/event_stage_02.jpg";
+                    }}
+                  />
                   <div className="mv-gallery-label-bar">{item.shortTitle}</div>
                 </div>
               ))}
@@ -932,60 +1031,18 @@ export default function CampusInfoPortal({
             </div>
 
             <div className="mv-timeline-list">
-              {[
-                {
-                  id: "ptm",
-                  day: "01",
-                  month: "NOV",
-                  name: "Parent Teacher Meeting",
-                  tag: "PTM",
-                  tagClass: "academics",
-                  venue: "10:00 AM – 12:00 PM | Main Auditorium",
-                  image: "/Warm Parent-Teacher Classroom Meeting-2.png",
-                  cardClass: "ptm-card",
-                },
-                {
-                  id: "sports",
-                  day: "05",
-                  month: "NOV",
-                  name: "Sports Day Finals",
-                  tag: "Sports",
-                  tagClass: "sports",
-                  venue: "04:00 PM – 06:00 PM | Athletic Arena",
-                  image: "/Sunny School Sports Field Gear-3.png",
-                  cardClass: "sports-card",
-                },
-                {
-                  id: "stem",
-                  day: "10",
-                  month: "NOV",
-                  name: "Science & AI Exhibition",
-                  tag: "STEM",
-                  tagClass: "stem",
-                  venue: "All Day | Discovery Block Labs",
-                  image: "/Vibrant Modern STEM Laboratory-4.png",
-                  cardClass: "stem-card",
-                },
-                {
-                  id: "cultural",
-                  day: "14",
-                  month: "NOV",
-                  name: "Children's Day Gala",
-                  tag: "Cultural",
-                  tagClass: "fest",
-                  venue: "09:00 AM – 12:00 PM | Main Auditorium",
-                  image: "/Indian Classical Arts on Stage-5.png",
-                  cardClass: "cultural-card",
-                },
-              ].map((event) => {
+              {activeEvents.map((event) => {
                 const isSelected = selectedScheduleId === event.id;
+                const venueDisplay = event.time ? `${event.time} | ${event.venue}` : event.venue;
                 return (
                   <div
                     key={event.id}
-                    className={`mv-timeline-card mv-timeline-row ${event.cardClass} ${isSelected ? "selected active" : ""}`}
+                    className={`mv-timeline-card mv-timeline-row ${(event as any).cardClass ?? ""} ${isSelected ? "selected active" : ""}`}
                     onClick={() => setSelectedScheduleId(event.id)}
                     style={{
-                      backgroundImage: `linear-gradient(90deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.90) 45%, rgba(255, 255, 255, 0.30) 75%, rgba(255, 255, 255, 0) 100%), url('${event.image}')`,
+                      backgroundImage: (event as any).image
+                        ? `linear-gradient(90deg, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.90) 45%, rgba(255,255,255,0.30) 75%, rgba(255,255,255,0) 100%), url('${(event as any).image}')`
+                        : undefined,
                       backgroundSize: "cover",
                       backgroundPosition: "center",
                       backgroundRepeat: "no-repeat",
@@ -999,9 +1056,11 @@ export default function CampusInfoPortal({
                     <div className="mv-timeline-info">
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <h4 className="mv-timeline-name">{event.name}</h4>
-                        <span className={`mv-timeline-tag ${event.tagClass}`}>{event.tag}</span>
+                        {(event as any).tag && (
+                          <span className={`mv-timeline-tag ${(event as any).tagClass ?? ""}`}>{(event as any).tag}</span>
+                        )}
                       </div>
-                      <span className="mv-timeline-venue">{event.venue}</span>
+                      <span className="mv-timeline-venue">{venueDisplay}</span>
                     </div>
                   </div>
                 );
@@ -1442,12 +1501,12 @@ export default function CampusInfoPortal({
                 <div>
                   <h3 style={{ margin: 0, fontSize: "1.02rem", fontWeight: 800 }}>
                     {selectedGalleryIndex !== null
-                      ? CAMPUS_GALLERY_ITEMS[selectedGalleryIndex].title
+                      ? (activeGallery[selectedGalleryIndex]?.title ?? "")
                       : `${schoolName} • Campus Life in Motion`}
                   </h3>
                   <span style={{ fontSize: "0.72rem", color: "rgba(255, 255, 255, 0.85)", fontWeight: 600 }}>
                     {selectedGalleryIndex !== null
-                      ? `Photo ${selectedGalleryIndex + 1} of ${CAMPUS_GALLERY_ITEMS.length} • Tap arrows or thumbnails to navigate`
+                      ? `Photo ${selectedGalleryIndex + 1} of ${activeGallery.length} • Tap arrows or thumbnails to navigate`
                       : "Campus Moments & Extracurricular Highlights"}
                   </span>
                 </div>
@@ -1519,13 +1578,17 @@ export default function CampusInfoPortal({
                     }}
                   >
                     <img
-                      src={CAMPUS_GALLERY_ITEMS[selectedGalleryIndex].src}
-                      alt={CAMPUS_GALLERY_ITEMS[selectedGalleryIndex].title}
+                      src={activeGallery[selectedGalleryIndex]?.src ?? ""}
+                      alt={activeGallery[selectedGalleryIndex]?.title ?? ""}
                       style={{
                         width: "100%",
                         height: "clamp(260px, 44vh, 400px)",
                         objectFit: "cover",
                         display: "block",
+                      }}
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = "/mvps/gallery/event_stage_02.jpg";
                       }}
                     />
 
@@ -1535,7 +1598,7 @@ export default function CampusInfoPortal({
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedGalleryIndex((prev) =>
-                          prev !== null ? (prev - 1 + CAMPUS_GALLERY_ITEMS.length) % CAMPUS_GALLERY_ITEMS.length : 0
+                          prev !== null ? (prev - 1 + activeGallery.length) % activeGallery.length : 0
                         );
                       }}
                       title="Previous Photo"
@@ -1549,7 +1612,7 @@ export default function CampusInfoPortal({
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedGalleryIndex((prev) =>
-                          prev !== null ? (prev + 1) % CAMPUS_GALLERY_ITEMS.length : 0
+                          prev !== null ? (prev + 1) % activeGallery.length : 0
                         );
                       }}
                       title="Next Photo"
@@ -1584,7 +1647,7 @@ export default function CampusInfoPortal({
                         }}
                       >
                         <Sparkles size={11} />
-                        {CAMPUS_GALLERY_ITEMS[selectedGalleryIndex].category}
+                        {activeGallery[selectedGalleryIndex]?.category ?? ""}
                       </span>
                       <span
                         style={{
@@ -1597,7 +1660,7 @@ export default function CampusInfoPortal({
                           fontWeight: 700,
                         }}
                       >
-                        {CAMPUS_GALLERY_ITEMS[selectedGalleryIndex].date}
+                        {activeGallery[selectedGalleryIndex]?.date ?? ""}
                       </span>
                     </div>
 
@@ -1615,7 +1678,7 @@ export default function CampusInfoPortal({
                         fontWeight: 800,
                       }}
                     >
-                      {selectedGalleryIndex + 1} / {CAMPUS_GALLERY_ITEMS.length}
+                      {selectedGalleryIndex + 1} / {activeGallery.length}
                     </div>
                   </div>
 
@@ -1634,11 +1697,11 @@ export default function CampusInfoPortal({
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 800, color: "#0f172a" }}>
-                        {CAMPUS_GALLERY_ITEMS[selectedGalleryIndex].title}
+                        {activeGallery[selectedGalleryIndex]?.title ?? ""}
                       </h4>
                     </div>
                     <p style={{ margin: 0, fontSize: "0.78rem", color: "#475569", lineHeight: 1.4 }}>
-                      {CAMPUS_GALLERY_ITEMS[selectedGalleryIndex].description}
+                      {activeGallery[selectedGalleryIndex]?.description ?? ""}
                     </p>
                   </div>
 
@@ -1655,14 +1718,21 @@ export default function CampusInfoPortal({
                       scrollbarWidth: "thin",
                     }}
                   >
-                    {CAMPUS_GALLERY_ITEMS.map((item, idx) => (
+                    {activeGallery.map((item, idx) => (
                       <div
                         key={item.id}
                         className={`mp-thumb-item ${selectedGalleryIndex === idx ? "active" : ""}`}
                         onClick={() => setSelectedGalleryIndex(idx)}
                         title={item.shortTitle}
                       >
-                        <img src={item.src} alt={item.shortTitle} />
+                        <img
+                          src={item.src}
+                          alt={item.shortTitle}
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = "/mvps/gallery/event_stage_02.jpg";
+                          }}
+                        />
                       </div>
                     ))}
                   </div>
@@ -1697,10 +1767,10 @@ export default function CampusInfoPortal({
                     }}
                   >
                     {(galleryCategoryFilter === "all"
-                      ? CAMPUS_GALLERY_ITEMS
-                      : CAMPUS_GALLERY_ITEMS.filter((item) => item.categoryFilter === galleryCategoryFilter)
+                      ? activeGallery
+                      : activeGallery.filter((item) => (item as any).categoryFilter === galleryCategoryFilter)
                     ).map((item) => {
-                      const origIndex = CAMPUS_GALLERY_ITEMS.findIndex((orig) => orig.id === item.id);
+                      const origIndex = activeGallery.findIndex((orig) => orig.id === item.id);
                       return (
                         <div
                           key={item.id}
@@ -1844,26 +1914,24 @@ export default function CampusInfoPortal({
 
             <div style={{ padding: "1.25rem", background: "#f8fafc", maxHeight: "450px", overflowY: "auto" }}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px" }}>
-                <div style={{ background: "#ffffff", borderRadius: "10px", padding: "10px", border: "1px solid #fed7aa" }}>
-                  <img src="/achievement_math.jpg" alt="Math Quiz" style={{ width: "100%", height: "120px", objectFit: "cover", borderRadius: "8px" }} />
-                  <span style={{ display: "inline-block", background: "#ea580c", color: "#fff", fontSize: "0.68rem", fontWeight: 800, padding: "2px 8px", borderRadius: "9999px", marginTop: "6px" }}>★ 1st Rank</span>
-                  <h4 style={{ margin: "4px 0 2px", fontSize: "0.85rem", fontWeight: 800 }}>Inter-School Mathematics Quiz</h4>
-                  <p style={{ margin: 0, fontSize: "0.72rem", color: "#64748b" }}>Inter School Competition • Aug 2025</p>
-                </div>
-
-                <div style={{ background: "#ffffff", borderRadius: "10px", padding: "10px", border: "1px solid #fed7aa" }}>
-                  <img src="/achievement_cricket.jpg" alt="Cricket" style={{ width: "100%", height: "120px", objectFit: "cover", borderRadius: "8px" }} />
-                  <span style={{ display: "inline-block", background: "#ea580c", color: "#fff", fontSize: "0.68rem", fontWeight: 800, padding: "2px 8px", borderRadius: "9999px", marginTop: "6px" }}>★ Best Player</span>
-                  <h4 style={{ margin: "4px 0 2px", fontSize: "0.85rem", fontWeight: 800 }}>Inter-School Cricket Tournament</h4>
-                  <p style={{ margin: 0, fontSize: "0.72rem", color: "#64748b" }}>Inter School • Sep 2025</p>
-                </div>
-
-                <div style={{ background: "#ffffff", borderRadius: "10px", padding: "10px", border: "1px solid #fed7aa" }}>
-                  <img src="/achievement_science.jpg" alt="Science" style={{ width: "100%", height: "120px", objectFit: "cover", borderRadius: "8px" }} />
-                  <span style={{ display: "inline-block", background: "#f59e0b", color: "#fff", fontSize: "0.68rem", fontWeight: 800, padding: "2px 8px", borderRadius: "9999px", marginTop: "6px" }}>2 2nd Place</span>
-                  <h4 style={{ margin: "4px 0 2px", fontSize: "0.85rem", fontWeight: 800 }}>District Science Exhibition</h4>
-                  <p style={{ margin: 0, fontSize: "0.72rem", color: "#64748b" }}>District Level • Aug 2025</p>
-                </div>
+                {activeAchievements.map((ach) => (
+                  <div key={ach.id} style={{ background: "#ffffff", borderRadius: "10px", padding: "10px", border: "1px solid #fed7aa" }}>
+                    <img
+                      src={ach.image}
+                      alt={ach.title}
+                      onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/achievement_math.jpg"; }}
+                      style={{ width: "100%", height: "120px", objectFit: "cover", borderRadius: "8px" }}
+                    />
+                    <span style={{ display: "inline-block", background: "#ea580c", color: "#fff", fontSize: "0.68rem", fontWeight: 800, padding: "2px 8px", borderRadius: "9999px", marginTop: "6px" }}>
+                      {(ach as any).badge || ach.rank}
+                    </span>
+                    <h4 style={{ margin: "4px 0 2px", fontSize: "0.85rem", fontWeight: 800 }}>{ach.title}</h4>
+                    <p style={{ margin: 0, fontSize: "0.72rem", color: "#64748b" }}>{ach.category} • {ach.date}</p>
+                    <p style={{ margin: "4px 0 0", fontSize: "0.72rem", fontWeight: 700, color: "#c2410c" }}>
+                      {ach.description || (ach.badge || ach.rank)}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -1920,49 +1988,44 @@ export default function CampusInfoPortal({
 
             <div style={{ padding: "1.25rem", background: "#f8fafc", maxHeight: "420px", overflowY: "auto" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                <div style={{ background: "#ffffff", borderRadius: "8px", padding: "10px 14px", border: "1px solid #fed7aa", display: "flex", alignItems: "center", gap: "12px" }}>
-                  <div style={{ background: "#fff7ed", borderRadius: "6px", width: 44, height: 44, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "1px solid #fed7aa" }}>
-                    <b style={{ fontSize: "1rem", color: "#c2410c" }}>01</b>
-                    <span style={{ fontSize: "0.62rem", color: "#ea580c", fontWeight: 800 }}>NOV</span>
+                {activeEvents.map((event) => (
+                  <div
+                    key={event.id}
+                    style={{
+                      background: "#ffffff",
+                      borderRadius: "8px",
+                      padding: "10px 14px",
+                      border: "1px solid #fed7aa",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        background: "#fff7ed",
+                        borderRadius: "6px",
+                        width: 44,
+                        height: 44,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        border: "1px solid #fed7aa",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <b style={{ fontSize: "1rem", color: "#c2410c" }}>{event.day}</b>
+                      <span style={{ fontSize: "0.62rem", color: "#ea580c", fontWeight: 800 }}>{event.month}</span>
+                    </div>
+                    <div>
+                      <h4 style={{ margin: 0, fontSize: "0.9rem", fontWeight: 800 }}>{event.name}</h4>
+                      <p style={{ margin: "2px 0 0", fontSize: "0.75rem", color: "#64748b" }}>
+                        {event.time ? `${event.time} | ${event.venue}` : event.venue}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 style={{ margin: 0, fontSize: "0.9rem", fontWeight: 800 }}>Parent Teacher Meeting (PTM)</h4>
-                    <p style={{ margin: "2px 0 0", fontSize: "0.75rem", color: "#64748b" }}>10:00 AM – 12:00 PM | School Main Auditorium</p>
-                  </div>
-                </div>
-
-                <div style={{ background: "#ffffff", borderRadius: "8px", padding: "10px 14px", border: "1px solid #fed7aa", display: "flex", alignItems: "center", gap: "12px" }}>
-                  <div style={{ background: "#fff7ed", borderRadius: "6px", width: 44, height: 44, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "1px solid #fed7aa" }}>
-                    <b style={{ fontSize: "1rem", color: "#c2410c" }}>05</b>
-                    <span style={{ fontSize: "0.62rem", color: "#ea580c", fontWeight: 800 }}>NOV</span>
-                  </div>
-                  <div>
-                    <h4 style={{ margin: 0, fontSize: "0.9rem", fontWeight: 800 }}>Sports Day Practice &amp; Athletic Heats</h4>
-                    <p style={{ margin: "2px 0 0", fontSize: "0.75rem", color: "#64748b" }}>04:00 PM – 06:00 PM | Campus Athletic Arena</p>
-                  </div>
-                </div>
-
-                <div style={{ background: "#ffffff", borderRadius: "8px", padding: "10px 14px", border: "1px solid #fed7aa", display: "flex", alignItems: "center", gap: "12px" }}>
-                  <div style={{ background: "#fff7ed", borderRadius: "6px", width: 44, height: 44, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "1px solid #fed7aa" }}>
-                    <b style={{ fontSize: "1rem", color: "#c2410c" }}>10</b>
-                    <span style={{ fontSize: "0.62rem", color: "#ea580c", fontWeight: 800 }}>NOV</span>
-                  </div>
-                  <div>
-                    <h4 style={{ margin: 0, fontSize: "0.9rem", fontWeight: 800 }}>District Science &amp; Innovation Exhibition</h4>
-                    <p style={{ margin: "2px 0 0", fontSize: "0.75rem", color: "#64748b" }}>All Day (09:00 AM – 04:30 PM) | Discovery Block</p>
-                  </div>
-                </div>
-
-                <div style={{ background: "#ffffff", borderRadius: "8px", padding: "10px 14px", border: "1px solid #fed7aa", display: "flex", alignItems: "center", gap: "12px" }}>
-                  <div style={{ background: "#fff7ed", borderRadius: "6px", width: 44, height: 44, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "1px solid #fed7aa" }}>
-                    <b style={{ fontSize: "1rem", color: "#c2410c" }}>14</b>
-                    <span style={{ fontSize: "0.62rem", color: "#ea580c", fontWeight: 800 }}>NOV</span>
-                  </div>
-                  <div>
-                    <h4 style={{ margin: 0, fontSize: "0.9rem", fontWeight: 800 }}>Children's Day Special Cultural Gala</h4>
-                    <p style={{ margin: "2px 0 0", fontSize: "0.75rem", color: "#64748b" }}>09:00 AM – 12:00 PM | School Auditorium</p>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           </div>

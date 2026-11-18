@@ -43,8 +43,8 @@ export async function POST(req: NextRequest) {
   try {
     const payload: CampusInfoData = await req.json();
 
-    if (!payload || !payload.branding || !payload.leadership || !payload.facilities) {
-      return NextResponse.json({ error: "Invalid campus info payload structure" }, { status: 400 });
+    if (!payload || !payload.branding) {
+      return NextResponse.json({ error: "Invalid campus info payload structure: branding is required" }, { status: 400 });
     }
 
     const dataDirPath = path.join(process.cwd(), "src", "data");

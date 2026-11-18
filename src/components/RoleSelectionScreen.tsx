@@ -270,7 +270,7 @@ const roles: RoleDefinition[] = [
   {
     role: "staff",
     eyebrow: "LEAD WITH PURPOSE",
-    title: "Staff",
+    title: "Teacher",
     badge: "Faculty Gateway",
     description: "Manage classrooms, marks, lesson plans and the moments that shape every learner.",
     image: "/staff_avatar.png",
@@ -279,18 +279,18 @@ const roles: RoleDefinition[] = [
     icon: <Users size={18} />,
     actions: ["Mark attendance", "Time table", "Lesson plans", "Leave applications"],
   },
-  {
-    role: "visitor",
-    eyebrow: "WELCOME IN",
-    title: "Visitor",
-    badge: "Admissions & Passes",
-    description: "Arrive, explore and connect with the campus through a fast, secure visitor experience.",
-    image: "/admin_avatar.png",
-    accent: "#7c3aed",
-    soft: "#f5f3ff",
-    icon: <QrCode size={18} />,
-    actions: ["Visitor pass", "Campus tour", "Admissions desk", "Meet leadership"],
-  }
+  // {
+  //   role: "visitor",
+  //   eyebrow: "WELCOME IN",
+  //   title: "Visitor",
+  //   badge: "Admissions & Passes",
+  //   description: "Arrive, explore and connect with the campus through a fast, secure visitor experience.",
+  //   image: "/admin_avatar.png",
+  //   accent: "#7c3aed",
+  //   soft: "#f5f3ff",
+  //   icon: <QrCode size={18} />,
+  //   actions: ["Visitor pass", "Campus tour", "Admissions desk", "Meet leadership"],
+  // }
 
   // ,
   // {
@@ -629,8 +629,21 @@ export default function RoleSelectionScreen({
 
         </section>
 
-        {/* 4 PERSONA ROLE SELECTION GRID (PREVIOUS LAYOUT RESTORED) */}
-        <section className="role-grid" style={{ "paddingTop": '50px' }} aria-label="Choose your portal">
+        {/* 2 PERSONA ROLE SELECTION GRID (CENTERED DUAL-ROLE LAYOUT) */}
+        <section
+          className="role-grid"
+          style={{
+            paddingTop: "50px",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "stretch",
+            gap: "32px",
+            width: "100%",
+            maxWidth: "960px",
+            margin: "0 auto",
+          }}
+          aria-label="Choose your portal"
+        >
           {roles.map((item, index) => (
             <article
               key={item.role}
@@ -640,7 +653,10 @@ export default function RoleSelectionScreen({
                   "--role-accent": item.accent,
                   "--role-soft": item.soft,
                   "--delay": `${index * 90}ms`,
-                  "height": '50vh'
+                  height: "50vh",
+                  flex: "0 1 420px",
+                  maxWidth: "440px",
+                  width: "100%",
                 } as React.CSSProperties
               }
               onClick={() => onSelectRole(item.role)}

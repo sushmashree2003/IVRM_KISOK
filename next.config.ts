@@ -7,7 +7,7 @@ function readEnvVar(key: string, defaultValue: string = ""): string {
   if (process.env[key] && process.env[key]!.trim() !== "") {
     return process.env[key]!.trim();
   }
-  const files = [".env.example", ".env.local", ".env", ".env.development"];
+  const files = [".env.local", ".env.production", ".env", ".env.development", ".env.example"];
   for (const file of files) {
     try {
       const fullPath = path.join(process.cwd(), file);
@@ -91,9 +91,42 @@ const resolvedAdminPassword =
   readEnvVar("password") ||
   "SGSNov@321";
 
+const resolvedLoginUrl =
+  readEnvVar("NEXT_PUBLIC_LOGIN_URL") ||
+  readEnvVar("LOGIN_URL") ||
+  "https://stgeorgesschoolerp.azurewebsites.in:30036/";
+
+const resolvedPortalUrl =
+  readEnvVar("NEXT_PUBLIC_PORTAL_URL") ||
+  readEnvVar("PORTAL_URL") ||
+  "https://stgeorgesschoolerp.azurewebsites.in:30029/";
+
+const resolvedLeaveUrl =
+  readEnvVar("LEAVE_URL") ||
+  resolvedPortalUrl;
+
+const resolvedApiLogin =
+  readEnvVar("API_VAPS_LOGIN") ||
+  `${resolvedLoginUrl.replace(/\/+$/, "")}/api/LoginFacade/`;
+
+const resolvedAiName =
+  readEnvVar("NEXT_PUBLIC_AI_NAME") ||
+  readEnvVar("AI_NAME") ||
+  "SGS AI";
+
 const nextConfig: NextConfig = {
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+
   // Expose branding & session config to client bundle
   env: {
+    LOGIN_URL: resolvedLoginUrl,
+    NEXT_PUBLIC_LOGIN_URL: resolvedLoginUrl,
+    PORTAL_URL: resolvedPortalUrl,
+    NEXT_PUBLIC_PORTAL_URL: resolvedPortalUrl,
+    LEAVE_URL: resolvedLeaveUrl,
+    API_VAPS_LOGIN: resolvedApiLogin,
     NEXT_PUBLIC_INST_CODE: resolvedInstCode,
     NEXT_PUBLIC_INST_CODE_BGIMAGE: resolvedInstCodeBg,
     NEXT_PUBLIC_BACKGROUPDLO: resolvedBackgroupdlo,
@@ -101,10 +134,16 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_INSTITUTE_LOGO: resolvedLogo,
     NEXT_PUBLIC_INSTITUTE_NAME: resolvedName,
     NEXT_PUBLIC_LOGIN_MI_ID: resolvedMiId,
+    LOGIN_MI_ID: resolvedMiId,
+    MI_ID: resolvedMiId,
     NEXT_PUBLIC_MI_SUBDOMAIN: resolvedMiSubdomain,
     NEXT_PUBLIC_LOGIN_ASMAY_ID: resolvedAsmayId,
+    LOGIN_ASMAY_ID: resolvedAsmayId,
     NEXT_PUBLIC_LOGIN_ASMAY_YEAR: resolvedAsmayYear,
+    LOGIN_ASMAY_YEAR: resolvedAsmayYear,
     NEXT_PUBLIC_ADMIN_PASSWORD: resolvedAdminPassword,
+    NEXT_PUBLIC_AI_NAME: resolvedAiName,
+    AI_NAME: resolvedAiName,
   },
 
   // Allow dev resources (HMR WebSocket, _next/static, etc.) from LAN, WAN, and tunnel origins

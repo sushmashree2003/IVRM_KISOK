@@ -186,9 +186,18 @@ export async function POST(req: NextRequest) {
     }
 
     // 1. Resolve Server URL and Institution ID from env
-    const endpoint = loginUrl
+    let endpoint = loginUrl
       ? `${loginUrl.trim().replace(/\/+$/, "")}/api/LoginFacade/`
       : VAPS_API_ENDPOINTS.LOGIN_FACADE;
+
+    if (!endpoint || !endpoint.startsWith("http")) {
+      const base = (VAPS_API_ENDPOINTS.LOGIN_URL || "https://stgeorgesschoolerp.azurewebsites.in:30036").replace(/\/+$/, "");
+      endpoint = `${base}/api/LoginFacade/`;
+    }
+
+    if (typeof process !== "undefined" && process.env) {
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+    }
 
     const instId = resolvedMiId;
 
@@ -273,14 +282,24 @@ export async function POST(req: NextRequest) {
         password === "Password@123";
 
       if (data.message && data.message.trim() !== "") {
-        if (!isDemoUser) {
+        const lowerMsg = data.message.toLowerCase();
+        const isExplicitAuthFailure =
+          lowerMsg.includes("invalid") ||
+          lowerMsg.includes("incorrect") ||
+          lowerMsg.includes("not found") ||
+          lowerMsg.includes("denied") ||
+          lowerMsg.includes("wrong") ||
+          lowerMsg.includes("failed") ||
+          lowerMsg.includes("password");
+
+        if (isExplicitAuthFailure || !isDemoUser) {
           return NextResponse.json({
             success: false,
-            message: data.message.trim(),
+            message: data.message.trim() || "Invalid username or password. Please try again.",
             data,
           });
         }
-        // Demo account: continue to fallback/mock generator below
+        // Explicit demo account with non-fatal notice: continue to fallback/mock generator below
       } else {
 
         // STRICT ROLE VALIDATION from backend response:
@@ -369,7 +388,29 @@ export async function POST(req: NextRequest) {
 
     // 4. Fallback / Offline / Demo validation
     // If the remote server is unreachable or credentials belong to demo environment,
-    // enforce role validation strictly:
+    // enforce password validation strictly:
+    const ALLOWED_DEMO_PASSWORDS = [
+      "1234",
+      "password123",
+      "Password@123",
+      "admin123",
+      "sgs123",
+      "SGSNov@321",
+      process.env.DEMO_PASSWORD,
+      process.env.NEXT_PUBLIC_DEMO_PASSWORD,
+    ].filter(Boolean) as string[];
+
+    if (!ALLOWED_DEMO_PASSWORDS.includes(password.trim())) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Incorrect password. Please verify your credentials and try again.",
+        },
+        { status: 401 }
+      );
+    }
+
+    // Enforce role segregation strictly:
     if (normalizedRole === "staff") {
       // Must NOT be student credentials
       if (isStudentFormat || trimmedUser.toLowerCase().includes("std") || trimmedUser.toLowerCase().includes("student")) {

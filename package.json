@@ -9,8 +9,9 @@
     "start": "next start -H 0.0.0.0",
     "lint": "eslint",
     "electron:dev": "cross-env NODE_ENV=development electron .",
-    "electron:pack": "next build && electron-builder --dir",
-    "electron:build": "next build && electron-builder --win"
+    "electron:pack": "next build --webpack && electron-builder --dir",
+    "electron:build": "next build --webpack && electron-builder --win",
+    "build:exe": "build-exe.bat"
   },
   "dependencies": {
     "lucide-react": "^1.48.0",

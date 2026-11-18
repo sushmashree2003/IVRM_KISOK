@@ -1,29 +1,17 @@
 {
   "branding": {
-    "instituteName": "",
-    "shortCode": "MVPS",
-    "aiName": "MVPS AI",
+    "instituteName": "St  George's School Unit -II Agra ",
+    "shortCode": "SGS",
+    "aiName": "SGS AI",
     "logo": "",
     "motto": "Empowering Minds, Shaping Futures",
-    "affiliation": "CBSE Affiliation No. 1930281 | NAAC Grade A++",
+    "affiliation": "CISCE",
     "tickerNotices": [
       {
         "id": "notice-1",
         "badge": "ADMISSION",
-        "text": "Admissions open for Academic Session 2026-27 (Pre-Nursery to Class XI).",
+        "text": "Admissions open for Academic Session 2027-28 (Pre-Nursery to Class XI).",
         "priority": "high"
-      },
-      {
-        "id": "notice-2",
-        "badge": "CBSE ALERT",
-        "text": "CBSE Term Examination date sheets published on student portal.",
-        "priority": "urgent"
-      },
-      {
-        "id": "notice-3",
-        "badge": "SPORTS",
-        "text": "Annual Inter-School Athletics Championship begins Nov 20.",
-        "priority": "normal"
       }
     ],
     "virtualTour360Url": "/uploads/hero/School_1794909324852.mp4",
@@ -31,18 +19,18 @@
   },
   "hero": {
     "videoUrl": "/uploads/hero/School_1794909324852.mp4",
-    "posterUrl": "/mvps/hero/banner_01.jpg",
-    "backgroundImageUrl": "/hero_school_building.jpg",
+    "posterUrl": "",
+    "backgroundImageUrl": "",
     "kicker": "Welcome to",
     "headline": "",
     "subheadline": "Empowering young minds with world-class scholastic rigor, ethical leadership, and futuristic STEM innovation.",
     "badge1Bold": "100% Pass",
-    "badge1Sub": "CISCE Board Distinction",
-    "badge2Bold": "180+ Faculty",
+    "badge1Sub": "CISCE Board ",
+    "badge2Bold": "100+ ",
     "badge2Sub": "Academic Excellence",
-    "badge3Bold": "4,200+",
-    "badge3Sub": "Happy Scholars",
-    "badge4Bold": "12 Labs",
+    "badge3Bold": "2,500 +",
+    "badge3Sub": "Happy Student ",
+    "badge4Bold": "5 LABS",
     "badge4Sub": "Robotics & AI Smart Hubs",
     "button1Text": "Explore 360° Campus",
     "button2Text": "Leadership & Vision",
@@ -51,307 +39,153 @@
     "ctaAction": "roles"
   },
   "quickStats": {
-    "studentsCount": "4,200+",
-    "facultyCount": "180+",
-    "busCount": "38",
-    "labsCount": "12",
-    "campusArea": "15 Acres"
+    "studentsCount": "2500+",
+    "facultyCount": "100+",
+    "busCount": "0",
+    "labsCount": "5",
+    "campusArea": "5"
   },
   "leadership": [
     {
-      "id": "chairman",
-      "name": "Amit Chadha",
-      "designation": "Chairman",
-      "image": "/mvps/leadership/chairman_amit_chadha.jpg",
-      "quotePreview": "Education is not about life, it is life itself. Every possible effort is made to make education a lifelike experience for learners.",
-      "fullQuote": "Education is not about life, it is life itself deeply considering this famous quote, every possible effort is being made to make education a lifelike experience for the learners at Madhuvan Vatika Public School. The students are encouraged to quest, experiment and analyse. Tailor made teaching methodologies and learner centric approach play a core role at MVPS.\n\nCo-curricular Activities are designed and implemented to develop a healthy Mind, Body and Soul besides supporting the zest of the students. We expect our students to be wholesome and replete with knowledge. I am assured that our school will continue to achieve the benchmark in academic & Non-academic spheres.\n\nWish you happy learning.",
-      "order": 1,
-      "active": true
-    },
-    {
-      "id": "principal",
-      "name": "Deepak Puri",
-      "designation": "Principal",
-      "image": "/mvps/leadership/principal_deepak_puri.jpg",
-      "quotePreview": "Empowering Minds, Shaping Futures. At MVPS, we believe that education is more than academic excellence; it is about fostering a lifelong passion for learning.",
-      "fullQuote": "Empowering Minds, Shaping Futures. Welcome to Madhuvan Vatika Public School. Choosing the right school for your child is one of the most significant decisions you will make as a parent. At Madhuvan Vatika Public School, we believe that education is more than just academic excellence; it is about fostering a lifelong passion for learning and the courage to innovate.\n\nOur dedicated faculty works tirelessly to create an environment where intellectual curiosity is celebrated. We don't just teach students to succeed in exams; we prepare them to navigate a rapidly changing world with integrity and resilience. We believe that every student possesses a unique spark, and it is our privilege to provide the tools, technology, and mentorship to turn that spark into a flame in a rapidly changing world.",
-      "order": 2,
-      "active": true
-    },
-    {
-      "id": "vice_chairman",
-      "name": "Aman Chadha",
-      "designation": "Vice Chairman",
-      "image": "/mvps/leadership/vice_chairman_aman_chadha.jpg",
-      "quotePreview": "MVPS at Asmanpur is the realization of my long nurtured dream to provide quality education to the children of Nurpur Bedi, Ropar.",
-      "fullQuote": "Madhuvan Vatika Public School at Asmanpur is the realization of my long nurtured dream to provide quality education to the children of Nurpur Bedi, Ropar. MVPS School has brought in the kind of education which helps our students to dream big, dare to become the change and do best to their ability.\n\nWe help the children to retain their individuality while learning joyously. Our endeavour is to provide world-class facilities in sensitively designed classrooms and state-of-the-art playgrounds to give the learners the best in all areas of learning.",
-      "order": 3,
-      "active": true
-    },
-    {
-      "id": "director",
-      "name": "Keshav Kumar",
-      "designation": "Director",
-      "image": "/mvps/leadership/director_keshav_kumar.jpg",
-      "quotePreview": "A child is neither genius nor dumb by birth; it is education and environment that decide destiny. We leave no stone unturned to inculcate true values.",
-      "fullQuote": "A child is neither genius nor dumb by birth, it is education and environment that decide the destiny of a child. The Management, Principal, Parents and Students play a vital role in the progress of educational institute. It is our constant endeavor to improve quality education by every means.\n\nThe collective dream which we have cherished a decade ago has come true to provide opportunity to the children in and around this locality for all round development. I am assured that the school team will leave no stone unturned to inculcate values depicted in our vision and mission besides making the child a world citizen of repute.\n\nExpecting your cooperation and assuring the same to you.",
-      "order": 4,
+      "id": "leader_1794978418899",
+      "name": "Mr. Ashish Paul Habil",
+      "designation": "Principal ",
+      "image": "/uploads/leadership/principal_mr_ashish_paul_habil_1794982336327.jpg",
+      "quotePreview": "“For the future belongs not merely to those who know how things are done, but to those who dare to imagine how they could be done better.”",
+      "fullQuote": "Flying cars, AI assistants, and robots doing our chores. We are officially living in the future! What a wonderful time to be alive, on the cusp of a new era of human civilisation, where science fiction is becoming reality and the impossible is becoming ordinary. What a privilege to watch it unfold!\n\nSince time immemorial, knowledge has been passed down from one generation to the next, from Plato’s Academy in ancient Athens to the intellectual traditions of Takshashila associated with Chanakya. Yet today, we stand at a historic turning point, on the threshold of what may well be another giant leap for mankind.\n\nThe pursuit of knowledge is no longer bound by the traditional confines of oral traditions, classrooms, textbooks, or even the wisdom of those who came before us. Information is more accessible than ever, expanding and evolving with every passing second. This unprecedented transformation challenges much of what we once understood about teaching and learning.\n\nJargon no longer carries an aura of intellectual superiority; simplicity is the new sophistication. Effective communication, clarity of thought, and the ability to translate knowledge into wisdom have become the new benchmarks of a sound schooling system in this era of information abundance.\n\nOur ancient traditions have always regarded knowledge and wisdom as sacred. Yet the true value of learning lies not merely in what we know, but in how we understand, interpret, and apply that knowledge to the world around us, growing as individuals and as a society. And therein lies the challenge for modern education: to cultivate the wisdom to question, the judgement to act, and the character to use what we learn responsibly for the good of all.\n\nBeyond the noise and excitement surrounding technological advancement stands a child whose curiosity deserves encouragement, whose individuality deserves respect, and whose potential deserves the chance to flourish. At St. George’s School Unit II, Agra, it is in this very spirit that we aspire to educate. Our responsibility as educators is to nurture independent thought, compassion, and the mental and physical resilience to meet an ever evolving world with confidence and kindness.",
       "active": true
     }
   ],
   "facilities": [
     {
-      "id": "classrooms",
-      "title": "Modern Smart Classrooms",
-      "category": "Scholastic Space",
-      "image": "/mvps/facilities/classrooms_01.jpg",
-      "description": "Spacious, well-ventilated classrooms with ergonomic desks, interactive boards, and multimedia-enabled pedagogical aids.",
+      "id": "facility_1794978827035",
+      "title": "Chemistry Lab",
+      "category": "Science",
+      "image": "/uploads/facilities/image_-_2026-11-18T104450_853_1794978902385.png",
+      "description": "Modern facility equipped with state-of-the-art infrastructure.",
       "highlights": [
-        "Interactive Smart Boards",
-        "Ergonomic Seating",
-        "Air-Conditioned Environment"
+        "Smart Interactive Panels",
+        "Air-conditioned",
+        "24/7 Monitored"
       ],
-      "order": 2,
       "active": true
     },
     {
-      "id": "labs",
-      "title": "STEM & Science Laboratories",
-      "category": "Innovation Hub",
-      "image": "/mvps/facilities/labs.jpg",
-      "description": "Fully equipped Physics, Chemistry, Biology, and Robotics/AI workstations facilitating experiential research and discovery.",
+      "id": "facility_1794978958176",
+      "title": "Physics lab",
+      "category": "Science",
+      "image": "/uploads/facilities/image_-_2026-11-18T104708_842_1794979036714.png",
+      "description": "Modern facility equipped with state-of-the-art infrastructure.",
       "highlights": [
-        "Advanced Robotics Kits",
-        "Safety Goggles & Fume Hoods",
-        "High-speed AI Workstations"
+        "Smart Interactive Panels",
+        "Air-conditioned",
+        "24/7 Monitored"
       ],
-      "order": 3,
-      "active": true
-    },
-    {
-      "id": "library",
-      "title": "Central Knowledge Library",
-      "category": "Resource Center",
-      "image": "/mvps/facilities/library_01.jpg",
-      "description": "Vast collection of curriculum texts, reference encyclopedias, national journals, and quiet individual reading nooks.",
-      "highlights": [
-        "15,000+ Volume Library",
-        "Digital E-Book Access",
-        "Quiet Reading Zones"
-      ],
-      "order": 4,
-      "active": true
-    },
-    {
-      "id": "sports",
-      "title": "Championship Sports Grounds",
-      "category": "Athletics & Physical",
-      "image": "/mvps/facilities/sports_01.jpg",
-      "description": "Regulation volleyball courts, athletic running tracks, cricket pitches, and badminton arenas promoting fitness and teamwork.",
-      "highlights": [
-        "Cricket Pavilion & Pitch",
-        "Volleyball & Badminton Courts",
-        "400m Olympic Track"
-      ],
-      "order": 5,
-      "active": true
-    },
-    {
-      "id": "transport",
-      "title": "Safe GPS-Enabled Bus Fleet",
-      "category": "Logistics & Safety",
-      "image": "/mvps/facilities/transport_buses.jpg",
-      "description": "Dedicated fleet of well-maintained school buses equipped with GPS tracking, first-aid, speed governors, and trained attendants.",
-      "highlights": [
-        "Real-time GPS Tracking",
-        "Speed Governors (<40km/h)",
-        "Female Bus Attendants"
-      ],
-      "order": 6,
-      "active": true
-    },
-    {
-      "id": "playarea",
-      "title": "Outdoor Recreational Lawns",
-      "category": "Kindergarten & Play",
-      "image": "/mvps/facilities/playarea_01.jpg",
-      "description": "Lush green open lawns and safe recreational play structures fostering joyful peer social interaction and motor skill growth.",
-      "highlights": [
-        "Child-Safe Soft Turf",
-        "Rubberized Play Swings",
-        "Shaded Rest Gazebos"
-      ],
-      "order": 7,
       "active": true
     }
   ],
   "gallery": [
     {
-      "id": "annual_cultural_stage",
-      "title": "Grand Annual Function & Cultural Symphony",
-      "shortTitle": "Annual Stage Gala",
-      "category": "Cultural & Arts",
-      "categoryFilter": "cultural",
-      "date": "Jan 2025",
-      "description": "Students presenting vibrant Indian classical dance, folk choreography, and theatrical drama in the school auditorium.",
-      "src": "/mvps/gallery/event_stage_01.jpg"
-    },
-    {
-      "id": "sports_cricket_tournament",
-      "title": "Inter-House Championship Cricket Tournament",
-      "shortTitle": "Cricket Finals",
-      "category": "Athletics & Sports",
-      "categoryFilter": "sports",
-      "date": "Nov 2024",
-      "description": "Competitive school tournament highlighting athletic agility, match batting masterclasses, and spirit of sportsmanship.",
-      "src": "/mvps/gallery/sports_cricket_01.jpg"
-    },
-    {
-      "id": "smart_class_learning",
-      "title": "Interactive Classroom Pedagogy & Discussions",
-      "shortTitle": "Modern Classroom",
-      "category": "Academic Excellence",
-      "categoryFilter": "academics",
-      "date": "Feb 2025",
-      "description": "Student-centered interactive learning sessions utilizing CBSE integrated curricular frameworks and analytical thinking.",
-      "src": "/mvps/facilities/classrooms_01.jpg"
-    },
-    {
-      "id": "science_stem_lab",
-      "title": "Hands-on Science & Chemistry Lab Practicals",
-      "shortTitle": "STEM Laboratory",
-      "category": "Academic Excellence",
-      "categoryFilter": "academics",
-      "date": "Aug 2025",
-      "description": "Students performing rigorous laboratory experiments, scientific titrations, and experiential biology investigations.",
-      "src": "/mvps/facilities/labs.jpg"
-    },
-    {
-      "id": "athletics_race",
-      "title": "Annual Sports Meet Track Sprints & Relays",
-      "shortTitle": "Track & Field Sprints",
-      "category": "Athletics & Sports",
-      "categoryFilter": "sports",
-      "date": "Nov 2024",
-      "description": "Track and field athletes competing in 100m, 200m, and inter-house relay sprints under official athletics guidelines.",
-      "src": "/mvps/gallery/sports_race_01.jpg"
-    },
-    {
-      "id": "cultural_celebration",
-      "title": "Folk Dance & Festive Celebrations",
-      "shortTitle": "Folk Dance Gala",
-      "category": "Cultural & Arts",
-      "categoryFilter": "cultural",
-      "date": "Oct 2024",
-      "description": "Colorful traditional Punjabi and Indian regional folk dance performances celebrating cultural unity and artistic expression.",
-      "src": "/mvps/gallery/event_cultural_01.jpg"
-    },
-    {
-      "id": "bus_fleet_safety",
-      "title": "Campus Transport Fleet & Commuter Safety",
-      "shortTitle": "Transport Fleet",
-      "category": "Campus Facilities",
+      "id": "gallery_1794982139576",
+      "title": "New Campus Moment",
+      "shortTitle": "Campus Life",
+      "category": "Campus & Fleet",
       "categoryFilter": "facilities",
-      "date": "Daily Operations",
-      "description": "Safe and dependable fleet of buses covering Asmanpur, Nurpur Bedi, Ropar, and surrounding regional routes.",
-      "src": "/mvps/facilities/transport_buses.jpg"
+      "date": "Nov 2026",
+      "description": "Capturing dynamic student growth, activities, and campus excellence.",
+      "src": "/uploads/gallery/Media__15__1794982145080.jfif",
+      "featured": true
     },
     {
-      "id": "central_library",
-      "title": "Central Reading Room & Digital Knowledge Base",
-      "shortTitle": "Campus Library",
-      "category": "Campus Facilities",
+      "id": "gallery_1794982127432",
+      "title": "New Campus Moment",
+      "shortTitle": "Campus Life",
+      "category": "Campus & Fleet",
       "categoryFilter": "facilities",
-      "date": "All Season",
-      "description": "Richly stocked library promoting reading habits, self-directed research, and academic literature review.",
-      "src": "/mvps/facilities/library_01.jpg"
+      "date": "Nov 2026",
+      "description": "Capturing dynamic student growth, activities, and campus excellence.",
+      "src": "/uploads/gallery/Media__10__1794982138083.jfif",
+      "featured": true
     },
     {
-      "id": "stage_drama_performance",
-      "title": "Dramatic Arts & Theatrical Showcase",
-      "shortTitle": "Theatrical Arts",
-      "category": "Cultural & Arts",
-      "categoryFilter": "cultural",
-      "date": "Dec 2024",
-      "description": "Award-winning theatrical stage production emphasizing moral values, character education, and student elocution.",
-      "src": "/mvps/gallery/event_stage_02.jpg"
+      "id": "gallery_1794982083528",
+      "title": "New Campus Moment",
+      "shortTitle": "Campus Life",
+      "category": "Campus & Fleet",
+      "categoryFilter": "facilities",
+      "date": "Nov 2026",
+      "description": "Capturing dynamic student growth, activities, and campus excellence.",
+      "src": "/uploads/gallery/Media__6__1794982094280.jfif",
+      "featured": true
     },
     {
-      "id": "sports_volleyball_arena",
-      "title": "Outdoor Sports Arena & Volleyball Match",
-      "shortTitle": "Sports Arena",
-      "category": "Athletics & Sports",
+      "id": "gallery_1794982070280",
+      "title": "New Campus Moment",
+      "shortTitle": "Campus Life",
+      "category": "Sports & Athletics",
       "categoryFilter": "sports",
-      "date": "Jan 2025",
-      "description": "Students training and competing in team volleyball on the dedicated outdoor campus sports court.",
-      "src": "/mvps/facilities/sports_01.jpg"
+      "date": "Nov 2026",
+      "description": "Capturing dynamic student growth, activities, and campus excellence.",
+      "src": "/uploads/gallery/Media__5__1794982076879.jfif",
+      "featured": true
     },
     {
-      "id": "campus_play_lawns",
-      "title": "Expansive Green Lawns & Activity Grounds",
-      "shortTitle": "Green Lawns",
-      "category": "Campus Facilities",
+      "id": "gallery_1794982047784",
+      "title": "New Campus Moment",
+      "shortTitle": "Campus Life",
+      "category": "Campus & Fleet",
       "categoryFilter": "facilities",
-      "date": "Ongoing",
-      "description": "Clean, eco-friendly green lawns providing a calm, natural ambience for wellness and outdoor student assemblies.",
-      "src": "/mvps/facilities/playarea_01.jpg"
-    },
-    {
-      "id": "co_curricular_activities",
-      "title": "Student Creative Arts & Extracurriculars",
-      "shortTitle": "Co-Curriculars",
-      "category": "Academic Excellence",
-      "categoryFilter": "academics",
-      "date": "Sep 2024",
-      "description": "Creative arts, public speaking, drawing competitions, and student club activities nurturing wholesome child development.",
-      "src": "/mvps/gallery/event_activity_01.jpg"
+      "date": "Nov 2026",
+      "description": "Capturing dynamic student growth, activities, and campus excellence.",
+      "src": "/uploads/gallery/Media__3__1794982059518.jfif",
+      "featured": true
     }
   ],
   "events": [
     {
       "id": "ptm",
-      "day": "28",
-      "month": "OCT",
-      "name": "Parent Teacher Meeting",
-      "tag": "PTM",
-      "tagClass": "ptm",
-      "venue": "10:00 AM – 12:00 PM | Main Auditorium",
-      "image": "/Warm Parent-Teacher Classroom Meeting-2.png",
+      "day": "07",
+      "month": "DEC",
+      "name": "Third Term Begins",
+      "tag": "Academics",
+      "tagClass": "academics",
+      "venue": "Exam ",
+      "image": "/uploads/events/images_1794979838452.jpg",
       "cardClass": "ptm-card",
       "description": "Comprehensive term evaluation and academic review meeting between parents, students, and faculty mentors."
     },
     {
       "id": "sports",
-      "day": "05",
-      "month": "NOV",
-      "name": "Sports Day Finals",
+      "day": "16",
+      "month": "DEC",
+      "name": "Nativity Play",
       "tag": "Sports",
       "tagClass": "sports",
-      "venue": "04:00 PM – 06:00 PM | Athletic Arena",
+      "venue": "School",
       "image": "/Sunny School Sports Field Gear-3.png",
       "cardClass": "sports-card",
       "description": "Inter-house championship finals covering athletic sprints, hurdles, high jump, and relay spectacles."
     },
     {
       "id": "stem",
-      "day": "10",
-      "month": "NOV",
-      "name": "Science & AI Exhibition",
-      "tag": "STEM",
-      "tagClass": "stem",
-      "venue": "All Day | Discovery Block Labs",
-      "image": "/Vibrant Modern STEM Laboratory-4.png",
+      "day": "19",
+      "month": "DEC",
+      "name": "Second Term Results",
+      "tag": "PTM",
+      "tagClass": "ptm",
+      "venue": "School",
+      "image": "/uploads/events/images__1__1794979979423.jpg",
       "cardClass": "stem-card",
       "description": "Student technological innovations, IoT robotics demonstrations, and AI model showcases."
     },
     {
       "id": "cultural",
-      "day": "14",
-      "month": "NOV",
-      "name": "Children's Day Gala",
-      "tag": "Cultural",
-      "tagClass": "fest",
-      "venue": "09:00 AM – 12:00 PM | Main Auditorium",
+      "day": "21",
+      "month": "DEC",
+      "name": "Winter Vacation Begins",
+      "tag": "Academics",
+      "tagClass": "academics",
+      "venue": "School Vacation Begins",
       "image": "/Indian Classical Arts on Stage-5.png",
       "cardClass": "cultural-card",
       "description": "Celebratory student carnival, cultural music performances, and prize distribution festival."
@@ -360,33 +194,33 @@
   "achievements": [
     {
       "id": "ach_math",
-      "title": "Inter-School Mathematics Quiz",
-      "badge": "★ 1st Rank",
+      "title": "School Sport",
+      "badge": "Rank",
       "rank": "1st Rank",
       "category": "Inter School Competition",
-      "date": "Aug 2025",
-      "image": "/achievement_math.jpg",
-      "description": "Gold trophy awarded to MVPS Senior Quiz squad across 32 competing regional schools."
+      "date": "Oct 2026",
+      "image": "/uploads/achievements/Media__15__1794981668478.jfif",
+      "description": "Sports Wining Monents"
     },
     {
       "id": "ach_cricket",
-      "title": "Inter-School Cricket Tournament",
-      "badge": "★ Best Player",
+      "title": "School Sport",
+      "badge": "★ Player",
       "rank": "Championship Trophy",
-      "category": "Inter School Athletics",
-      "date": "Sep 2025",
-      "image": "/achievement_cricket.jpg",
-      "description": "Undefeated tournament victory with top tournament scorer and best bowler accolades."
+      "category": "Inter School Competition",
+      "date": "Oct 2026",
+      "image": "/uploads/achievements/Media__16__1794981705681.jfif",
+      "description": "Sports Wining Monents"
     },
     {
-      "id": "ach_science",
-      "title": "District Science Exhibition",
-      "badge": "★ 2nd Place",
-      "rank": "2nd Place",
-      "category": "District Level",
-      "date": "Aug 2025",
-      "image": "/achievement_science.jpg",
-      "description": "Awarded for clean solar energy conversion model built by Class 10 STEM scholars."
+      "id": "ach_1794981750593",
+      "title": "School",
+      "badge": "Fuctions",
+      "rank": "1st Rank",
+      "category": "School",
+      "date": "Oct 2026",
+      "image": "/uploads/achievements/Media__5__1794981763017.jfif",
+      "description": "Sports "
     }
   ],
   "footerMotto": "— Together for a Brighter Tomorrow 🍃 —",

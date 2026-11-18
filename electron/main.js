@@ -5,6 +5,8 @@ const { fork, spawn } = require('child_process');
 const fs = require('fs');
 const net = require('net');
 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 let mainWindow = null;
 let serverProcess = null;
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
@@ -54,6 +56,48 @@ function waitForServer(url, timeoutMs = 45000) {
   });
 }
 
+// Load .env variables from all possible locations (next to .exe, resourcesPath, projectRoot)
+function loadEnvFromFiles(projectRoot) {
+  const envVars = {};
+  const searchDirs = [
+    path.dirname(process.execPath),           // Directly next to the .exe file
+    process.resourcesPath,                     // Electron extraResources
+    path.join(process.resourcesPath, 'app'),  // Unpacked app root
+    projectRoot,                               // Project root
+    process.cwd(),                             // Current working directory
+  ];
+
+  const envFileNames = ['.env.local', '.env', '.env.production', '.env.example'];
+
+  for (const dir of searchDirs) {
+    if (!dir) continue;
+    for (const name of envFileNames) {
+      const fullPath = path.join(dir, name);
+      if (fs.existsSync(fullPath)) {
+        try {
+          const content = fs.readFileSync(fullPath, 'utf8');
+          const lines = content.split(/\r?\n/);
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (trimmed && !trimmed.startsWith('#') && trimmed.includes('=')) {
+              const [k, ...rest] = trimmed.split('=');
+              const key = k.trim();
+              const val = rest.join('=').trim().replace(/^["']|["']$/g, '');
+              if (key && envVars[key] === undefined) {
+                envVars[key] = val;
+              }
+            }
+          }
+        } catch (e) {
+          console.warn(`[Kiosk] Error reading ${fullPath}:`, e);
+        }
+      }
+    }
+  }
+
+  return envVars;
+}
+
 // Start Next.js local server
 async function startNextServer(port) {
   if (isDev) {
@@ -68,11 +112,15 @@ async function startNextServer(port) {
   const standaloneServer = path.join(projectRoot, '.next', 'standalone', 'server.js');
   const nextCli = path.join(projectRoot, 'node_modules', 'next', 'dist', 'bin', 'next');
 
+  const loadedEnv = loadEnvFromFiles(projectRoot);
+
   const env = {
     ...process.env,
+    ...loadedEnv,
     PORT: String(port),
     HOSTNAME: '127.0.0.1',
     NODE_ENV: 'production',
+    NODE_TLS_REJECT_UNAUTHORIZED: '0',
   };
 
   if (fs.existsSync(standaloneServer)) {

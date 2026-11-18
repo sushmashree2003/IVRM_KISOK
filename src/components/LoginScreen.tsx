@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   User,
   Lock,
@@ -318,6 +318,21 @@ export default function LoginScreen({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authSuccess, setAuthSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Field-level error validation & feedback
+  const [usernameError, setUsernameError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [shakeCard, setShakeCard] = useState(false);
+  const [capsLockOn, setCapsLockOn] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+
+  const usernameInputRef = useRef<HTMLInputElement>(null);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
+
+  const triggerShake = () => {
+    setShakeCard(true);
+    setTimeout(() => setShakeCard(false), 500);
+  };
   const [serverUrl, setServerUrl] = useState(
     CLIENT_API_ENDPOINTS.DEFAULT_SERVER_URL
   );
@@ -358,6 +373,10 @@ export default function LoginScreen({
     setUsername("");
     setPassword("");
     setErrorMessage(null);
+    setUsernameError("");
+    setPasswordError("");
+    setCapsLockOn(false);
+    setFailedAttempts(0);
     setVisitorName("");
     setVisitorPhone("");
     setVisitorNameError("");
@@ -366,14 +385,33 @@ export default function LoginScreen({
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    setIsSubmitting(true);
     setErrorMessage(null);
+    setUsernameError("");
+    setPasswordError("");
 
-    if (role !== "alumni" && !password.trim()) {
-      setIsSubmitting(false);
-      setErrorMessage("Please enter your password to authenticate.");
+    const trimmedUser = username.trim();
+    if (!trimmedUser) {
+      const msg =
+        role === "staff"
+          ? "Please enter your Staff Email or Faculty ID."
+          : "Please enter your Admission Number or Student ID.";
+      setUsernameError(msg);
+      setErrorMessage(msg);
+      triggerShake();
+      usernameInputRef.current?.focus();
       return;
     }
+
+    if (role !== "alumni" && !password.trim()) {
+      const msg = "Please enter your password to authenticate.";
+      setPasswordError(msg);
+      setErrorMessage(msg);
+      triggerShake();
+      passwordInputRef.current?.focus();
+      return;
+    }
+
+    setIsSubmitting(true);
 
     try {
       const response = await fetch(CLIENT_API_ENDPOINTS.LOGIN, {
@@ -382,7 +420,7 @@ export default function LoginScreen({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username: username.trim(),
+          username: trimmedUser,
           password: password || "alumni",
           mI_ID: institutionId,
           MI_Subdomain: CLIENT_API_ENDPOINTS.DEFAULT_MI_SUBDOMAIN || "",
@@ -394,6 +432,7 @@ export default function LoginScreen({
       const result = await response.json();
 
       if (result.success && result.session) {
+        setFailedAttempts(0);
         // Dynamically capture institution logo from response if present
         const dynamicLogo =
           result.session.initlogo ||
@@ -479,17 +518,34 @@ export default function LoginScreen({
         }, 400);
       } else {
         setIsSubmitting(false);
+        triggerShake();
+        setFailedAttempts((prev) => prev + 1);
+
         if (result.firstTimeLogin) {
           setErrorMessage("First time login or password expired. Please update password.");
         } else {
-          setErrorMessage(
-            result.message || "Invalid credentials. Please verify your login details."
-          );
+          const rawMsg = result.message || "Invalid credentials. Please verify your login details.";
+          setErrorMessage(rawMsg);
+
+          const lower = rawMsg.toLowerCase();
+          if (lower.includes("password") || lower.includes("credential")) {
+            setPasswordError(rawMsg);
+            setPassword("");
+            setTimeout(() => passwordInputRef.current?.focus(), 60);
+          } else if (lower.includes("user") || lower.includes("admission") || lower.includes("id")) {
+            setUsernameError(rawMsg);
+            setTimeout(() => usernameInputRef.current?.focus(), 60);
+          } else {
+            setPasswordError(rawMsg);
+            setPassword("");
+            setTimeout(() => passwordInputRef.current?.focus(), 60);
+          }
         }
       }
     } catch (err: any) {
       console.error("Login request failed:", err);
       setIsSubmitting(false);
+      triggerShake();
       setErrorMessage(
         "Network connection failed. Unable to reach the school login server."
       );
@@ -1029,11 +1085,11 @@ export default function LoginScreen({
                 }}
               >
                 <BookOpen size={16} />
-                <span>Staff</span>
+                <span>Teacher</span>
               </button>
 
               {/* Visitor Login Chip */}
-              <button
+              {/* <button
                 className={`login-role-chip ${role === "visitor" ? "active" : ""}`}
                 style={{
                   display: "flex",
@@ -1056,7 +1112,7 @@ export default function LoginScreen({
               >
                 <Users size={16} />
                 <span>Visitor</span>
-              </button>
+              </button> */}
 
               {/* <button
                 className={`login-role-chip ${role === "alumni" ? "active" : ""}`}
@@ -1597,7 +1653,8 @@ export default function LoginScreen({
           ) : (
             <form
               onSubmit={handleSubmit}
-              className="login-form"
+              className={`login-form ${shakeCard ? "login-shake" : ""}`}
+              noValidate
               autoComplete="off"
               style={{
                 width: "100%",
@@ -1606,6 +1663,17 @@ export default function LoginScreen({
                 gap: "clamp(0.55rem, 0.9vh, 0.8rem)",
               }}
             >
+              <style jsx>{`
+                @keyframes loginShakeAnim {
+                  0%, 100% { transform: translateX(0); }
+                  20%, 60% { transform: translateX(-8px); }
+                  40%, 80% { transform: translateX(8px); }
+                }
+                .login-shake {
+                  animation: loginShakeAnim 0.45s ease-in-out;
+                }
+              `}</style>
+
               {/* Username / ID Input */}
               <div className="login-field-wrap" style={{ display: "flex", flexDirection: "column", gap: "4px", width: "100%" }}>
                 <label
@@ -1628,15 +1696,19 @@ export default function LoginScreen({
                         : "Admission Number / Student ID"}
                   </span>
                 </label>
-                <div className="login-input-group" style={{ position: "relative", width: "100%", display: "flex", alignItems: "center" }}>
+                <div className="login-input-group" style={{ position: "relative", width: "100%", display: "flex", flexDirection: "column" }}>
                   <input
+                    ref={usernameInputRef}
                     type="text"
                     name="kiosk_username"
                     className="login-input-field"
                     placeholder={config.userPlaceholder}
                     value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    required
+                    onChange={(e) => {
+                      setUsername(e.target.value);
+                      if (usernameError) setUsernameError("");
+                      if (errorMessage) setErrorMessage(null);
+                    }}
                     autoComplete="off"
                     autoCorrect="off"
                     autoCapitalize="none"
@@ -1647,7 +1719,7 @@ export default function LoginScreen({
                       width: "100%",
                       height: "44px",
                       background: "#ffffff",
-                      border: "1.5px solid #cbd5e1",
+                      border: `1.5px solid ${usernameError ? "#ef4444" : "#cbd5e1"}`,
                       borderRadius: "10px",
                       padding: "0 14px",
                       fontSize: "0.95rem",
@@ -1655,8 +1727,15 @@ export default function LoginScreen({
                       color: "#0f172a",
                       outline: "none",
                       boxSizing: "border-box",
+                      boxShadow: usernameError ? "0 0 0 3px rgba(239, 68, 68, 0.15)" : undefined,
+                      transition: "border-color 0.15s ease, box-shadow 0.15s ease",
                     }}
                   />
+                  {usernameError && (
+                    <span style={{ fontSize: "0.74rem", color: "#ef4444", fontWeight: 600, marginTop: "3px" }}>
+                      {usernameError}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -1676,57 +1755,112 @@ export default function LoginScreen({
                   <Lock size={15} style={{ color: config.accentColor }} />
                   <span>Access Password / Security PIN</span>
                 </label>
-                <div className="login-input-group" style={{ position: "relative", width: "100%", display: "flex", alignItems: "center" }}>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="kiosk_password"
-                    className="login-input-field"
-                    placeholder={role === "alumni" ? "Enter any password / PIN" : "Password / PIN"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required={role !== "alumni"}
-                    autoComplete="new-password"
-                    autoCorrect="off"
-                    autoCapitalize="none"
-                    spellCheck={false}
-                    data-lpignore="true"
-                    data-form-type="other"
-                    style={{
-                      width: "100%",
-                      height: "44px",
-                      background: "#ffffff",
-                      border: "1.5px solid #cbd5e1",
-                      borderRadius: "10px",
-                      padding: "0 40px 0 14px",
-                      fontSize: "0.95rem",
-                      fontWeight: 600,
-                      color: "#0f172a",
-                      outline: "none",
-                      boxSizing: "border-box",
-                    }}
-                  />
-                  <button
-                    type="button"
-                    className="login-eye-btn"
-                    onClick={() => setShowPassword(!showPassword)}
-                    aria-label="Toggle password visibility"
-                    style={{
-                      position: "absolute",
-                      right: "10px",
-                      background: "none",
-                      border: "none",
-                      color: "#64748b",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      padding: "4px",
-                    }}
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
+                <div className="login-input-group" style={{ position: "relative", width: "100%", display: "flex", flexDirection: "column" }}>
+                  <div style={{ position: "relative", width: "100%", display: "flex", alignItems: "center" }}>
+                    <input
+                      ref={passwordInputRef}
+                      type={showPassword ? "text" : "password"}
+                      name="kiosk_password"
+                      className="login-input-field"
+                      placeholder={role === "alumni" ? "Enter any password / PIN" : "Password / PIN"}
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (passwordError) setPasswordError("");
+                        if (errorMessage) setErrorMessage(null);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.getModifierState) {
+                          setCapsLockOn(e.getModifierState("CapsLock"));
+                        }
+                      }}
+                      onKeyUp={(e) => {
+                        if (e.getModifierState) {
+                          setCapsLockOn(e.getModifierState("CapsLock"));
+                        }
+                      }}
+                      autoComplete="new-password"
+                      autoCorrect="off"
+                      autoCapitalize="none"
+                      spellCheck={false}
+                      data-lpignore="true"
+                      data-form-type="other"
+                      style={{
+                        width: "100%",
+                        height: "44px",
+                        background: "#ffffff",
+                        border: `1.5px solid ${passwordError ? "#ef4444" : "#cbd5e1"}`,
+                        borderRadius: "10px",
+                        padding: "0 40px 0 14px",
+                        fontSize: "0.95rem",
+                        fontWeight: 600,
+                        color: "#0f172a",
+                        outline: "none",
+                        boxSizing: "border-box",
+                        boxShadow: passwordError ? "0 0 0 3px rgba(239, 68, 68, 0.15)" : undefined,
+                        transition: "border-color 0.15s ease, box-shadow 0.15s ease",
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="login-eye-btn"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label="Toggle password visibility"
+                      style={{
+                        position: "absolute",
+                        right: "10px",
+                        background: "none",
+                        border: "none",
+                        color: "#64748b",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        padding: "4px",
+                      }}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+
+                  {/* Caps Lock Detection Warning */}
+                  {capsLockOn && (
+                    <div style={{ display: "flex", alignItems: "center", gap: "5px", color: "#d97706", fontSize: "0.74rem", fontWeight: 700, marginTop: "3px" }}>
+                      <span>⚠️ Caps Lock is active</span>
+                    </div>
+                  )}
+
+                  {/* Field-level Password Error */}
+                  {passwordError && (
+                    <span style={{ fontSize: "0.74rem", color: "#ef4444", fontWeight: 600, marginTop: "3px" }}>
+                      {passwordError}
+                    </span>
+                  )}
                 </div>
               </div>
+
+              {/* Multiple Failed Attempts Support Banner */}
+              {failedAttempts >= 3 && (
+                <div
+                  style={{
+                    background: "#fffbeb",
+                    border: "1px solid #fde68a",
+                    borderRadius: "8px",
+                    padding: "8px 12px",
+                    fontSize: "0.76rem",
+                    color: "#92400e",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    lineHeight: 1.35,
+                  }}
+                >
+                  <AlertCircle size={15} style={{ color: "#d97706", flexShrink: 0 }} />
+                  <span>
+                    Having trouble signing in? Please visit the School Admin Office or contact Student Support.
+                  </span>
+                </div>
+              )}
 
 
               {/* Primary High-Visibility Sign In Button */}
@@ -1781,7 +1915,7 @@ export default function LoginScreen({
                       {role === "student"
                         ? "Student / Parent"
                         : role === "staff"
-                          ? "Staff"
+                          ? "Teacher"
                           : "Alumni / Ex-Staff"}{" "}
                       Portal
                     </span>

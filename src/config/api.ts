@@ -186,6 +186,13 @@ export const CLIENT_API_ENDPOINTS = {
   STAFF_SALARY: getEnv("NEXT_PUBLIC_API_STAFF_SALARY", "/api/staff/salary"),
   STAFF_EVENTS: getEnv("NEXT_PUBLIC_API_STAFF_EVENTS", "/api/staff/events"),
 
+
+
+
+
+
+
+
   // Kiosk Home Features
   KIOSK_BIRTHDAYS: "/api/kiosk/birthdays",
   KIOSK_SPORTS: "/api/kiosk/sports",

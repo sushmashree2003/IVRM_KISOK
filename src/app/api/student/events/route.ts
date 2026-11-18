@@ -1,5 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
+import fs from "fs";
+import path from "path";
 import { VAPS_API_ENDPOINTS } from "@/config/api";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+function readEnv(key: string): string {
+  const files = [".env.example", ".env.local", ".env", ".env.development"];
+  for (const file of files) {
+    try {
+      const fullPath = path.join(process.cwd(), file);
+      if (fs.existsSync(fullPath)) {
+        const lines = fs.readFileSync(fullPath, "utf-8").split(/\r?\n/);
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed.startsWith("#") || !trimmed.includes("=")) continue;
+          const [k, ...rest] = trimmed.split("=");
+          if (k.trim() === key) {
+            const val = rest.join("=").trim().replace(/^["']|["']$/g, "");
+            if (val) return val;
+          }
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  if (process.env[key] && process.env[key]!.trim() !== "") {
+    return process.env[key]!.trim().replace(/^["']|["']$/g, "");
+  }
+
+  return "";
+}
 
 function extractArray(val: any): any[] {
   if (!val) return [];
@@ -57,15 +91,23 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const endpoint = portalUrl
-      ? `${portalUrl.trim().replace(/\/+$/, "")}/api/COEFacade/getcoedata/`
-      : VAPS_API_ENDPOINTS.STUDENT_EVENTS;
+    const envEndpoint = (
+      readEnv("API_VAPS_STUDENT_EVENTS") ||
+      readEnv("API_VAPS_STUDENT_COE") ||
+      readEnv("NEXT_PUBLIC_API_VAPS_STUDENT_EVENTS") ||
+      VAPS_API_ENDPOINTS.STUDENT_EVENTS
+    ).trim();
+
+    const endpoint = envEndpoint;
 
     const payload: any = {
       asmay_id: finalAsmayId,
       amst_id: studentId,
       month: Number(month || 0),
       MI_Id: instId,
+      type: body.type || "1",
+      COEE_EStartDate: body.COEE_EStartDate || "",
+      COEE_EEndDate: body.COEE_EEndDate || "",
     };
     if (miSubdomain) {
       payload.MI_Subdomain = miSubdomain;
@@ -92,7 +134,14 @@ export async function POST(req: NextRequest) {
     }
 
     const data = await response.json();
-    const rawEvents = data.coereportlist || data.coestudentlist || data;
+    const rawEvents =
+      data.coereport?.$values ||
+      data.coereport ||
+      data.coereportlist?.$values ||
+      data.coereportlist ||
+      data.coestudentlist?.$values ||
+      data.coestudentlist ||
+      data;
     const coereportlist = extractArray(rawEvents).map((e: any) => ({
       ...e,
       COEME_EventName: e.COEME_EventName || e.eventName || e.title || "Campus Event",

@@ -136,6 +136,7 @@ export default function StaffDashboard({ onBackToKiosk }: DashboardProps) {
   const [punchData, setPunchData] = useState<any[]>([]);
   const [salaryData, setSalaryData] = useState<any[]>([]);
   const [staffEvents, setStaffEvents] = useState<any[]>([]);
+  const [selectedEventMonth, setSelectedEventMonth] = useState<number>(() => new Date().getMonth() + 1);
   const [staffNotices, setStaffNotices] = useState<any[]>([]);
   const [evaluationRoster, setEvaluationRoster] = useState<any[]>([]);
 
@@ -183,7 +184,7 @@ export default function StaffDashboard({ onBackToKiosk }: DashboardProps) {
       fetchStaffLeave(activeSession);
       fetchStaffPunchLog(activeSession);
       fetchStaffSalary(activeSession);
-      fetchStaffEvents(activeSession);
+      fetchStaffEvents(activeSession, new Date().getMonth() + 1);
       fetchStaffNotices(activeSession);
     }
   }, []);
@@ -340,24 +341,33 @@ export default function StaffDashboard({ onBackToKiosk }: DashboardProps) {
   };
 
   // Fetch Staff Events Calendar (matching legacy StaffCOE.cs)
-  const fetchStaffEvents = async (s: SessionInfo) => {
+  const fetchStaffEvents = async (s: SessionInfo, monthId?: number) => {
     try {
+      const currentMonth = monthId !== undefined ? monthId : (new Date().getMonth() + 1);
+      const configuredAsmayId = Number(process.env.NEXT_PUBLIC_LOGIN_ASMAY_ID || 0);
+      const asmayId = configuredAsmayId > 0 ? configuredAsmayId : (s.ASMAY_Id || 371);
+
+      const payload = {
+        asmay_id: asmayId,
+        month: currentMonth,
+        MI_Id: s.miid || CLIENT_API_ENDPOINTS.DEFAULT_MI_ID,
+        type: "1",
+        COEE_EStartDate: "",
+        COEE_EEndDate: "",
+      };
+
       const res = await fetch(CLIENT_API_ENDPOINTS.STAFF_EVENTS, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          asmay_id: s.ASMAY_Id || 0,
-          month: 0,
-          MI_Id: s.miid || CLIENT_API_ENDPOINTS.DEFAULT_MI_ID,
-          MI_Subdomain: s.MI_Subdomain || CLIENT_API_ENDPOINTS.DEFAULT_MI_SUBDOMAIN || "",
-        }),
+        body: JSON.stringify(payload),
       });
       if (res.ok) {
         const json = await res.json();
+        console.log("coe response", json);
         if (json.success && json.data) {
           const list = Array.isArray(json.data)
             ? json.data
-            : (json.data.events || json.data.coereport || []);
+            : (json.data.events || json.data.coereport || json.data.coereportlist || []);
           setStaffEvents(list);
         }
       }
@@ -2307,6 +2317,61 @@ export default function StaffDashboard({ onBackToKiosk }: DashboardProps) {
               </div>
             </div>
 
+            {/* MONTH FILTER TABS */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "8px 18px",
+                background: "rgba(255, 255, 255, 0.85)",
+                borderBottom: "1px solid rgba(254, 215, 170, 0.5)",
+                overflowX: "auto",
+                flexShrink: 0,
+              }}
+            >
+              <span style={{ fontSize: "0.74rem", fontWeight: 800, color: "#64748b", margin: "0 0.5rem" }}>
+                Filter Month:
+              </span>
+              {[
+                { id: 0, name: "All Months" },
+                { id: 1, name: "Jan" },
+                { id: 2, name: "Feb" },
+                { id: 3, name: "Mar" },
+                { id: 4, name: "Apr" },
+                { id: 5, name: "May" },
+                { id: 6, name: "Jun" },
+                { id: 7, name: "Jul" },
+                { id: 8, name: "Aug" },
+                { id: 9, name: "Sep" },
+                { id: 10, name: "Oct" },
+                { id: 11, name: "Nov" },
+                { id: 12, name: "Dec" },
+              ].map((m) => (
+                <button
+                  key={m.id}
+                  onClick={() => {
+                    setSelectedEventMonth(m.id);
+                    if (session) fetchStaffEvents(session, m.id);
+                  }}
+                  style={{
+                    padding: "4px 12px",
+                    borderRadius: "9999px",
+                    fontSize: "0.75rem",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    border: selectedEventMonth === m.id ? "1.5px solid #ea580c" : "1px solid rgba(254, 215, 170, 0.7)",
+                    background: selectedEventMonth === m.id ? "#ea580c" : "#ffffff",
+                    color: selectedEventMonth === m.id ? "#ffffff" : "#475569",
+                    whiteSpace: "nowrap",
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  {m.name}
+                </button>
+              ))}
+            </div>
+
             <div className="student-screen-scroll-body">
               <div className="student-screen-card" style={{ padding: "1.25rem" }}>
                 {staffEvents.length > 0 ? (
@@ -2334,7 +2399,7 @@ export default function StaffDashboard({ onBackToKiosk }: DashboardProps) {
                           {event.eventName}
                         </h4>
                         <p style={{ margin: 0, fontSize: "0.78rem", color: "#475569", lineHeight: 1.5 }}>
-                          {event.eventDesc || "Institutional event scheduled for faculty participation."}
+                          {event.eventDesc || event.desc || "Institutional event scheduled for faculty participation."}
                         </p>
                       </div>
                     ))}

@@ -825,81 +825,106 @@ export default function CampusInfoPortal({
           </div>
 
           {/* Card A2: Touch-To-Enter Role Hub */}
-          <div className="mv-role-hub-card">
-            <div className="mv-hub-header">
-              <h3 className="mv-hub-title">
-                <ShieldCheck size={16} style={{ color: "#ea580c" }} />
-                <span>Self-Service Gateway</span>
-              </h3>
-              <span className="mv-hub-kicker">Touch To Sign In</span>
-            </div>
+          <div
+            className={`mv-role-hub-card ${campusData?.roleHub?.backgroundImageUrl ? "has-video-bg has-backdrop-bg" : ""}`}
+            style={
+              campusData?.roleHub?.backgroundImageUrl
+                ? {
+                  backgroundImage: `url('${campusData.roleHub.backgroundImageUrl}')`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }
+                : undefined
+            }
+          >
+            {/* Transparent Scrim Overlay for Contrast & Glassmorphism */}
+            {campusData?.roleHub?.backgroundImageUrl && (
+              <div className="mv-role-hub-sc-overlay" aria-hidden="true" />
+            )}
 
-            <div className="mv-roles-grid">
-              <div
-                className="mv-role-pill-btn"
-                onClick={() => router.push("/login?role=student")}
-                title="Open Student & Parent Portal"
-              >
-                <div className="mv-role-icon student">
-                  <GraduationCap size={18} />
-                </div>
-                <div className="mv-role-text">
-                  <b>Student &amp; Parent</b>
-                  <span>Reports, Fees &amp; HW</span>
-                </div>
+            <div style={{ position: "relative", zIndex: 2, display: "flex", flexDirection: "column", justifyContent: "space-between", height: "100%", width: "100%" }}>
+              <div className="mv-hub-header">
+                <h3 className="mv-hub-title">
+                  <ShieldCheck size={16} style={{ color: "#c9642eff" }} />
+                  <span>{campusData?.roleHub?.title || "Self-Service Gateway"}</span>
+                </h3>
+                <span className="mv-hub-kicker">
+                  {campusData?.roleHub?.kicker || "Touch To Sign In"}
+                </span>
               </div>
 
-              <div
-                className="mv-role-pill-btn"
-                onClick={() => router.push("/login?role=staff")}
-                title="Open Staff Portal"
-              >
-                <div className="mv-role-icon staff">
-                  <Users size={18} />
+              <div className="mv-roles-grid">
+                <div
+                  className="mv-role-pill-btn"
+                  onClick={() => router.push("/login?role=student")}
+                  title="Open Student & Parent Portal"
+                >
+                  <div className="mv-role-icon student">
+                    <GraduationCap size={18} />
+                  </div>
+                  <div className="mv-role-text">
+                    <b>Student &amp; Parent</b>
+                    <span>Reports, Fees &amp; HW</span>
+                  </div>
                 </div>
-                <div className="mv-role-text">
-                  <b>Faculty &amp; Staff</b>
-                  <span>Timetable &amp; Leaves</span>
+
+                <div
+                  className="mv-role-pill-btn"
+                  onClick={() => router.push("/login?role=staff")}
+                  title="Open Staff Portal"
+                >
+                  <div className="mv-role-icon staff">
+                    <Users size={18} />
+                  </div>
+                  <div className="mv-role-text">
+                    <b>Faculty &amp; Staff</b>
+                    <span>Timetable &amp; Leaves</span>
+                  </div>
                 </div>
+
+                {/* <div
+                  className="mv-role-pill-btn"
+                  onClick={() => router.push("/visitor")}
+                  title="Open Visitor Desk"
+                >
+                  <div className="mv-role-icon visitor">
+                    <QrCode size={18} />
+                  </div>
+                  <div className="mv-role-text">
+                    <b>Visitor &amp; Guest</b>
+                    <span>Digital Pass &amp; Maps</span>
+                  </div>
+                </div> */}
+                {/* 
+                <div
+                  className="mv-role-pill-btn"
+                  onClick={() => router.push("/alumni")}
+                  title="Open Alumni Network"
+                >
+                  <div className="mv-role-icon alumni">
+                    <Award size={18} />
+                  </div>
+                  <div className="mv-role-text">
+                    <b>Alumni Network</b>
+                    <span>Reunions &amp; Mentoring</span>
+                  </div>
+                </div> */}
               </div>
 
-              {/* <div
-                className="mv-role-pill-btn"
-                onClick={() => router.push("/visitor")}
-                title="Open Visitor Desk"
+              <button
+                className="mv-primary-login-btn"
+                onClick={onEnterRoleSelection}
+                title="Open Full Portal Roster"
+                style={campusData?.roleHub?.backgroundImageUrl ? {
+                  background: "rgba(216, 155, 79, 0.95)",
+                  backdropFilter: "blur(8px)",
+                  boxShadow: "0 4px 16px rgba(0, 0, 0, 0.15)",
+                } : undefined}
               >
-                <div className="mv-role-icon visitor">
-                  <QrCode size={18} />
-                </div>
-                <div className="mv-role-text">
-                  <b>Visitor &amp; Guest</b>
-                  <span>Digital Pass &amp; Maps</span>
-                </div>
-              </div> */}
-              {/* 
-              <div
-                className="mv-role-pill-btn"
-                onClick={() => router.push("/alumni")}
-                title="Open Alumni Network"
-              >
-                <div className="mv-role-icon alumni">
-                  <Award size={18} />
-                </div>
-                <div className="mv-role-text">
-                  <b>Alumni Network</b>
-                  <span>Reunions &amp; Mentoring</span>
-                </div>
-              </div> */}
+                <span>Tap to Open All Portals</span>
+                <ArrowRight size={17} />
+              </button>
             </div>
-
-            <button
-              className="mv-primary-login-btn"
-              onClick={onEnterRoleSelection}
-              title="Open Full Portal Roster"
-            >
-              <span>Tap to Open All Portals</span>
-              <ArrowRight size={17} />
-            </button>
           </div>
         </div>
 

@@ -260,7 +260,7 @@ const roles: RoleDefinition[] = [
     eyebrow: "LEARN & GROW",
     title: "Student / Parent",
     badge: "Scholastic Hub",
-    description: "Your everyday hub for CBSE curriculum, attendance, homework, report cards, and bus tracking.",
+    description: "Your everyday hub for School curriculum, attendance, homework and events.",
     image: "/student_avatar.png",
     accent: "#ea580c",
     soft: "#fff7ed",
@@ -724,11 +724,11 @@ export default function RoleSelectionScreen({
             <span>Role Selection Portal • Touch any role card above to proceed</span>
           </div>
 
-          <div className="footer-links">
+          {/* <div className="footer-links">
             <span>CISCE Affiliation </span>
             <span>NAAC Grade A++</span>
             <span>Campus: 4,200 Students</span>
-          </div>
+          </div> */}
 
           <button className="assistant-button" onClick={handleBotButtonClick}>
             <span className="assistant-pulse" />

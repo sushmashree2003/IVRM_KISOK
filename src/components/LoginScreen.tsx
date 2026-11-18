@@ -1968,10 +1968,10 @@ export default function LoginScreen({
           <span className="footer-dot" /> Role Authentication Portal • Enter credentials or select role to login
         </div>
         <div className="footer-links">
-          <span>CISCE </span>
+          {/* <span>CISCE </span>
           <span>NAAC Grade A++</span>
           <span>Campus: 6,200 Students</span>
-          <span>Digital Campus Kiosk</span>
+          <span>Digital Campus Kiosk</span> */}
         </div>
         <button className="assistant-button" type="button" onClick={onBackToKiosk}>
           <span className="assistant-pulse" /> Need help? <b>Ask {aiName}</b>

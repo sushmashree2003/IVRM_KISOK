@@ -39,11 +39,13 @@ import {
   Sliders,
   X,
   Play,
+  ShieldCheck,
 } from "lucide-react";
 
 type CmsTab =
   | "branding"
   | "hero"
+  | "gateway"
   | "facilities"
   | "gallery"
   | "events"
@@ -274,6 +276,7 @@ interface VideoInputControlProps {
   isUploading?: boolean;
   onUploadFile: (file: File, category: string, onSuccess: (url: string) => void) => void;
   subtext?: string;
+  category?: string;
 }
 
 function VideoInputControl({
@@ -283,6 +286,7 @@ function VideoInputControl({
   isUploading,
   onUploadFile,
   subtext = "Upload a 15–30 second MP4/WebM campus promo clip or enter a public asset path / remote video URL.",
+  category = "hero",
 }: VideoInputControlProps) {
   const [mode, setMode] = useState<"url" | "upload">("url");
   const inputId = `upload-video-${Math.random().toString(36).slice(2, 8)}`;
@@ -415,7 +419,7 @@ function VideoInputControl({
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
-                      onUploadFile(file, "hero", (url) => {
+                      onUploadFile(file, category, (url) => {
                         onChange(url);
                       });
                     }
@@ -499,7 +503,7 @@ export default function PortalCmsManager({ onBackToDashboard }: { onBackToDashbo
   const [data, setData] = useState<CampusInfoData | null>(null);
   const [savedSnapshot, setSavedSnapshot] = useState<string>("");
   const [activeTab, setActiveTab] = useState<CmsTab>("branding");
-  const [brandingSubTab, setBrandingSubTab] = useState<"identity" | "news" | "tour" | "leaders" | "all">("identity");
+  const [brandingSubTab, setBrandingSubTab] = useState<"identity" | "news" | "tour" | "leaders" | "gateway" | "all">("identity");
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [saveStatus, setSaveStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
@@ -510,13 +514,19 @@ export default function PortalCmsManager({ onBackToDashboard }: { onBackToDashbo
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/admin/campus-info");
+      const res = await fetch(`/api/admin/campus-info?t=${Date.now()}`, {
+        cache: "no-store",
+        headers: { "Pragma": "no-cache", "Cache-Control": "no-cache" },
+      });
       if (res.ok) {
         const json = await res.json();
         setData(json);
         setSavedSnapshot(JSON.stringify(json));
       } else {
-        const fallbackRes = await fetch("/api/kiosk/campus-info");
+        const fallbackRes = await fetch(`/api/kiosk/campus-info?t=${Date.now()}`, {
+          cache: "no-store",
+          headers: { "Pragma": "no-cache", "Cache-Control": "no-cache" },
+        });
         const json = await fallbackRes.json();
         setData(json);
         setSavedSnapshot(JSON.stringify(json));
@@ -794,6 +804,7 @@ export default function PortalCmsManager({ onBackToDashboard }: { onBackToDashbo
         {[
           { id: "branding" as CmsTab, label: "Branding, Live News, 360 Tour & Leaders", icon: Building2 },
           { id: "hero" as CmsTab, label: "Hero Video & Reel", icon: Video },
+          { id: "gateway" as CmsTab, label: "Self-Service Gateway", icon: ShieldCheck },
           { id: "facilities" as CmsTab, label: "Campus Facilities", icon: MapPin },
           { id: "gallery" as CmsTab, label: "Photo Gallery", icon: ImageIcon },
           { id: "events" as CmsTab, label: "Upcoming Events", icon: Calendar },
@@ -874,6 +885,7 @@ export default function PortalCmsManager({ onBackToDashboard }: { onBackToDashbo
             { id: "news" as const, label: `2. Campus Live News (${structuredTicker.length})`, icon: Megaphone },
             { id: "tour" as const, label: "3. 360° Tour Walkthrough", icon: Play },
             { id: "leaders" as const, label: `4. Leadership Desk (${data.leadership?.length || 0})`, icon: Users },
+            { id: "gateway" as const, label: `5. ${data.roleHub?.title || "Self-Service Gateway"}`, icon: ShieldCheck },
             { id: "all" as const, label: "👁️ View All Sections (Scrollable)", icon: Layers },
           ].map((sub) => {
             const Icon = sub.icon;
@@ -886,6 +898,9 @@ export default function PortalCmsManager({ onBackToDashboard }: { onBackToDashbo
                   setBrandingSubTab(sub.id);
                   if (sub.id === "all") {
                     const el = document.getElementById("sub-branding");
+                    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  } else if (sub.id === "gateway") {
+                    const el = document.getElementById("sub-gateway");
                     el?.scrollIntoView({ behavior: "smooth", block: "start" });
                   }
                 }}
@@ -908,6 +923,86 @@ export default function PortalCmsManager({ onBackToDashboard }: { onBackToDashbo
                 }}
               >
                 <Icon size={14} style={{ color: isSubActive ? "#ea580c" : "#64748b" }} />
+                <span>{sub.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* SUB-NAVIGATION TAB BAR FOR TAB 2 (HERO SHOWCASE & GATEWAY) */}
+      {activeTab === "hero" && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            background: "#f1f5f9",
+            padding: "6px",
+            borderRadius: "14px",
+            border: "1.5px solid #fed7aa",
+            overflowX: "auto",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "0 10px 0 6px",
+              borderRight: "1px solid #cbd5e1",
+              flexShrink: 0,
+            }}
+          >
+            <Sparkles size={14} style={{ color: "#ea580c" }} />
+            <span
+              style={{
+                fontSize: "0.74rem",
+                fontWeight: 800,
+                color: "#ea580c",
+                textTransform: "uppercase",
+                letterSpacing: "0.04em",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Sub-Navigation:
+            </span>
+          </div>
+
+          {[
+            { id: "hero-sec-1", label: "1. Headlines & Story", icon: Video },
+            { id: "hero-sec-2", label: "2. Distinction Badges", icon: Sparkles },
+            { id: "hero-sec-3", label: "3. Showcase Media", icon: Play },
+            { id: "hero-sec-4", label: "4. Action Buttons", icon: Layers },
+            { id: "hero-sec-5", label: `5. ${data.roleHub?.title || "Self-Service Gateway"}`, icon: ShieldCheck },
+          ].map((sub) => {
+            const Icon = sub.icon;
+            return (
+              <button
+                key={sub.id}
+                type="button"
+                onClick={() => {
+                  const el = document.getElementById(sub.id);
+                  el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "0.52rem 0.95rem",
+                  borderRadius: "10px",
+                  border: "1px solid transparent",
+                  background: "transparent",
+                  color: "#64748b",
+                  fontWeight: 600,
+                  fontSize: "0.8rem",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  transition: "all 0.15s ease",
+                  flexShrink: 0,
+                }}
+              >
+                <Icon size={14} />
                 <span>{sub.label}</span>
               </button>
             );
@@ -966,6 +1061,7 @@ export default function PortalCmsManager({ onBackToDashboard }: { onBackToDashbo
                   { target: "sub-live-news", label: "2. Live News" },
                   { target: "sub-tour-360", label: "3. 360° Tour" },
                   { target: "sub-leaders", label: "4. Leadership Desk" },
+                  { target: "sub-gateway", label: `5. ${data.roleHub?.title || "Self-Service Gateway"}` },
                 ].map((item) => (
                   <button
                     key={item.target}
@@ -1680,6 +1776,215 @@ export default function PortalCmsManager({ onBackToDashboard }: { onBackToDashbo
                   </button>
                   <button
                     type="button"
+                    onClick={() => setBrandingSubTab("gateway")}
+                    style={{
+                      background: "#fff7ed",
+                      border: "1px solid #fed7aa",
+                      color: "#ea580c",
+                      padding: "0.45rem 1rem",
+                      borderRadius: "8px",
+                      fontSize: "0.78rem",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    Next: 5. Self-Service Gateway →
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* SUB-SECTION 5: SELF-SERVICE GATEWAY CARD (.mv-role-hub-card) & TRANSPARENT VIDEO BACKDROP */}
+          {(brandingSubTab === "all" || brandingSubTab === "gateway") && (
+            <div
+              id="sub-gateway"
+              style={{
+                borderTop: brandingSubTab === "all" ? "1.5px solid #fed7aa" : "none",
+                paddingTop: brandingSubTab === "all" ? "1.25rem" : "0",
+                display: "flex",
+                flexDirection: "column",
+                gap: "14px",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "8px" }}>
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+                    <span style={{ background: "#ea580c", color: "#ffffff", fontSize: "0.68rem", fontWeight: 800, padding: "2px 6px", borderRadius: "4px" }}>
+                      5
+                    </span>
+                    <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 800, color: "#0e2a47", display: "flex", alignItems: "center", gap: "6px" }}>
+                      <ShieldCheck size={16} style={{ color: "#ea580c" }} />
+                      Self-Service Gateway Card (.mv-role-hub-card) &amp; Transparent Video Backdrop
+                    </h4>
+                  </div>
+                  <p style={{ margin: 0, fontSize: "0.75rem", color: "#64748b" }}>
+                    Configure the touch-to-enter gateway card, transparent backdrop photo, and quick access buttons.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handlePublish}
+                  disabled={isSaving}
+                  style={{
+                    background: isSaving
+                      ? "#94a3b8"
+                      : "linear-gradient(135deg, #ea580c 0%, #c2410c 100%)",
+                    border: "none",
+                    color: "#ffffff",
+                    borderRadius: "8px",
+                    padding: "0.45rem 1.1rem",
+                    fontSize: "0.78rem",
+                    fontWeight: 800,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    cursor: isSaving ? "not-allowed" : "pointer",
+                    boxShadow: "0 3px 10px rgba(234, 88, 12, 0.35)",
+                  }}
+                >
+                  {isSaving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
+                  <span>{isSaving ? "Saving Gateway..." : "💾 Save & Publish Gateway"}</span>
+                </button>
+              </div>
+
+              {/* Sub-Section 5.1: Gateway Branding & Headings */}
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "1.1rem", display: "flex", flexDirection: "column", gap: "12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span style={{ background: "#ea580c", color: "#ffffff", fontSize: "0.68rem", fontWeight: 800, padding: "2px 6px", borderRadius: "4px" }}>
+                    5.1
+                  </span>
+                  <h4 style={{ margin: 0, fontSize: "0.92rem", fontWeight: 800, color: "#0e2a47" }}>
+                    Gateway Header &amp; Subtitle
+                  </h4>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "12px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.74rem", fontWeight: 700, color: "#334155", marginBottom: "4px" }}>
+                      Gateway Card Title
+                    </label>
+                    <input
+                      type="text"
+                      value={data.roleHub?.title ?? "Self-Service Gateway"}
+                      placeholder="Self-Service Gateway"
+                      onChange={(e) => {
+                        const current = data.roleHub || {
+                          title: "Self-Service Gateway",
+                          kicker: "Touch To Sign In",
+                          videoUrl: "",
+                          posterUrl: "",
+                          backgroundImageUrl: "",
+                          useHeroVideo: true,
+                          transparent: true,
+                        };
+                        setData({ ...data, roleHub: { ...current, title: e.target.value } });
+                      }}
+                      style={{ width: "100%", padding: "0.5rem 0.75rem", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.85rem", fontWeight: 700 }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.74rem", fontWeight: 700, color: "#334155", marginBottom: "4px" }}>
+                      Gateway Kicker / Badge
+                    </label>
+                    <input
+                      type="text"
+                      value={data.roleHub?.kicker ?? "Touch To Sign In"}
+                      placeholder="Touch To Sign In"
+                      onChange={(e) => {
+                        const current = data.roleHub || {
+                          title: "Self-Service Gateway",
+                          kicker: "Touch To Sign In",
+                          videoUrl: "",
+                          posterUrl: "",
+                          backgroundImageUrl: "",
+                          useHeroVideo: true,
+                          transparent: true,
+                        };
+                        setData({ ...data, roleHub: { ...current, kicker: e.target.value } });
+                      }}
+                      style={{ width: "100%", padding: "0.5rem 0.75rem", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.85rem" }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Sub-Section 5.2: Gateway Backdrop Photo & Glassmorphic Scrim */}
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "1.1rem", display: "flex", flexDirection: "column", gap: "14px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span style={{ background: "#ea580c", color: "#ffffff", fontSize: "0.68rem", fontWeight: 800, padding: "2px 6px", borderRadius: "4px" }}>
+                    5.2
+                  </span>
+                  <h4 style={{ margin: 0, fontSize: "0.92rem", fontWeight: 800, color: "#0e2a47" }}>
+                    Gateway Backdrop Photo &amp; Glassmorphic Styling
+                  </h4>
+                </div>
+
+                <PhotoInputControl
+                  label="Gateway Backdrop Photo (Uploaded by Admin)"
+                  value={data.roleHub?.backgroundImageUrl || ""}
+                  onChange={(val) => {
+                    const current = data.roleHub || {
+                      title: "Self-Service Gateway",
+                      kicker: "Touch To Sign In",
+                      videoUrl: "",
+                      posterUrl: "",
+                      backgroundImageUrl: "",
+                      useHeroVideo: false,
+                      transparent: true,
+                    };
+                    setData({
+                      ...data,
+                      roleHub: { ...current, backgroundImageUrl: val, posterUrl: val, videoUrl: "", useHeroVideo: false },
+                    });
+                  }}
+                  category="gateway"
+                  subtext="Upload a photo for the Self-Service Gateway card. Renders with full-bleed coverage and translucent glassmorphism behind the student & parent touch buttons."
+                  previewShape="banner"
+                  isUploading={uploadingField?.startsWith("gateway")}
+                  onUploadFile={handleFileUpload}
+                />
+              </div>
+
+              {/* Sub-Section 5.3: Glassmorphism Preview Info */}
+              <div style={{ background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: "12px", padding: "1.1rem", display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <Sparkles size={16} style={{ color: "#ea580c" }} />
+                  <h4 style={{ margin: 0, fontSize: "0.88rem", fontWeight: 800, color: "#9a3412" }}>
+                    Transparent Glassmorphism Feature
+                  </h4>
+                </div>
+                <p style={{ margin: 0, fontSize: "0.76rem", color: "#7c2d12", lineHeight: 1.45 }}>
+                  When active, the Self-Service Gateway card renders the uploaded backdrop photo with a subtle dark gradient scrim. The Student &amp; Parent, Faculty &amp; Staff, and All Portals buttons render with frosted glass, ensuring maximum readability and responsive touch navigation.
+                </p>
+              </div>
+
+              {/* Sub-tab footer switch when viewing single gateway tab */}
+              {brandingSubTab === "gateway" && (
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #f1f5f9", paddingTop: "0.75rem", marginTop: "0.5rem" }}>
+                  <button
+                    type="button"
+                    onClick={() => setBrandingSubTab("leaders")}
+                    style={{
+                      background: "#f8fafc",
+                      border: "1px solid #cbd5e1",
+                      color: "#475569",
+                      padding: "0.45rem 1rem",
+                      borderRadius: "8px",
+                      fontSize: "0.78rem",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                    }}
+                  >
+                    ← 4. Leadership Desk
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setBrandingSubTab("all")}
                     style={{
                       background: "#eff6ff",
@@ -1720,7 +2025,7 @@ export default function PortalCmsManager({ onBackToDashboard }: { onBackToDashbo
             </div>
 
             {/* SECTION 1: TYPOGRAPHY & STORY */}
-            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "1.1rem", display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div id="hero-sec-1" style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "1.1rem", display: "flex", flexDirection: "column", gap: "12px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <span style={{ background: "#ea580c", color: "#ffffff", fontSize: "0.68rem", fontWeight: 800, padding: "2px 6px", borderRadius: "4px" }}>
                   1
@@ -1779,7 +2084,7 @@ export default function PortalCmsManager({ onBackToDashboard }: { onBackToDashbo
             </div>
 
             {/* SECTION 2: THE 4 DISTINCTION STAT BADGES (.mv-hero-pills-row) */}
-            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "1.1rem", display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div id="hero-sec-2" style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "1.1rem", display: "flex", flexDirection: "column", gap: "12px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <span style={{ background: "#ea580c", color: "#ffffff", fontSize: "0.68rem", fontWeight: 800, padding: "2px 6px", borderRadius: "4px" }}>
                   2
@@ -1904,7 +2209,7 @@ export default function PortalCmsManager({ onBackToDashboard }: { onBackToDashbo
             </div>
 
             {/* SECTION 3: VISUAL MEDIA & BACKDROPS */}
-            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "1.1rem", display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div id="hero-sec-3" style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "1.1rem", display: "flex", flexDirection: "column", gap: "12px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <span style={{ background: "#ea580c", color: "#ffffff", fontSize: "0.68rem", fontWeight: 800, padding: "2px 6px", borderRadius: "4px" }}>
                   3
@@ -1955,7 +2260,7 @@ export default function PortalCmsManager({ onBackToDashboard }: { onBackToDashbo
             </div>
 
             {/* SECTION 4: ACTION BUTTONS & FOOTER TAGLINE */}
-            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "1.1rem", display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div id="hero-sec-4" style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "1.1rem", display: "flex", flexDirection: "column", gap: "12px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <span style={{ background: "#ea580c", color: "#ffffff", fontSize: "0.68rem", fontWeight: 800, padding: "2px 6px", borderRadius: "4px" }}>
                   4
@@ -2005,6 +2310,302 @@ export default function PortalCmsManager({ onBackToDashboard }: { onBackToDashbo
                   />
                 </div>
               </div>
+            </div>
+
+            {/* SECTION 5: SELF-SERVICE GATEWAY CARD (.mv-role-hub-card) */}
+            <div id="hero-sec-5" style={{ background: "#ffffff", border: "1.5px solid #fed7aa", borderRadius: "12px", padding: "1.1rem", display: "flex", flexDirection: "column", gap: "14px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "8px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span style={{ background: "#ea580c", color: "#ffffff", fontSize: "0.68rem", fontWeight: 800, padding: "2px 6px", borderRadius: "4px" }}>
+                    5
+                  </span>
+                  <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: 800, color: "#0e2a47", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <ShieldCheck size={16} style={{ color: "#ea580c" }} />
+                    Self-Service Gateway Card (.mv-role-hub-card) &amp; Transparent Video Backdrop
+                  </h4>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <button
+                    type="button"
+                    onClick={handlePublish}
+                    disabled={isSaving}
+                    style={{
+                      background: isSaving
+                        ? "#94a3b8"
+                        : "linear-gradient(135deg, #ea580c 0%, #c2410c 100%)",
+                      border: "none",
+                      color: "#ffffff",
+                      borderRadius: "6px",
+                      padding: "0.38rem 0.9rem",
+                      fontSize: "0.76rem",
+                      fontWeight: 800,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "5px",
+                      cursor: isSaving ? "not-allowed" : "pointer",
+                      boxShadow: "0 2px 8px rgba(234, 88, 12, 0.35)",
+                    }}
+                  >
+                    {isSaving ? <RefreshCw size={12} className="animate-spin" /> : <Save size={12} />}
+                    <span>{isSaving ? "Saving..." : "💾 Save"}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("gateway")}
+                    style={{
+                      background: "#fff7ed",
+                      border: "1px solid #fed7aa",
+                      color: "#ea580c",
+                      padding: "0.35rem 0.75rem",
+                      borderRadius: "6px",
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                    }}
+                  >
+                    Open Dedicated Tab →
+                  </button>
+                </div>
+              </div>
+              <p style={{ margin: 0, fontSize: "0.75rem", color: "#64748b" }}>
+                Configure the touch-to-enter gateway card, transparent backdrop photo, and quick access buttons.
+              </p>
+
+              {/* Gateway Title and Kicker */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "12px" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "0.74rem", fontWeight: 700, color: "#334155", marginBottom: "4px" }}>
+                    Gateway Card Title
+                  </label>
+                  <input
+                    type="text"
+                    value={data.roleHub?.title ?? "Self-Service Gateway"}
+                    placeholder="Self-Service Gateway"
+                    onChange={(e) => {
+                      const current = data.roleHub || {
+                        title: "Self-Service Gateway",
+                        kicker: "Touch To Sign In",
+                        videoUrl: "",
+                        posterUrl: "",
+                        backgroundImageUrl: "",
+                        useHeroVideo: true,
+                        transparent: true,
+                      };
+                      setData({ ...data, roleHub: { ...current, title: e.target.value } });
+                    }}
+                    style={{ width: "100%", padding: "0.5rem 0.75rem", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.85rem", fontWeight: 700 }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "0.74rem", fontWeight: 700, color: "#334155", marginBottom: "4px" }}>
+                    Gateway Kicker / Badge
+                  </label>
+                  <input
+                    type="text"
+                    value={data.roleHub?.kicker ?? "Touch To Sign In"}
+                    placeholder="Touch To Sign In"
+                    onChange={(e) => {
+                      const current = data.roleHub || {
+                        title: "Self-Service Gateway",
+                        kicker: "Touch To Sign In",
+                        videoUrl: "",
+                        posterUrl: "",
+                        backgroundImageUrl: "",
+                        useHeroVideo: true,
+                        transparent: true,
+                      };
+                      setData({ ...data, roleHub: { ...current, kicker: e.target.value } });
+                    }}
+                    style={{ width: "100%", padding: "0.5rem 0.75rem", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.85rem" }}
+                  />
+                </div>
+              </div>
+
+              {/* Gateway Backdrop Photo & Glassmorphic Scrim */}
+              <PhotoInputControl
+                label="Gateway Backdrop Photo (Uploaded by Admin)"
+                value={data.roleHub?.backgroundImageUrl || ""}
+                onChange={(val) => {
+                  const current = data.roleHub || {
+                    title: "Self-Service Gateway",
+                    kicker: "Touch To Sign In",
+                    videoUrl: "",
+                    posterUrl: "",
+                    backgroundImageUrl: "",
+                    useHeroVideo: false,
+                    transparent: true,
+                  };
+                  setData({
+                    ...data,
+                    roleHub: { ...current, backgroundImageUrl: val, posterUrl: val, videoUrl: "", useHeroVideo: false },
+                  });
+                }}
+                category="gateway"
+                subtext="Upload a photo for the Self-Service Gateway card. Renders with full-bleed coverage and translucent glassmorphism behind the student & parent touch buttons."
+                previewShape="banner"
+                isUploading={uploadingField?.startsWith("gateway")}
+                onUploadFile={handleFileUpload}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* =========================================================================
+           TAB 3: SELF-SERVICE GATEWAY CONFIGURATION (.mv-role-hub-card)
+           ========================================================================= */}
+        {activeTab === "gateway" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 800, color: "#0e2a47", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <ShieldCheck size={20} style={{ color: "#ea580c" }} />
+                  Self-Service Gateway (.mv-role-hub-card)
+                </h3>
+                <p style={{ margin: "2px 0 0", fontSize: "0.75rem", color: "#64748b" }}>
+                  Configure the touch-to-enter gateway card, transparent background video, and direct login access.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handlePublish}
+                disabled={isSaving}
+                style={{
+                  background: isSaving
+                    ? "#94a3b8"
+                    : "linear-gradient(135deg, #ea580c 0%, #c2410c 100%)",
+                  border: "none",
+                  color: "#ffffff",
+                  borderRadius: "8px",
+                  padding: "0.45rem 1.15rem",
+                  fontSize: "0.8rem",
+                  fontWeight: 800,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  cursor: isSaving ? "not-allowed" : "pointer",
+                  boxShadow: "0 3px 10px rgba(234, 88, 12, 0.35)",
+                }}
+              >
+                {isSaving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
+                <span>{isSaving ? "Saving Gateway..." : "💾 Save & Publish Gateway"}</span>
+              </button>
+            </div>
+
+            {/* SECTION 1: GATEWAY BRANDING & HEADINGS */}
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "1.1rem", display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ background: "#ea580c", color: "#ffffff", fontSize: "0.68rem", fontWeight: 800, padding: "2px 6px", borderRadius: "4px" }}>
+                  1
+                </span>
+                <h4 style={{ margin: 0, fontSize: "0.92rem", fontWeight: 800, color: "#0e2a47" }}>
+                  Gateway Header &amp; Subtitle
+                </h4>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "0.74rem", fontWeight: 700, color: "#334155", marginBottom: "4px" }}>
+                    Gateway Card Title
+                  </label>
+                  <input
+                    type="text"
+                    value={data.roleHub?.title ?? "Self-Service Gateway"}
+                    placeholder="Self-Service Gateway"
+                    onChange={(e) => {
+                      const current = data.roleHub || {
+                        title: "Self-Service Gateway",
+                        kicker: "Touch To Sign In",
+                        videoUrl: "",
+                        posterUrl: "",
+                        backgroundImageUrl: "",
+                        useHeroVideo: true,
+                        transparent: true,
+                      };
+                      setData({ ...data, roleHub: { ...current, title: e.target.value } });
+                    }}
+                    style={{ width: "100%", padding: "0.5rem 0.75rem", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.85rem", fontWeight: 700 }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "0.74rem", fontWeight: 700, color: "#334155", marginBottom: "4px" }}>
+                    Gateway Kicker / Badge
+                  </label>
+                  <input
+                    type="text"
+                    value={data.roleHub?.kicker ?? "Touch To Sign In"}
+                    placeholder="Touch To Sign In"
+                    onChange={(e) => {
+                      const current = data.roleHub || {
+                        title: "Self-Service Gateway",
+                        kicker: "Touch To Sign In",
+                        videoUrl: "",
+                        posterUrl: "",
+                        backgroundImageUrl: "",
+                        useHeroVideo: true,
+                        transparent: true,
+                      };
+                      setData({ ...data, roleHub: { ...current, kicker: e.target.value } });
+                    }}
+                    style={{ width: "100%", padding: "0.5rem 0.75rem", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.85rem" }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* SECTION 2: GATEWAY BACKDROP PHOTO & GLASSMORPHIC STYLING */}
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "1.1rem", display: "flex", flexDirection: "column", gap: "14px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ background: "#ea580c", color: "#ffffff", fontSize: "0.68rem", fontWeight: 800, padding: "2px 6px", borderRadius: "4px" }}>
+                  2
+                </span>
+                <h4 style={{ margin: 0, fontSize: "0.92rem", fontWeight: 800, color: "#0e2a47" }}>
+                  Gateway Backdrop Photo &amp; Glassmorphic Styling
+                </h4>
+              </div>
+
+              <PhotoInputControl
+                label="Gateway Backdrop Photo (Uploaded by Admin)"
+                value={data.roleHub?.backgroundImageUrl || ""}
+                onChange={(val) => {
+                  const current = data.roleHub || {
+                    title: "Self-Service Gateway",
+                    kicker: "Touch To Sign In",
+                    videoUrl: "",
+                    posterUrl: "",
+                    backgroundImageUrl: "",
+                    useHeroVideo: false,
+                    transparent: true,
+                  };
+                  setData({
+                    ...data,
+                    roleHub: { ...current, backgroundImageUrl: val, posterUrl: val, videoUrl: "", useHeroVideo: false },
+                  });
+                }}
+                category="gateway"
+                subtext="Upload a photo for the Self-Service Gateway card. Renders with full-bleed coverage and translucent glassmorphism behind the student & parent touch buttons."
+                previewShape="banner"
+                isUploading={uploadingField?.startsWith("gateway")}
+                onUploadFile={handleFileUpload}
+              />
+            </div>
+
+            {/* SECTION 3: KIOSK DISPLAY & GLASSMORPHISM PREVIEW */}
+            <div style={{ background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: "12px", padding: "1.1rem", display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <Sparkles size={16} style={{ color: "#ea580c" }} />
+                <h4 style={{ margin: 0, fontSize: "0.88rem", fontWeight: 800, color: "#9a3412" }}>
+                  Transparent Glassmorphism Feature
+                </h4>
+              </div>
+              <p style={{ margin: 0, fontSize: "0.76rem", color: "#7c2d12", lineHeight: 1.45 }}>
+                When active, the Self-Service Gateway card renders the uploaded backdrop photo with a subtle dark gradient scrim. The Student &amp; Parent, Faculty &amp; Staff, and All Portals buttons render with frosted glass, ensuring maximum readability and responsive touch navigation.
+              </p>
             </div>
           </div>
         )}

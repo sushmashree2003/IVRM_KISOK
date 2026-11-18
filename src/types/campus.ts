@@ -108,9 +108,21 @@ export interface QuickStats {
   campusArea: string;
 }
 
+export interface RoleHubConfig {
+  title?: string;
+  kicker?: string;
+  videoUrl?: string;
+  posterUrl?: string;
+  backgroundImageUrl?: string;
+  useHeroVideo?: boolean;
+  transparent?: boolean;
+  overlayOpacity?: number;
+}
+
 export interface CampusInfoData {
   branding: CampusBranding;
   hero: HeroConfig;
+  roleHub?: RoleHubConfig;
   quickStats: QuickStats;
   stats?: QuickStats;
   leadership: LeadershipMember[];

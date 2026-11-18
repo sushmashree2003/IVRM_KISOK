@@ -456,12 +456,74 @@ body:has(.mv-kiosk-wrapper) {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(12px);
   border-radius: 20px;
-  border: 1.5px solid rgba(254, 215, 170, 0.9);
+  border: 1.5px solid rgba(199, 121, 33, 0.9);
   box-shadow: 0 6px 20px rgba(234, 88, 12, 0.08);
   padding: clamp(10px, 1.4vh, 14px);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+}
+
+/* Touch Role Hub Card with Transparent Backdrop Image */
+.mv-role-hub-card.has-backdrop-bg,
+.mv-role-hub-card.has-video-bg {
+  background: transparent;
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(180, 120, 51, 0.75);
+}
+
+.mv-role-hub-bg-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.mv-role-hub-sc-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(14, 42, 71, 0.74) 0%,
+    rgba(15, 23, 42, 0.68) 50%,
+    rgba(30, 58, 138, 0.72) 100%
+  );
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.mv-role-hub-card.has-backdrop-bg .mv-hub-title,
+.mv-role-hub-card.has-video-bg .mv-hub-title {
+  color: #ffffff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+.mv-role-hub-card.has-backdrop-bg .mv-hub-kicker,
+.mv-role-hub-card.has-video-bg .mv-hub-kicker {
+  color: #995507;
+}
+
+.mv-role-hub-card.has-backdrop-bg .mv-role-pill-btn,
+.mv-role-hub-card.has-video-bg .mv-role-pill-btn {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+
+.mv-role-hub-card.has-backdrop-bg .mv-role-pill-btn:hover,
+.mv-role-hub-card.has-video-bg .mv-role-pill-btn:hover {
+  background: #ffffff;
+  border-color: #ea580c;
+  box-shadow: 0 6px 18px rgba(234, 88, 12, 0.25);
 }
 
 .mv-hub-header {
@@ -485,7 +547,7 @@ body:has(.mv-kiosk-wrapper) {
   font-weight: 800;
   color: #ea580c;
   background: #fff7ed;
-  border: 1px solid #fed7aa;
+  border: 1px solid #a1621a;
   padding: 2px 8px;
   border-radius: 9999px;
 }

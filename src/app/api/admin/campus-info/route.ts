@@ -33,7 +33,12 @@ export async function GET() {
     }
     const raw = fs.readFileSync(dataFilePath, "utf-8");
     const data: CampusInfoData = JSON.parse(raw);
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        "Pragma": "no-cache",
+      },
+    });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || "Failed to read configuration" }, { status: 500 });
   }

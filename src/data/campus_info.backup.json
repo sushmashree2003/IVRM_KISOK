@@ -38,6 +38,15 @@
     "ctaText": "Admissions 2026-27 Open",
     "ctaAction": "roles"
   },
+  "roleHub": {
+    "title": "Self-Service Gateway",
+    "kicker": "Touch To Sign In",
+    "videoUrl": "",
+    "posterUrl": "/uploads/gateway/Media__9__1794994873739.jfif",
+    "backgroundImageUrl": "/uploads/gateway/Media__9__1794994873739.jfif",
+    "useHeroVideo": true,
+    "transparent": true
+  },
   "quickStats": {
     "studentsCount": "2500+",
     "facultyCount": "100+",
@@ -200,7 +209,7 @@
       "category": "Inter School Competition",
       "date": "Oct 2026",
       "image": "/uploads/achievements/Media__15__1794981668478.jfif",
-      "description": "Gold trophy awarded to MVPS Senior Quiz squad across 32 competing regional schools."
+      "description": "Sports Wining Monents"
     },
     {
       "id": "ach_cricket",
@@ -210,7 +219,7 @@
       "category": "Inter School Competition",
       "date": "Oct 2026",
       "image": "/uploads/achievements/Media__16__1794981705681.jfif",
-      "description": "Undefeated tournament victory with top tournament scorer and best bowler accolades."
+      "description": "Sports Wining Monents"
     },
     {
       "id": "ach_1794981750593",
@@ -220,7 +229,7 @@
       "category": "School",
       "date": "Oct 2026",
       "image": "/uploads/achievements/Media__5__1794981763017.jfif",
-      "description": "Annual School Cultural Functions • Excellence Award"
+      "description": "Sports "
     }
   ],
   "footerMotto": "— Together for a Brighter Tomorrow 🍃 —",

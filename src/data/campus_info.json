@@ -38,6 +38,15 @@
     "ctaText": "Admissions 2026-27 Open",
     "ctaAction": "roles"
   },
+  "roleHub": {
+    "title": "Self-Service Gateway",
+    "kicker": "Touch To Sign In",
+    "videoUrl": "",
+    "posterUrl": "/uploads/gateway/Media__9__1794994873739.jfif",
+    "backgroundImageUrl": "/uploads/gateway/Media__9__1794994873739.jfif",
+    "useHeroVideo": false,
+    "transparent": true
+  },
   "quickStats": {
     "studentsCount": "2500+",
     "facultyCount": "100+",

@@ -2,6 +2,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import LiveClock from "@/components/LiveClock";
+import AdminExitFullscreenModal from "@/components/common/AdminExitFullscreenModal";
 import {
   User,
   Lock,
@@ -75,24 +77,20 @@ export default function LoginScreen({
   onBackToKiosk,
   onSwitchRole,
 }: LoginScreenProps) {
-  const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [schoolLogo, setSchoolLogo] = useState<string>(() => getInstituteLogo());
   const [schoolName, setSchoolName] = useState<string>(() => getInstituteName());
   const aiName = getAiAssistantName();
 
-  // Real-time clock & fullscreen sync
+  // Fullscreen sync
   useEffect(() => {
-    setCurrentTime(new Date());
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-
     const handleFsChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
     };
     document.addEventListener("fullscreenchange", handleFsChange);
 
     return () => {
-      clearInterval(timer);
       document.removeEventListener("fullscreenchange", handleFsChange);
     };
   }, []);
@@ -137,14 +135,23 @@ export default function LoginScreen({
   }, []);
 
   const toggleFullscreen = () => {
+    const isCurrentlyFs = isFullscreen || !!document.fullscreenElement || (typeof window !== "undefined" && !!(window as any).kioskNative?.isKioskApp);
+
+    if (isCurrentlyFs) {
+      setIsAdminModalOpen(true);
+      return;
+    }
+
+    if (typeof window !== "undefined" && (window as any).kioskNative?.toggleFullscreen) {
+      (window as any).kioskNative.toggleFullscreen().then((isFs: boolean) => {
+        setIsFullscreen(isFs);
+      }).catch(() => {});
+      return;
+    }
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch((err) => {
         console.error("Error attempting to enable fullscreen:", err);
       });
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      }
     }
   };
 
@@ -655,9 +662,7 @@ export default function LoginScreen({
           justifyContent: "space-between",
           padding: "10px 32px",
           flexShrink: 0,
-          background: "rgba(255, 255, 255, 0.88)",
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
+          background: "rgba(255, 255, 255, 0.96)",
           borderBottom: "1.5px solid rgba(254, 215, 170, 0.65)",
           boxShadow: "0 4px 18px rgba(234, 88, 12, 0.05)",
         }}
@@ -727,13 +732,7 @@ export default function LoginScreen({
           <div className="command-live-status"><span /> Campus online</div>
 
           {/* Live Clock & Date Badge */}
-          {currentTime && (
-            <div className="command-time" suppressHydrationWarning>
-              <Calendar size={15} />
-              <span suppressHydrationWarning>{formatDate(currentTime)}</span>
-              <b suppressHydrationWarning>{formatTime(currentTime)}</b>
-            </div>
-          )}
+          <LiveClock className="command-time" />
 
           {/* Role Status Tag */}
           <div
@@ -1149,9 +1148,7 @@ export default function LoginScreen({
             flex: 0.85,
             width: "clamp(360px, 31vw, 450px)",
             maxWidth: "460px",
-            background: "rgba(255, 255, 255, 0.94)",
-            backdropFilter: "blur(28px)",
-            WebkitBackdropFilter: "blur(28px)",
+            background: "rgba(255, 255, 255, 0.97)",
             border: "1.5px solid rgba(254, 215, 170, 0.75)",
             borderRadius: "26px",
             padding: "clamp(1.1rem, 1.9vh, 1.6rem) clamp(1.2rem, 1.9vw, 1.7rem)",
@@ -1958,9 +1955,7 @@ export default function LoginScreen({
           justifyContent: "space-between",
           padding: "10px 32px",
           flexShrink: 0,
-          background: "rgba(255, 255, 255, 0.88)",
-          backdropFilter: "blur(14px)",
-          WebkitBackdropFilter: "blur(14px)",
+          background: "rgba(255, 255, 255, 0.96)",
           borderTop: "1.5px solid rgba(254, 215, 170, 0.65)",
         }}
       >
@@ -1977,6 +1972,12 @@ export default function LoginScreen({
           <span className="assistant-pulse" /> Need help? <b>Ask {aiName}</b>
         </button>
       </footer>
+
+      <AdminExitFullscreenModal
+        isOpen={isAdminModalOpen}
+        onClose={() => setIsAdminModalOpen(false)}
+        onSuccess={() => setIsFullscreen(false)}
+      />
     </div>
   );
 }

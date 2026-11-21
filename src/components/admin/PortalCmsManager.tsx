@@ -368,6 +368,9 @@ function VideoInputControl({
               key={value}
               src={value}
               controls
+              controlsList="nodownload nofullscreen noremoteplayback"
+              disablePictureInPicture
+              onContextMenu={(e) => e.preventDefault()}
               muted
               playsInline
               preload="metadata"

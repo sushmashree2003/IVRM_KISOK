@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import LiveClock from "@/components/LiveClock";
+import AdminExitFullscreenModal from "@/components/common/AdminExitFullscreenModal";
 import MarkdownResponse from "@/components/chat/MarkdownResponse";
 import UnifiedAIChatPanel from "@/components/chat/UnifiedAIChatPanel";
 import { getUserSession, clearUserSession, getInstituteLogo, getInstituteName, getAiAssistantName, getBackgroundLo } from "@/lib/session";
@@ -96,9 +98,9 @@ const STUDENT_MOTTOES = [
 
 export default function StudentDashboard({ onBackToKiosk }: DashboardProps) {
   const [session, setSession] = useState<SessionInfo | null>(null);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [bgImage, setBgImage] = useState<string>(() => getBackgroundLo());
   const [currentScreen, setCurrentScreen] = useState<StudentScreen>("dashboard");
-  const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -228,12 +230,6 @@ export default function StudentDashboard({ onBackToKiosk }: DashboardProps) {
   const [isTyping, setIsTyping] = useState(false);
   const chatMessagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Clock timer
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
   // Fullscreen sync
   useEffect(() => {
     const handleFsChange = () => setIsFullscreen(!!document.fullscreenElement);
@@ -246,10 +242,21 @@ export default function StudentDashboard({ onBackToKiosk }: DashboardProps) {
   }, [chatMessages, isTyping]);
 
   const toggleFullscreen = () => {
+    const isCurrentlyFs = isFullscreen || !!document.fullscreenElement || (typeof window !== "undefined" && !!(window as any).kioskNative?.isKioskApp);
+
+    if (isCurrentlyFs) {
+      setIsAdminModalOpen(true);
+      return;
+    }
+
+    if (typeof window !== "undefined" && (window as any).kioskNative?.toggleFullscreen) {
+      (window as any).kioskNative.toggleFullscreen().then((isFs: boolean) => {
+        setIsFullscreen(isFs);
+      }).catch(() => {});
+      return;
+    }
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch((err) => console.error("Fullscreen error:", err));
-    } else {
-      if (document.exitFullscreen) document.exitFullscreen();
     }
   };
 
@@ -1006,14 +1013,8 @@ export default function StudentDashboard({ onBackToKiosk }: DashboardProps) {
             <span>Campus online</span>
           </div>
 
-          {/* Command Time Pill */}
-          <div className="dash-clock-widget" suppressHydrationWarning>
-            <Calendar size={13} style={{ color: "#ea580c" }} />
-            <span suppressHydrationWarning>
-              {currentTime.toLocaleDateString("en-US", { weekday: "short", day: "2-digit", month: "short" })} •{" "}
-              <b suppressHydrationWarning>{currentTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}</b>
-            </span>
-          </div>
+          {/* Command Time Pill (Isolated to prevent full-dashboard re-renders) */}
+          <LiveClock className="dash-clock-widget" />
 
           {/* Fullscreen Button */}
           <button className="command-fullscreen" onClick={toggleFullscreen}>
@@ -1033,9 +1034,7 @@ export default function StudentDashboard({ onBackToKiosk }: DashboardProps) {
       <nav
         style={{
           flexShrink: 0,
-          background: "rgba(255, 255, 255, 0.88)",
-          backdropFilter: "blur(14px)",
-          WebkitBackdropFilter: "blur(14px)",
+          background: "rgba(255, 255, 255, 0.96)",
           borderBottom: "1.5px solid rgba(254, 215, 170, 0.6)",
           padding: "8px 24px",
           display: "flex",
@@ -3622,8 +3621,7 @@ export default function StudentDashboard({ onBackToKiosk }: DashboardProps) {
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(15, 23, 42, 0.65)",
-            backdropFilter: "blur(5px)",
+            background: "rgba(15, 23, 42, 0.85)",
             zIndex: 9999,
             display: "flex",
             alignItems: "center",
@@ -3749,6 +3747,12 @@ export default function StudentDashboard({ onBackToKiosk }: DashboardProps) {
           </div>
         </div>
       )}
+
+      <AdminExitFullscreenModal
+        isOpen={isAdminModalOpen}
+        onClose={() => setIsAdminModalOpen(false)}
+        onSuccess={() => setIsFullscreen(false)}
+      />
     </div>
   );
 }

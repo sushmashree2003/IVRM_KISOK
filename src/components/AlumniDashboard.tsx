@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import AdminExitFullscreenModal from "@/components/common/AdminExitFullscreenModal";
 import MarkdownResponse from "@/components/chat/MarkdownResponse";
 import UnifiedAIChatPanel from "@/components/chat/UnifiedAIChatPanel";
 import { getUserSession, clearUserSession, getInstituteLogo, getInstituteName, getAiAssistantName, getBackgroundLo } from "@/lib/session";
@@ -601,6 +602,7 @@ export default function AlumniDashboard({ onBackToKiosk }: DashboardProps) {
   // Navigation & General UI State
   const [currentScreen, setCurrentScreen] = useState<AlumniScreen>("dashboard");
   const [session, setSession] = useState<SessionInfo | null>(null);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [bgImage, setBgImage] = useState<string>(() => getBackgroundLo());
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -737,10 +739,21 @@ export default function AlumniDashboard({ onBackToKiosk }: DashboardProps) {
   };
 
   const toggleFullscreen = () => {
+    const isCurrentlyFs = isFullscreen || !!document.fullscreenElement || (typeof window !== "undefined" && !!(window as any).kioskNative?.isKioskApp);
+
+    if (isCurrentlyFs) {
+      setIsAdminModalOpen(true);
+      return;
+    }
+
+    if (typeof window !== "undefined" && (window as any).kioskNative?.toggleFullscreen) {
+      (window as any).kioskNative.toggleFullscreen().then((isFs: boolean) => {
+        setIsFullscreen(isFs);
+      }).catch(() => {});
+      return;
+    }
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch((err) => console.error("Fullscreen error:", err));
-    } else {
-      if (document.exitFullscreen) document.exitFullscreen();
     }
   };
 
@@ -5149,6 +5162,12 @@ export default function AlumniDashboard({ onBackToKiosk }: DashboardProps) {
           <ShieldCheck size={14} /> Safe & Encrypted Kiosk
         </div>
       </footer>
+
+      <AdminExitFullscreenModal
+        isOpen={isAdminModalOpen}
+        onClose={() => setIsAdminModalOpen(false)}
+        onSuccess={() => setIsFullscreen(false)}
+      />
     </div>
   );
 }

@@ -28,7 +28,7 @@
   "win": {
     "target": [
       {
-        "target": "portable",
+        "target": "nsis",
         "arch": ["x64"]
       }
     ],
@@ -36,16 +36,13 @@
     "requestedExecutionLevel": "asInvoker"
   },
   "nsis": {
-    "oneClick": true,
+    "oneClick": false,
     "perMachine": false,
     "allowElevation": true,
-    "allowToChangeInstallationDirectory": false,
+    "allowToChangeInstallationDirectory": true,
     "createDesktopShortcut": true,
     "createStartMenuShortcut": true,
     "runAfterFinish": true,
     "artifactName": "Campus-Smart-Kiosk-Setup-${version}.${ext}"
-  },
-  "portable": {
-    "artifactName": "Campus-Smart-Kiosk-Portable-${version}.${ext}"
   }
 }

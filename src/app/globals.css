@@ -10,6 +10,14 @@
   --glass-shadow: 0 10px 25px -5px rgba(0, 30, 60, 0.08), 0 8px 10px -6px rgba(0, 30, 60, 0.04);
 }
 
+/* Hide download buttons from all HTML5 video players */
+video::-internal-media-controls-download-button {
+  display: none !important;
+}
+video::-webkit-media-controls-download-button {
+  display: none !important;
+}
+
 *,
 *::before,
 *::after {
@@ -3804,9 +3812,11 @@ body:has(.hp-wrapper) {
   position: absolute;
   z-index: -1;
   border-radius: 999px;
-  filter: blur(40px);
-  opacity: 0.55;
-  animation: kioskFloat 12s ease-in-out infinite;
+  opacity: 0.65;
+  pointer-events: none;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  animation: kioskFloat 16s ease-in-out infinite;
 }
 
 .kiosk-orb-one {
@@ -3814,7 +3824,7 @@ body:has(.hp-wrapper) {
   height: 320px;
   top: 18%;
   right: -60px;
-  background: rgba(251, 146, 60, 0.22);
+  background: radial-gradient(circle, rgba(251, 146, 60, 0.35) 0%, transparent 70%);
 }
 
 .kiosk-orb-two {
@@ -3822,7 +3832,7 @@ body:has(.hp-wrapper) {
   height: 260px;
   bottom: 8%;
   left: -50px;
-  background: rgba(253, 186, 116, 0.26);
+  background: radial-gradient(circle, rgba(253, 186, 116, 0.38) 0%, transparent 70%);
   animation-delay: -5s;
 }
 
@@ -3917,13 +3927,11 @@ body:has(.hp-wrapper) {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  background: rgba(255, 255, 255, 0.62);
-  backdrop-filter: blur(24px) saturate(190%);
-  -webkit-backdrop-filter: blur(24px) saturate(190%);
-  border: 1.5px solid rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.95);
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
   border-radius: 20px;
   padding: 9px 18px;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12), inset 0 1.5px 2px rgba(255, 255, 255, 0.95);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.08);
   flex-shrink: 0;
 }
 
@@ -3941,10 +3949,8 @@ body:has(.hp-wrapper) {
   display: grid;
   place-items: center;
   color: #ea580c;
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06), inset 0 1px 1px rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   touch-action: manipulation;
@@ -4571,11 +4577,9 @@ body:has(.hp-wrapper) {
   min-width: 0;
   padding: 14px;
   border-radius: 24px;
-  background: linear-gradient(170deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.52) 100%);
-  backdrop-filter: blur(28px) saturate(190%);
-  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  background: linear-gradient(170deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.88) 100%);
   border: 1.5px solid rgba(255, 255, 255, 0.85);
-  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.12), inset 0 1.5px 2px rgba(255, 255, 255, 0.95);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.08);
   cursor: pointer;
   overflow: hidden;
   display: flex;
@@ -5030,20 +5034,16 @@ body:has(.hp-wrapper) {
   padding: 34px;
   border: 1.5px solid rgba(255, 255, 255, 0.85);
   border-radius: 28px;
-  background: linear-gradient(155deg, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0.82) 100%);
-  backdrop-filter: blur(32px) saturate(200%);
-  -webkit-backdrop-filter: blur(32px) saturate(200%);
-  box-shadow: 0 35px 80px rgba(0, 0, 0, 0.3), inset 0 1.5px 2px rgba(255, 255, 255, 0.95);
+  background: #ffffff;
+  box-shadow: 0 35px 80px rgba(0, 0, 0, 0.25);
   animation: modalIn 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   overflow: hidden;
 }
 
 .gallery-modal-window {
-  background: linear-gradient(155deg, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0.85) 100%) !important;
-  backdrop-filter: blur(32px) saturate(200%) !important;
-  -webkit-backdrop-filter: blur(32px) saturate(200%) !important;
+  background: #ffffff !important;
   border: 1.5px solid rgba(255, 255, 255, 0.9) !important;
-  box-shadow: 0 35px 80px rgba(0, 0, 0, 0.35), inset 0 1.5px 2px rgba(255, 255, 255, 0.95) !important;
+  box-shadow: 0 35px 80px rgba(0, 0, 0, 0.3) !important;
 }
 
 .modal-accent {

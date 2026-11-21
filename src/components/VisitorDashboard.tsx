@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import AdminExitFullscreenModal from "@/components/common/AdminExitFullscreenModal";
 import MarkdownResponse from "@/components/chat/MarkdownResponse";
 import UnifiedAIChatPanel from "@/components/chat/UnifiedAIChatPanel";
 import { getInstituteLogo, getInstituteName, getAiAssistantName, getUserSession, clearUserSession, getBackgroundLo } from "@/lib/session";
@@ -271,6 +272,7 @@ export default function VisitorDashboard({ onBackToKiosk }: VisitorDashboardProp
   const [currentScreen, setCurrentScreen] = useState<VisitorScreen>("dashboard");
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [bgImage, setBgImage] = useState<string>(() => getBackgroundLo());
 
   // Visitor Session from localStorage
@@ -341,12 +343,21 @@ export default function VisitorDashboard({ onBackToKiosk }: VisitorDashboardProp
   }, []);
 
   const toggleFullscreen = () => {
+    const isCurrentlyFs = isFullscreen || !!document.fullscreenElement || (typeof window !== "undefined" && !!(window as any).kioskNative?.isKioskApp);
+
+    if (isCurrentlyFs) {
+      setIsAdminModalOpen(true);
+      return;
+    }
+
+    if (typeof window !== "undefined" && (window as any).kioskNative?.toggleFullscreen) {
+      (window as any).kioskNative.toggleFullscreen().then((isFs: boolean) => {
+        setIsFullscreen(isFs);
+      }).catch(() => {});
+      return;
+    }
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(() => { });
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      }
     }
   };
 
@@ -1776,6 +1787,12 @@ export default function VisitorDashboard({ onBackToKiosk }: VisitorDashboardProp
           />
         </section>
       )}
+
+      <AdminExitFullscreenModal
+        isOpen={isAdminModalOpen}
+        onClose={() => setIsAdminModalOpen(false)}
+        onSuccess={() => setIsFullscreen(false)}
+      />
     </div>
   );
 }

@@ -7,6 +7,22 @@ import AdminPasswordGate from "@/components/admin/AdminPasswordGate";
 
 const AdminDashboard = dynamic(() => import("@/components/AdminDashboard"), {
   ssr: false,
+  loading: () => (
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#0f172a",
+        color: "#ea580c",
+        fontFamily: "Outfit, sans-serif",
+        fontWeight: 700,
+      }}
+    >
+      Loading Institutional Administration...
+    </div>
+  ),
 });
 
 export default function AdminPage() {

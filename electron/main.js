@@ -7,6 +7,24 @@ const net = require('net');
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
+// Stable hardware acceleration & performance configuration for Intel integrated graphics (e.g. Intel HD 520 / 2-core CPUs)
+app.commandLine.appendSwitch('enable-gpu-rasterization');
+app.commandLine.appendSwitch('enable-accelerated-video-decode');
+app.commandLine.appendSwitch('disable-renderer-backgrounding');
+
+// Ensure single-instance lock for installed desktop application
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+  });
+}
+
 let mainWindow = null;
 let serverProcess = null;
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
@@ -164,20 +182,29 @@ async function createWindow() {
     autoHideMenuBar: true,  // Hide top menu bar
     frame: isDev,           // Borderless in production
     show: false,
+    backgroundColor: '#0c3558', // Avoid white screen blink while rendering
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
       webSecurity: true,
+      backgroundThrottling: false, // Prevent frame stutter when focus shifts
     },
     icon: path.join(__dirname, '../public/favicon.ico'),
   });
 
+  // Clear persistent HTTP cache and stale workers so old application builds and previous data are never served
+  try {
+    await mainWindow.webContents.session.clearCache();
+    await mainWindow.webContents.session.clearStorageData({
+      storages: ['cachestorage', 'serviceworkers'],
+    });
+  } catch (cacheErr) {
+    console.warn('[Kiosk] Cache clearing skipped:', cacheErr);
+  }
+
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
-    if (!isDev) {
-      mainWindow.setKiosk(true);
-    }
   });
 
   // Load the application
@@ -239,6 +266,29 @@ ipcMain.handle('app-toggle-fullscreen', () => {
     const isFs = mainWindow.isFullScreen();
     mainWindow.setFullScreen(!isFs);
     return !isFs;
+  }
+  return false;
+});
+
+ipcMain.handle('app-minimize', () => {
+  if (mainWindow) {
+    if (mainWindow.isKiosk()) {
+      mainWindow.setKiosk(false);
+    }
+    mainWindow.setFullScreen(false);
+    mainWindow.minimize();
+    return true;
+  }
+  return false;
+});
+
+ipcMain.handle('app-exit-fullscreen', () => {
+  if (mainWindow) {
+    if (mainWindow.isKiosk()) {
+      mainWindow.setKiosk(false);
+    }
+    mainWindow.setFullScreen(false);
+    return false;
   }
   return false;
 });

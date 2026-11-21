@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { RoleType } from "@/components/LoginScreen";
+import AdminExitFullscreenModal from "@/components/common/AdminExitFullscreenModal";
 
 const RoleSelectionScreen = dynamic(() => import("@/components/RoleSelectionScreen"), {
   ssr: false,
@@ -15,30 +16,39 @@ const CampusInfoPortal = dynamic(() => import("@/components/CampusInfoPortal"), 
 export default function Home() {
   const router = useRouter();
   const [activePage, setActivePage] = useState<"portal" | "roles">("portal");
-  const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
 
   useEffect(() => {
-    setCurrentTime(new Date());
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-
     const handleFsChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
     };
     document.addEventListener("fullscreenchange", handleFsChange);
 
     return () => {
-      clearInterval(timer);
       document.removeEventListener("fullscreenchange", handleFsChange);
     };
   }, []);
 
   const toggleFullscreen = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
+
+    // If currently in fullscreen (or in Electron kiosk mode), exiting or minimizing requires Admin Password
+    const isCurrentlyFs = isFullscreen || !!document.fullscreenElement || (typeof window !== "undefined" && !!(window as any).kioskNative?.isKioskApp);
+
+    if (isCurrentlyFs) {
+      setIsAdminModalOpen(true);
+      return;
+    }
+
+    if (typeof window !== "undefined" && (window as any).kioskNative?.toggleFullscreen) {
+      (window as any).kioskNative.toggleFullscreen().then((isFs: boolean) => {
+        setIsFullscreen(isFs);
+      }).catch(() => {});
+      return;
+    }
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(console.error);
-    } else if (document.exitFullscreen) {
-      document.exitFullscreen();
     }
   };
 
@@ -53,7 +63,6 @@ export default function Home() {
           onEnterRoleSelection={() => setActivePage("roles")}
           isFullscreen={isFullscreen}
           toggleFullscreen={toggleFullscreen}
-          currentTime={currentTime}
         />
       )}
 
@@ -63,9 +72,14 @@ export default function Home() {
           onBackToPortal={() => setActivePage("portal")}
           isFullscreen={isFullscreen}
           toggleFullscreen={toggleFullscreen}
-          currentTime={currentTime}
         />
       )}
+
+      <AdminExitFullscreenModal
+        isOpen={isAdminModalOpen}
+        onClose={() => setIsAdminModalOpen(false)}
+        onSuccess={() => setIsFullscreen(false)}
+      />
     </>
   );
 }

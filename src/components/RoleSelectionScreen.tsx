@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import LiveClock from "@/components/LiveClock";
 import {
   Activity,
   ArrowLeft,
@@ -36,7 +37,7 @@ export interface RoleSelectionScreenProps {
   onBackToPortal: () => void;
   isFullscreen: boolean;
   toggleFullscreen: (e?: React.MouseEvent) => void;
-  currentTime: Date | null;
+  currentTime?: Date | null;
   onOpenBot?: () => void;
 }
 
@@ -584,15 +585,7 @@ export default function RoleSelectionScreen({
           <div className="command-tools">
 
 
-            <div className="command-chip">
-              <Calendar size={13} style={{ color: "#ea580c" }} />
-              <span>{formatDate(currentTime)}</span>
-            </div>
-
-            <div className="command-chip">
-              <Clock3 size={13} style={{ color: "#ea580c" }} />
-              <span>{formatTime(currentTime)}</span>
-            </div>
+            <LiveClock variant="chips" />
 
             <div className="command-chip pulse">
               <span className="status-dot green" />

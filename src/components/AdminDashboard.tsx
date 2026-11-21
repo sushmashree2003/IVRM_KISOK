@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import LiveClock from "@/components/LiveClock";
 import MarkdownResponse from "@/components/chat/MarkdownResponse";
 import { getUserSession, clearUserSession, getInstituteLogo, getInstituteName, getAiAssistantName } from "@/lib/session";
 import { SessionInfo } from "@/types/auth";
@@ -172,7 +173,6 @@ const ADMISSIONS_PIPELINE = [
 export default function AdminDashboard({ onBackToKiosk }: DashboardProps) {
   const [session, setSession] = useState<SessionInfo | null>(null);
   const [currentScreen, setCurrentScreen] = useState<ActiveScreen>("portal-cms");
-  const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Widget state
@@ -253,12 +253,6 @@ export default function AdminDashboard({ onBackToKiosk }: DashboardProps) {
     }
   };
 
-  // Real-time Clock
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
   // Automatic quote rotation
   useEffect(() => {
     const quoteTimer = setInterval(() => {
@@ -285,6 +279,12 @@ export default function AdminDashboard({ onBackToKiosk }: DashboardProps) {
   }, []);
 
   const toggleFullscreen = () => {
+    if (typeof window !== "undefined" && (window as any).kioskNative?.toggleFullscreen) {
+      (window as any).kioskNative.toggleFullscreen().then((isFs: boolean) => {
+        setIsFullscreen(isFs);
+      }).catch(() => {});
+      return;
+    }
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch((err) => {
         console.error("Fullscreen error:", err);
@@ -387,11 +387,7 @@ export default function AdminDashboard({ onBackToKiosk }: DashboardProps) {
 
           {/* Command Time Pill */}
           <div className="dash-clock-widget">
-            <Calendar size={13} style={{ color: "#ea580c" }} />
-            <span>
-              {currentTime.toLocaleDateString("en-US", { weekday: "short", day: "2-digit", month: "short" })} •{" "}
-              <b>{currentTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}</b>
-            </span>
+            <LiveClock />
           </div>
 
           {/* Fullscreen Button */}
@@ -1212,8 +1208,7 @@ export default function AdminDashboard({ onBackToKiosk }: DashboardProps) {
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(15, 23, 42, 0.85)",
-            backdropFilter: "blur(8px)",
+            background: "rgba(15, 23, 42, 0.92)",
             zIndex: 9999,
             display: "flex",
             alignItems: "center",
@@ -1318,8 +1313,7 @@ export default function AdminDashboard({ onBackToKiosk }: DashboardProps) {
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(15, 23, 42, 0.65)",
-            backdropFilter: "blur(5px)",
+            background: "rgba(15, 23, 42, 0.85)",
             zIndex: 9999,
             display: "flex",
             alignItems: "center",

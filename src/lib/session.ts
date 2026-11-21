@@ -707,6 +707,10 @@ export function clearUserSession(): void {
     sessionStorage.removeItem("gvps_visitor_session");
     localStorage.removeItem("gvps_visitor_session");
     localStorage.removeItem(REMEMBERED_USER_KEY);
+    localStorage.removeItem(KIOSK_LOGO_KEY);
+    localStorage.removeItem(KIOSK_NAME_KEY);
+    localStorage.removeItem("kiosk_backgroupdlo");
+    localStorage.removeItem("kiosk_institute_code");
   } catch (error) {
     console.error("Failed to clear session data:", error);
   }

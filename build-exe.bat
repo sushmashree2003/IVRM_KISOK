@@ -11,7 +11,7 @@ echo ========================================================
 call npm run build
 
 echo ========================================================
-echo  Packaging fresh Windows executable (.exe)...
+echo  Packaging Windows App Setup Installer (.exe)...
 echo ========================================================
 call npx electron-builder --win
 
@@ -22,5 +22,6 @@ if exist dist copy /y .env dist\.env
 if exist dist\win-unpacked copy /y .env dist\win-unpacked\.env
 
 echo ========================================================
-echo  Build complete! Executable is in: dist\
+echo  Build complete!
+echo  Installer is in: dist\Campus-Smart-Kiosk-Setup-0.1.0.exe
 echo ========================================================

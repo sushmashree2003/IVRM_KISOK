@@ -147,7 +147,6 @@ export default function AdminPasswordGate({
           height: "550px",
           borderRadius: "50%",
           background: "radial-gradient(circle, rgba(234, 88, 12, 0.15) 0%, transparent 70%)",
-          filter: "blur(60px)",
           pointerEvents: "none",
         }}
       />
@@ -160,7 +159,6 @@ export default function AdminPasswordGate({
           height: "550px",
           borderRadius: "50%",
           background: "radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)",
-          filter: "blur(60px)",
           pointerEvents: "none",
         }}
       />
@@ -171,8 +169,7 @@ export default function AdminPasswordGate({
           width: "100%",
           maxWidth: showVirtualKeyboard ? "780px" : "480px",
           transition: "max-width 0.25s ease",
-          background: "rgba(30, 41, 59, 0.82)",
-          backdropFilter: "blur(20px)",
+          background: "rgba(30, 41, 59, 0.96)",
           borderRadius: "24px",
           border: "1px solid rgba(255, 255, 255, 0.12)",
           boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(234, 88, 12, 0.2)",
